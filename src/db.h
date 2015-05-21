@@ -75,26 +75,31 @@ class Rectangle : public rectangle_data<T>
 		Rectangle() : base_type()
 		{
 			m_valid = true;
-			m_color = -1;
+			m_color = m_layer = -1;
+			m_comp_id = std::numeric_limits<uint32_t>::max();
 			this->initialize();
 		}
 		Rectangle(interval_type const& hor, interval_type const& ver) : base_type(hor, ver) 
 		{
 			m_valid = true;
-			m_color = -1;
+			m_color = m_layer = -1;
+			m_comp_id = std::numeric_limits<uint32_t>::max();
 			this->initialize();
 		}
 		Rectangle(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh) : base_type(xl, yl, xh, yh)
 		{
 			m_valid = true;
-			m_color = -1;
+			m_color = m_layer = -1;
+			m_comp_id = std::numeric_limits<uint32_t>::max();
 			this->initialize();
 		}
 		/// copy constructor
 		Rectangle(Rectangle const& rhs) : base_type(rhs)
 		{
 			this->m_valid = rhs.m_valid;
-			m_color = rhs.m_color;
+			this->m_color = rhs.m_color;
+			this->m_layer = rhs.m_layer;
+			this->m_comp_id = rhs.m_comp_id;
 			this->initialize();
 		}
 		/// assignment 
@@ -104,7 +109,9 @@ class Rectangle : public rectangle_data<T>
 			{
 				this->base_type::operator=(rhs);
 				this->m_valid = rhs.m_valid;
-				m_color = rhs.m_color;
+				this->m_color = rhs.m_color;
+				this->m_layer = rhs.m_layer;
+				this->m_comp_id = rhs.m_comp_id;
 			}
 			return *this;
 		}
@@ -115,8 +122,14 @@ class Rectangle : public rectangle_data<T>
 		bool valid() const {return m_valid;}
 		void valid(bool v) {m_valid = v;}
 
-		int32_t color() const {return m_color;}
-		void color(int32_t l) {m_color = l;}
+		int8_t color() const {return m_color;}
+		void color(int8_t c) {m_color = c;}
+
+		int32_t layer() const {return m_layer;}
+		void layer(int32_t l) {m_layer = l;}
+
+		uint32_t comp_id() const {return m_comp_id;}
+		void comp_id(uint32_t c) {m_comp_id = c;}
 
 		// for debug 
 		void check() 
@@ -128,7 +141,7 @@ class Rectangle : public rectangle_data<T>
 					<< gtl::xh(*this) << ", " << gtl::yh(*this) << ")");
 		}
 
-	protected:
+	private:
 		void initialize()
 		{
 #pragma omp critical 
@@ -144,9 +157,13 @@ class Rectangle : public rectangle_data<T>
 		}
 
 		long m_id; ///< internal id 
+
+	protected:
 		bool m_valid; ///< 1 valid, 0 invalid, default is true 
 
-		int32_t m_color; ///< color 
+		int8_t m_color; ///< color 
+		int32_t m_layer; ///< input layer 
+		uint32_t m_comp_id; ///< independent component id 
 };
 
 template <typename T>
@@ -300,11 +317,13 @@ struct indexed_access
 
 namespace SimpleMPL {
 
+/// current implementation assume all the input patterns are rectangles 
 template <typename T>
 struct LayoutDB : public rectangle_data<T>
 {
 	typedef T coordinate_type;
 	typedef typename gtl::coordinate_traits<coordinate_type>::manhattan_area_type area_type;
+	typedef typename gtl::coordinate_traits<coordinate_type>::coordinate_difference coordinate_difference;
 	typedef rectangle_data<coordinate_type> base_type;
 	typedef Rectangle<coordinate_type> rectangle_type;
 	typedef Polygon<coordinate_type> polygon_type;
@@ -312,13 +331,17 @@ struct LayoutDB : public rectangle_data<T>
 	typedef shared_ptr<polygon_type> polygon_pointer_type;
 	typedef shared_ptr<rectangle_type> rectangle_pointer_type;
 	typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
-
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
 
-	rtree_type tPolygon; ///< rtree for polygon components that intersects the LayoutDB
+	rtree_type tPattern; ///< rtree for components that intersects the LayoutDB
+	vector<rectangle_pointer_type> vPattern; ///< uncolored and precolored patterns 
+	map<int32_t, path_type> hPath; ///< path 
 
-	map<int32_t, vector<polygon_pointer_type > > hPolygon; 
-	map<int32_t, vector<vector<point_type> > > hPath;
+	set<int32_t> sUncolorLayer; ///< layers that represent uncolored patterns 
+	set<int32_t> sPrecolorLayer; ///< layers that represent precolored features, they should have the same number of colors 
+	coordinate_difference coloring_distance; ///< minimum coloring distance 
+	uint32_t color_num; ///< number of colors available, only support 3 or 4
+	uint32_t thread_num; ///< number of maximum threads for parallel computation 
 
 	LayoutDB() : base_type() 
 	{
@@ -350,15 +373,55 @@ struct LayoutDB : public rectangle_data<T>
 		hPath = rhs.hPath;
 	}
 
-	void add_polygon(int32_t layer, polygon_pointer_type p)
+	void add_pattern(int32_t layer, vector<point_type> const& vPoint)
 	{
-		tPolygon.insert(p);
-		if (hPolygon.count(layer))
-			hPolygon[layer].push_back(p);
-		else assert(hPolygon.insert(make_pair(layer, vector<polygon_pointer_type>(1, p))).second);
+		assert(vPoint.size() < 6);
+		coordinate_type xl = std::numeric_limits<coordinate_type>::max();
+		coordinate_type yl = std::numeric_limits<coordinate_type>::max();
+		coordinate_type xh = std::numeric_limits<coordinate_type>::min();
+		coordinate_type yh = std::numeric_limits<coordinate_type>::min();
+
+		for (vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
+		{
+			xl = std::min(xl, gtl::x(*it));
+			yl = std::min(xl, gtl::y(*it));
+			xh = std::max(xh, gtl::x(*it));
+			yh = std::max(xh, gtl::y(*it));
+		}
+
+		rectangle_pointer_type pPattern (new rectangle_type (xl, yl, xh, yh));
+		pPattern->layer(layer);
+
+		// update layout boundary 
+		if (vPrecolorPattern.empty() && vUncolorPattern.empty()) // first call 
+			gtl::set_points(*this, gtl::construct<point_type>(xl, yl), gtl::construct<point_type>(xh, yh));
+		else // bloat layout region to encompass current points 
+		{
+			gtl::encompass(*this, gtl::construct<point_type>(xl, yl));
+			gtl::encompass(*this, gtl::construct<point_type>(xh, yh));
+		}
+
+		// collect patterns 
+		if (sPrecolorLayer.count(layer)) 
+		{
+			// for precolored patterns 
+			// set colors 
+			pPattern->color(layer-*sPrecolorLayer->begin());
+			vPattern.push_back(pPattern);
+		}
+		else if (sUncolorLayer.count(layer))
+		{
+			// for uncolored patterns, simply collect it 
+			vPattern.push_back(pPattern);
+		}
+
+		// add to rtree 
+		tPattern.insert(pPattern);
+
 	}
-	void add_path(int32_t layer, path_type const& p)
+	void add_path(int32_t layer, vector<point_type> const& vPoint)
 	{
+		path_type p (vPoint.begin(), vPoint.end());
 		if (hPath.count(layer))
 			hPath[layer].push_back(p);
 		else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);

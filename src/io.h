@@ -69,7 +69,6 @@ struct GdsReader : GdsParser::GdsDataBase
 	int32_t status; // 0: not in any block, 1 in BOUNDARY or BOX block, 2 in PATH   
 	vector<point_type> vPoint;
 	int64_t file_size; // in bytes 
-	array<coordinate_type, 4> layout_boundary;
 
 	layoutdb_type& db;  
 
@@ -85,21 +84,8 @@ struct GdsReader : GdsParser::GdsDataBase
 		std::streampos end = in.tellg();
 		file_size = (end-begin);
 		in.close();
-		// initialize layout_boundary
-		layout_boundary[0] = std::numeric_limits<coordinate_type>::max();
-		layout_boundary[1] = std::numeric_limits<coordinate_type>::max();
-		layout_boundary[2] = std::numeric_limits<coordinate_type>::min();
-		layout_boundary[3] = std::numeric_limits<coordinate_type>::min();
 		// read gds 
-		bool flag = GdsParser::read(*this, filename);
-		if (flag)
-		{
-			gtl::xl(db, layout_boundary[0]);
-			gtl::yl(db, layout_boundary[1]);
-			gtl::xh(db, layout_boundary[2]);
-			gtl::yh(db, layout_boundary[3]);
-		}
-		return flag;
+		return GdsParser::read(*this, filename);
 	}
 
 	template <typename ContainerType>
@@ -135,13 +121,7 @@ struct GdsReader : GdsParser::GdsDataBase
 				// skip last point for BOX and BOUNDARY
 				if (status == 1) end -= 2;
 				for (uint32_t i = 0; i < end; i += 2)
-				{
 					vPoint.push_back(gtl::construct<point_type>(vData[i], vData[i+1]));
-					layout_boundary[0] = std::min(layout_boundary[0], (coordinate_type)vData[i]);
-					layout_boundary[1] = std::min(layout_boundary[1], (coordinate_type)vData[i+1]);
-					layout_boundary[2] = std::max(layout_boundary[2], (coordinate_type)vData[i]);
-					layout_boundary[3] = std::max(layout_boundary[3], (coordinate_type)vData[i+1]);
-				}
 			}
 		}
 		else if (ascii_record_type == "ENDEL")
@@ -150,17 +130,14 @@ struct GdsReader : GdsParser::GdsDataBase
 			{
 				assert(layer != -1);
 
-				polygon_pointer_type pPolygon (new polygon_type());
-				pPolygon->set(vPoint.begin(), vPoint.end());
-				db.add_polygon(layer, pPolygon);
+				db.add_polygon(layer, vPoint);
 
 				status = 0;
 			}
 			else if (status == 2)
 			{
 				assert(layer != -1);
-				path_type path (vPoint.begin(), vPoint.end());
-				db.add_path(layer, path);
+				db.add_path(layer, vPoint);
 
 				status = 0;
 			}
