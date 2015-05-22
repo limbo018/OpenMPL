@@ -74,33 +74,20 @@ class Rectangle : public rectangle_data<T>
 		/// default constructor 
 		Rectangle() : base_type()
 		{
-			m_valid = true;
-			m_color = m_layer = -1;
-			m_comp_id = std::numeric_limits<uint32_t>::max();
 			this->initialize();
 		}
 		Rectangle(interval_type const& hor, interval_type const& ver) : base_type(hor, ver) 
 		{
-			m_valid = true;
-			m_color = m_layer = -1;
-			m_comp_id = std::numeric_limits<uint32_t>::max();
 			this->initialize();
 		}
 		Rectangle(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh) : base_type(xl, yl, xh, yh)
 		{
-			m_valid = true;
-			m_color = m_layer = -1;
-			m_comp_id = std::numeric_limits<uint32_t>::max();
 			this->initialize();
 		}
 		/// copy constructor
 		Rectangle(Rectangle const& rhs) : base_type(rhs)
 		{
-			this->m_valid = rhs.m_valid;
-			this->m_color = rhs.m_color;
-			this->m_layer = rhs.m_layer;
-			this->m_comp_id = rhs.m_comp_id;
-			this->initialize();
+			this->copy(rhs);
 		}
 		/// assignment 
 		Rectangle& operator=(Rectangle const& rhs)
@@ -108,16 +95,13 @@ class Rectangle : public rectangle_data<T>
 			if (this != &rhs)
 			{
 				this->base_type::operator=(rhs);
-				this->m_valid = rhs.m_valid;
-				this->m_color = rhs.m_color;
-				this->m_layer = rhs.m_layer;
-				this->m_comp_id = rhs.m_comp_id;
+				this->copy(rhs);
 			}
 			return *this;
 		}
 		virtual ~Rectangle() {this->m_valid = false;}
 
-		long id() {return m_id;}
+		long internal_id() {return m_internal_id;}
 
 		bool valid() const {return m_valid;}
 		void valid(bool v) {m_valid = v;}
@@ -130,6 +114,9 @@ class Rectangle : public rectangle_data<T>
 
 		uint32_t comp_id() const {return m_comp_id;}
 		void comp_id(uint32_t c) {m_comp_id = c;}
+
+		uint32_t pattern_id() const {return m_pattern_id;}
+		void pattern_id(uint32_t p) {m_pattern_id = p;}
 
 		// for debug 
 		void check() 
@@ -144,8 +131,21 @@ class Rectangle : public rectangle_data<T>
 	private:
 		void initialize()
 		{
+			m_valid = true;
+			m_color = m_layer = -1;
+			m_comp_id = std::numeric_limits<uint32_t>::max();
+			m_pattern_id = std::numeric_limits<uint32_t>::max();
 #pragma omp critical 
-			m_id = generate_id();
+			m_internal_id = generate_id();
+		}
+		void copy(Rectangle const& rhs)
+		{
+			this->m_valid = rhs.m_valid;
+			this->m_color = rhs.m_color;
+			this->m_layer = rhs.m_layer;
+			this->m_comp_id = rhs.m_comp_id;
+			this->m_pattern_id = rhs.m_pattern_id;
+			this->m_internal_id = rhs.m_internal_id;
 		}
 		static long generate_id()
 		{
@@ -156,13 +156,13 @@ class Rectangle : public rectangle_data<T>
 			return cnt;
 		}
 
-		long m_id; ///< internal id 
-
-	protected:
+		long m_internal_id; ///< internal id 
 		bool m_valid; ///< 1 valid, 0 invalid, default is true 
 
+	protected:
 		int8_t m_color; ///< color 
 		int32_t m_layer; ///< input layer 
+		uint32_t m_pattern_id; ///< index in the pattern array 
 		uint32_t m_comp_id; ///< independent component id 
 };
 
@@ -339,6 +339,7 @@ struct LayoutDB : public rectangle_data<T>
 
 	set<int32_t> sUncolorLayer; ///< layers that represent uncolored patterns 
 	set<int32_t> sPrecolorLayer; ///< layers that represent precolored features, they should have the same number of colors 
+	set<int32_t> sPathLayer; ///< path layers that represent conflict edges 
 	coordinate_difference coloring_distance; ///< minimum coloring distance 
 	uint32_t color_num; ///< number of colors available, only support 3 or 4
 	uint32_t thread_num; ///< number of maximum threads for parallel computation 
@@ -391,9 +392,10 @@ struct LayoutDB : public rectangle_data<T>
 
 		rectangle_pointer_type pPattern (new rectangle_type (xl, yl, xh, yh));
 		pPattern->layer(layer);
+		pPattern->pattern_id(vPattern.size());
 
 		// update layout boundary 
-		if (vPrecolorPattern.empty() && vUncolorPattern.empty()) // first call 
+		if (vPattern.empty()) // first call 
 			gtl::set_points(*this, gtl::construct<point_type>(xl, yl), gtl::construct<point_type>(xh, yh));
 		else // bloat layout region to encompass current points 
 		{
@@ -402,22 +404,26 @@ struct LayoutDB : public rectangle_data<T>
 		}
 
 		// collect patterns 
+		bool pattern_layer_flag = true;
 		if (sPrecolorLayer.count(layer)) 
 		{
 			// for precolored patterns 
 			// set colors 
 			pPattern->color(layer-*sPrecolorLayer->begin());
-			vPattern.push_back(pPattern);
 		}
 		else if (sUncolorLayer.count(layer))
 		{
-			// for uncolored patterns, simply collect it 
-			vPattern.push_back(pPattern);
+			// for uncolored patterns
 		}
+		else pattern_layer_flag = false;
 
-		// add to rtree 
-		tPattern.insert(pPattern);
-
+		if (pattern_layer_flag)
+		{
+			// collect pattern 
+			vPattern.push_back(pPattern);
+			// add to rtree 
+			tPattern.insert(pPattern);
+		}
 	}
 	void add_path(int32_t layer, vector<point_type> const& vPoint)
 	{

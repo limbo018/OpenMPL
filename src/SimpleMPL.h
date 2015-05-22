@@ -33,13 +33,20 @@ class SimpleMPL
 				boost::property<boost::edge_index_t, std::size_t, boost::property<boost::edge_weight_t, int> >,
 				boost::property<boost::graph_name_t, string> > graph_type;
 #endif
+		/// top api to solve decomposition
+		void run(int32_t argc, char** argv);
+		void read_cmd(int32_t argc, char** argv);
+		void read_gds();
+		void write_gds();
+		/// solve decomposition
+		void solve();
 	protected:
 		/// compute connected component 
 		void connected_component();
 		/// DFS for connected component computation
-		void depth_first_search(rectangle_pointer_type source, uint32_t comp_id);
+		void depth_first_search(rectangle_pointer_type source, uint32_t comp_id, uint32_t& pattern_id);
 		/// solve a single component 
-		void solve_component(vector<rectangle_pointer_type> const& vPattern);
+		void solve_component(const vector<rectangle_pointer_type>::const_iterator itBgn, const vector<rectangle_pointer_type>::const_iterator itEnd);
 
 		layoutdb_type m_db; ///< layout database and user-defined options 
 		uint32_t m_comp_cnt; ///< maximum number of connected components 

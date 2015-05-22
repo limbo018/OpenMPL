@@ -190,7 +190,7 @@ struct GdsWriter
 
 		// basic operation
 		// will add more 
-		(*this)(gw, db.hPolygon);
+		(*this)(gw, db.vPattern);
 
 		gw.gds_write_endstr();
 		gw.gds_write_endlib(); 
