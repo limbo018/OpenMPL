@@ -9,6 +9,9 @@
 #define _SIMPLEMPL_DB_H
 
 #include <iostream>
+#include <vector>
+#include <map>
+#include <set>
 #include <boost/cstdint.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/array.hpp>
@@ -36,8 +39,13 @@
 #include <limbo/geometry/api/BoostPolygonApi.h>
 #include <limbo/geometry/Polygon2Rectangle.h>
 
+namespace SimpleMPL {
+
 using std::cout;
 using std::endl;
+using std::vector;
+using std::map;
+using std::set;
 
 namespace gtl = boost::polygon;
 namespace bg = boost::geometry;
@@ -58,8 +66,6 @@ using gtl::polygon_90_data;
 using gtl::polygon_90_set_data;
 
 using namespace gtl::operators;
-
-namespace SimpleMPL {
 
 template <typename T>
 class Rectangle : public rectangle_data<T>
@@ -112,8 +118,8 @@ class Rectangle : public rectangle_data<T>
 		int32_t layer() const {return m_layer;}
 		void layer(int32_t l) {m_layer = l;}
 
-		uint32_t comp_id() const {return m_comp_id;}
-		void comp_id(uint32_t c) {m_comp_id = c;}
+//		uint32_t comp_id() const {return m_comp_id;}
+//		void comp_id(uint32_t c) {m_comp_id = c;}
 
 		uint32_t pattern_id() const {return m_pattern_id;}
 		void pattern_id(uint32_t p) {m_pattern_id = p;}
@@ -246,6 +252,9 @@ class Path : public vector<point_data<T> >
 
 		Path() : base_type() {}
 		Path(Path const& rhs) : base_type(rhs) {}
+
+		template <typename Iterator>
+		Path(Iterator first, Iterator last) : base_type(first, last) {}
 };
 
 } // namespace SimpleMPL
@@ -325,6 +334,7 @@ struct LayoutDB : public rectangle_data<T>
 	typedef typename gtl::coordinate_traits<coordinate_type>::manhattan_area_type area_type;
 	typedef typename gtl::coordinate_traits<coordinate_type>::coordinate_difference coordinate_difference;
 	typedef rectangle_data<coordinate_type> base_type;
+	typedef point_data<coordinate_type> point_type;
 	typedef Rectangle<coordinate_type> rectangle_type;
 	typedef Polygon<coordinate_type> polygon_type;
 	typedef Path<coordinate_type> path_type;
@@ -383,8 +393,8 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	void copy(LayoutDB const& rhs)
 	{
-		tPolygon = rhs.tPolygon;
-		hPolygon = rhs.hPolygon;
+		tPattern = rhs.tPattern;
+		vPattern = rhs.vPattern;
 		hPath = rhs.hPath;
 		// options
 		sUncolorLayer = rhs.sUncolorLayer;
@@ -405,7 +415,7 @@ struct LayoutDB : public rectangle_data<T>
 		coordinate_type xh = std::numeric_limits<coordinate_type>::min();
 		coordinate_type yh = std::numeric_limits<coordinate_type>::min();
 
-		for (vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
+		for (typename vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
 		{
 			xl = std::min(xl, gtl::x(*it));
 			yl = std::min(xl, gtl::y(*it));
@@ -432,7 +442,7 @@ struct LayoutDB : public rectangle_data<T>
 		{
 			// for precolored patterns 
 			// set colors 
-			pPattern->color(layer-*sPrecolorLayer->begin());
+			pPattern->color(layer-*sPrecolorLayer.begin());
 		}
 		else if (sUncolorLayer.count(layer))
 		{

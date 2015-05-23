@@ -22,6 +22,8 @@
 
 #include "db.h"
 
+namespace SimpleMPL {
+
 using std::cout;
 using std::endl;
 using std::vector;
@@ -47,8 +49,6 @@ using gtl::polygon_90_data;
 using gtl::polygon_90_set_data;
 
 using namespace gtl::operators;
-
-namespace SimpleMPL {
 
 /// read gds file 
 template <typename T>
@@ -130,7 +130,7 @@ struct GdsReader : GdsParser::GdsDataBase
 			{
 				assert(layer != -1);
 
-				db.add_polygon(layer, vPoint);
+				db.add_pattern(layer, vPoint);
 
 				status = 0;
 			}
@@ -197,7 +197,7 @@ struct GdsWriter
 	}
 	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect) const 
 	{
-		for (vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
+		for (typename vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
 		{
 			rectangle_type const& rect = **it;
 			gw.write_box(100+rect.color(), 0, 
@@ -257,7 +257,7 @@ struct CmdParser
 			{
 				argc--;
 				argv++;
-				db.thread_num = atoi(thread_num);
+				db.thread_num = atoi(*argv);
 			}
 			else if (strcmp(*argv, "-path_layer") == 0)
 			{

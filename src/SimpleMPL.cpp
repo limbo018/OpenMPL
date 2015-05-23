@@ -5,8 +5,9 @@
     > Created Time: Wed May 20 22:38:50 2015
  ************************************************************************/
 
-#include "SimpleMPL"
+#include "SimpleMPL.h"
 #include <stack>
+#include <deque>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
 
@@ -15,6 +16,7 @@ namespace SimpleMPL {
 using std::cout;
 using std::endl;
 using std::stack;
+using std::deque;
 
 void SimpleMPL::run(int argc, char** argv)
 {
@@ -27,19 +29,19 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 {
 	// read command 
 	CmdParser<coordinate_type> cmd (m_db);
-	assert(cmd(argc, argv));
+	assert_msg(cmd(argc, argv), "failed to parse command");
 }
 void SimpleMPL::read_gds()
 {
 	// read input gds file 
 	GdsReader<coordinate_type> reader (m_db);
-	assert(reader(m_db.input_gds));
+	assert_msg(reader(m_db.input_gds), "failed to read " << m_db.input_gds);
 }
 void SimpleMPL::write_gds()
 {
 	// write output gds file 
 	GdsWriter<coordinate_type> writer;
-	assert(writer.m_db.output_gds, m_db);
+	writer(m_db.output_gds, m_db);
 }
 void SimpleMPL::solve()
 {
@@ -99,8 +101,8 @@ void SimpleMPL::construct_graph()
 				if (pAdjPattern != pPattern) // skip pPattern itself 
 				{
 					assert(pAdjPattern->pattern_id() != pPattern->pattern_id());
-					// we consider eucliean distance
-					gtl::coordinate_traits<coordinate_type>::coordinate_distance distance = gtl::eucliean_distance(*pAdjPattern, *pPattern);
+					// we consider euclidean distance
+					gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*pAdjPattern, *pPattern);
 					if (distance < m_db.coloring_distance)
 						vAdjVertex.push_back(pAdjPattern->pattern_id());
 				}
@@ -142,7 +144,7 @@ void SimpleMPL::construct_graph()
 			}
 		}
 	}
-	m_vCompId.resize(m_vVertex.size(), std::numeric_limits<uint32_t>::max());
+	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 }
 
 void SimpleMPL::connected_component()
@@ -150,9 +152,9 @@ void SimpleMPL::connected_component()
 	uint32_t comp_id = 0;
 	uint32_t order_id = 0; // position in an ordered pattern array with grouped components 
 
-	uint32_t vertex_num = m_vVertex.size();
+	uint32_t vertex_num = m_vVertexOrder.size();
 	// here we employ the assumption that the graph data structure alreays has vertices labeled with 0~vertex_num-1
-	// m_vVertex only saves an order of it 
+	// m_vVertexOrder only saves an order of it 
 	for (uint32_t v = 0; v != vertex_num; ++v)
 	{
 		if (m_vCompId[v] != std::numeric_limits<uint32_t>::max()) // not visited 
@@ -237,11 +239,11 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 	// do not use setS, it does not compile for subgraph
 	// do not use custom property tags, it does not compile for most utilities
 	typedef adjacency_list<vecS, vecS, undirectedS, 
-			property<vertex_index_t, std::uint32_t, property<vertex_color_t, int> >, 
-			property<edge_index_t, std::uint32_t, property<edge_weight_t, int> >,
+			property<vertex_index_t, uint32_t, property<vertex_color_t, int> >, 
+			property<edge_index_t, uint32_t, property<edge_weight_t, int> >,
 			property<graph_name_t, string> > graph_type;
-	typedef property<vertex_index_t, std::uint32_t> VertexId;
-	typedef property<edge_index_t, std::uint32_t> EdgeID;
+	typedef property<vertex_index_t, uint32_t> VertexId;
+	typedef property<edge_index_t, uint32_t> EdgeID;
 	typedef typename graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
 	typedef typename graph_traits<graph_type>::edge_descriptor edge_descriptor;
 	typedef typename property_map<graph_type, edge_weight_t>::type edge_weight_map_type;
@@ -282,20 +284,20 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 
 	// graph simplification 
 	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
-	graph_simplification_type gs (g);
+	graph_simplification_type gs (dg);
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
 	// keep the order of simplification 
 	gs.hide_small_degree(m_db.color_num); // hide vertices with degree smaller than color_num
 	if (m_db.color_num == 3)
 		gs.merge_subK4(); // merge sub-K4 structure 
 	// collect simplified information 
-	vector<graph_simplification_type::vertex_status_type> vStatus const& = gs.status();
+	vector<graph_simplification_type::vertex_status_type> const& vStatus = gs.status();
 	vector<vector<vertex_descriptor> > const& vChildren = gs.children();
 	stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 	pair<graph_type, map<vertex_descriptor, vertex_descriptor> > sg = gs.simplified_graph(); // simplified graph and vertex mapping
 
 	// solve coloring 
-	typedef limbo::algorithms::coloring::LPColoring coloring_solver_type;
+	typedef limbo::algorithms::coloring::LPColoring<graph_type> coloring_solver_type;
 	coloring_solver_type cs (sg.first);
 	cs.stitchWeight(0.1);
 	cs.conflictCost(false);
@@ -357,20 +359,20 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 		// find the nearest distance of each color 
 		// search all patterns in the component 
 		// TO DO: further speedup is possible to search a local window 
-		vector<coordinate_distance> vDist (m_db.color_num, std::numeric_limits<coordinate_distance>::max());
+		vector<coordinate_difference> vDist (m_db.color_num, std::numeric_limits<coordinate_difference>::max());
 		for (uint32_t u = 0; u != pattern_cnt; ++u)
 		{
 			if (v == u) continue;
 			// skip uncolored vertices 
 			if (vColor[u] < 0) continue; 
-			// we consider eucliean distance
-			gtl::coordinate_traits<coordinate_type>::coordinate_distance distance = gtl::eucliean_distance(vPattern[*(itBgn+v)], vPattern[*(itBgn+u)]);
+			// we consider euclidean distance
+			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*vPattern[*(itBgn+v)], *vPattern[*(itBgn+u)]);
 			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
 		}
 
 		// choose the color with largest distance 
 		int8_t best_color = -1;
-		coordinate_distance best_dist = std::numeric_limits<coordinate_distance>::min();
+		coordinate_difference best_dist = std::numeric_limits<coordinate_difference>::min();
 		for (int8_t i = 0; i != m_db.color_num; ++i)
 		{
 			if (vUnusedColor[i])

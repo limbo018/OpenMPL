@@ -18,6 +18,7 @@ class SimpleMPL
 	public:
 		typedef int32_t coordinate_type;
 		typedef LayoutDB<coordinate_type> layoutdb_type;
+		typedef typename layoutdb_type::coordinate_difference coordinate_difference;
 		typedef typename layoutdb_type::point_type point_type;
 		typedef typename layoutdb_type::rectangle_type rectangle_type;
 		typedef typename layoutdb_type::polygon_type polygon_type;
