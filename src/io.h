@@ -195,89 +195,32 @@ struct GdsWriter
 		gw.gds_write_endstr();
 		gw.gds_write_endlib(); 
 	}
-	void operator() (GdsParser::GdsWriter& gw, map<int32_t, vector<polygon_pointer_type > > const& hPolygon) const 
+	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect) const 
 	{
-		for (BOOST_AUTO(it, hPolygon.begin()); it != hPolygon.end(); ++it)
+		for (vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
 		{
-			int32_t const& layer = it->first;
-			vector<polygon_pointer_type> const& vPolygon = it->second;
-
-			BOOST_FOREACH(polygon_pointer_type const& pPolygon, vPolygon)
-			{
-				polygon_type const& polygon = *pPolygon;
-				vector<coordinate_type> vx, vy;
-				vx.reserve(polygon.size());
-				vy.reserve(polygon.size());
-				for (BOOST_AUTO(itp, polygon.begin()); itp != polygon.end(); ++itp)
-				{
-					vx.push_back((*itp).x());
-					vy.push_back((*itp).y());
-				}
-				gw.write_boundary(layer, 0, vx, vy, false);
-			}
-		}
-	}
-	void operator() (GdsParser::GdsWriter& gw, map<int32_t, vector<rectangle_pointer_type> > const& hRect) const 
-	{
-		for (BOOST_AUTO(it, hRect.begin()); it != hRect.end(); ++it)
-		{
-			int32_t const& layer = it->first;
-			vector<rectangle_pointer_type> const& vRect = it->second;
-
-			BOOST_FOREACH(rectangle_pointer_type const& pRect, vRect)
-			{
-				rectangle_type const& rect = *pRect;
-				gw.write_box(layer, 0, 
-						gtl::xl(rect), gtl::yl(rect), 
-						gtl::xh(rect), gtl::yh(rect));
-			}
+			rectangle_type const& rect = **it;
+			gw.write_box(100+rect.color(), 0, 
+					gtl::xl(rect), gtl::yl(rect), 
+					gtl::xh(rect), gtl::yh(rect));
 		}
 	}
 };
 
 
 /// parse command line arguments 
+template <typename T>
 struct CmdParser
 {
-	/// required commands 
-	string input_gds;
-	string output_gds;
-	vector<string> vInputRoute;
-	/// optional commands 
-	int64_t min_spacing;
-	int64_t min_width;
-	int64_t min_area;
-	string log_filename;
-	string score_filename;
-	int32_t max_iteration;
-	pair<string, double> prune_window_hint; ///< hint for window-based pruning 
-											///< the first element can be AVERAGE or MAX, the second element is weight
-	double round_error;
-	double density_budget_lp_variation_weight; ///< weight to balance variation and line hotspot in density_budget_lp()
-	double overlay_weight; ///< overlay weight in ILP formulation
-	double generate_strategy_no_overlay_area_weight; ///< area weight for 2nd layer sorting cost in UFO::generate_strategy_no_overlay()
-	double generate_strategy_large_area_area_weight; ///< area weight for even number of layer sorting cost in UFO::generate_strategy_large_area()
-	uint32_t generate_strategy_no_overlay_max_fill_cnt; ///< max number of fills for each layer in each StatWindow during UFO::generate_strategy_no_overlay()
+	typedef T coordinate_type;
+	typedef LayoutDB<coordinate_type> layoutdb_type;
 
-	CmdParser() 
-	{
-		min_width = 32;
-		min_spacing = 32;
-		min_area = 4800;
-		log_filename = "ufo.log";
-		score_filename = "score_s.txt";
-		max_iteration = 4;
-		prune_window_hint = pair<string, double>("AVERAGE", 1.2);
-		round_error = 1e-9;
-		density_budget_lp_variation_weight = 1.0;
-		overlay_weight = 1;
-		generate_strategy_no_overlay_area_weight = 1.0;
-		generate_strategy_large_area_area_weight = 1.0;
-		generate_strategy_no_overlay_max_fill_cnt = 500;
-	}
+	layoutdb_type& db;
+
+	CmdParser(layoutdb_type& _db) : db(_db) {}
 	bool operator()(int argc, char** argv)
 	{
-		if (argc < 7) 
+		if (argc < 4) 
 		{
 			cout << "too few arguments" << endl;
 			return false;
@@ -290,76 +233,49 @@ struct CmdParser
 			{
 				argc--;
 				argv++;
-				input_gds = *argv;
+				db.input_gds = *argv;
 			}
 			else if (strcmp(*argv, "-out") == 0)
 			{
 				argc--;
 				argv++;
-				output_gds = *argv;
+				db.output_gds = *argv;
 			}
-			else if (strcmp(*argv, "-route") == 0)
+			else if (strcmp(*argv, "-coloring_distance") == 0)
 			{
 				argc--;
 				argv++;
-				vInputRoute.push_back(*argv);
+				db.coloring_distance = atol(*argv);
 			}
-			else if (strcmp(*argv, "-width") == 0)
+			else if (strcmp(*argv, "-color_num") == 0)
 			{
 				argc--;
 				argv++;
-				min_width = atol(*argv);
+				db.color_num = atoi(*argv);
 			}
-			else if (strcmp(*argv, "-spacing") == 0)
+			else if (strcmp(*argv, "-thread_num") == 0)
 			{
 				argc--;
 				argv++;
-				min_spacing = atol(*argv);
+				db.thread_num = atoi(thread_num);
 			}
-			else if (strcmp(*argv, "-area") == 0)
+			else if (strcmp(*argv, "-path_layer") == 0)
 			{
 				argc--;
 				argv++;
-				min_area = atol(*argv);
+				db.sPathLayer.insert(atoi(*argv));
 			}
-			else if (strcmp(*argv, "-log") == 0)
+			else if (strcmp(*argv, "-precolor_layer") == 0)
 			{
 				argc--;
 				argv++;
-				log_filename = *argv;
+				db.sPrecolorLayer.insert(atoi(*argv));
 			}
-			else if (strcmp(*argv, "-score") == 0)
+			else if (strcmp(*argv, "-uncolor_layer") == 0)
 			{
 				argc--;
 				argv++;
-				score_filename = *argv;
-			}
-			else if (strcmp(*argv, "-max_iteration") == 0)
-			{
-				argc--;
-				argv++;
-				max_iteration = atoi(*argv);
-			}
-			else if (strcmp(*argv, "-prune_window_hint") == 0)
-			{
-				argc--;
-				argv++;
-				prune_window_hint.first = *argv;
-				argc--;
-				argv++;
-				prune_window_hint.second = atof(*argv);
-			}
-			else if (strcmp(*argv, "-round_error") == 0)
-			{
-				argc--;
-				argv++;
-				round_error = atof(*argv);
-			}
-			else if (strcmp(*argv, "-overlay_weight") == 0)
-			{
-				argc--;
-				argv++;
-				overlay_weight = atof(*argv);
+				db.sUncolorLayer.insert(atoi(*argv));
 			}
 			else 
 			{

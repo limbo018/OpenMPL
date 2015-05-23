@@ -131,20 +131,20 @@ class Rectangle : public rectangle_data<T>
 	private:
 		void initialize()
 		{
-			m_valid = true;
 			m_color = m_layer = -1;
-			m_comp_id = std::numeric_limits<uint32_t>::max();
+			//m_comp_id = std::numeric_limits<uint32_t>::max();
 			m_pattern_id = std::numeric_limits<uint32_t>::max();
+			m_valid = true;
 #pragma omp critical 
 			m_internal_id = generate_id();
 		}
 		void copy(Rectangle const& rhs)
 		{
-			this->m_valid = rhs.m_valid;
 			this->m_color = rhs.m_color;
 			this->m_layer = rhs.m_layer;
-			this->m_comp_id = rhs.m_comp_id;
+			//this->m_comp_id = rhs.m_comp_id;
 			this->m_pattern_id = rhs.m_pattern_id;
+			this->m_valid = rhs.m_valid;
 			this->m_internal_id = rhs.m_internal_id;
 		}
 		static long generate_id()
@@ -162,8 +162,8 @@ class Rectangle : public rectangle_data<T>
 	protected:
 		int8_t m_color; ///< color 
 		int32_t m_layer; ///< input layer 
+		//uint32_t m_comp_id; ///< independent component id 
 		uint32_t m_pattern_id; ///< index in the pattern array 
-		uint32_t m_comp_id; ///< independent component id 
 };
 
 template <typename T>
@@ -335,8 +335,9 @@ struct LayoutDB : public rectangle_data<T>
 
 	rtree_type tPattern; ///< rtree for components that intersects the LayoutDB
 	vector<rectangle_pointer_type> vPattern; ///< uncolored and precolored patterns 
-	map<int32_t, path_type> hPath; ///< path 
+	map<int32_t, vector<path_type> > hPath; ///< path 
 
+	/// options 
 	set<int32_t> sUncolorLayer; ///< layers that represent uncolored patterns 
 	set<int32_t> sPrecolorLayer; ///< layers that represent precolored features, they should have the same number of colors 
 	set<int32_t> sPathLayer; ///< path layers that represent conflict edges 
@@ -344,11 +345,16 @@ struct LayoutDB : public rectangle_data<T>
 	uint32_t color_num; ///< number of colors available, only support 3 or 4
 	uint32_t thread_num; ///< number of maximum threads for parallel computation 
 
+	string input_gds; ///< input gdsii filename 
+	string output_gds; ///< output gdsii filename 
+
 	LayoutDB() : base_type() 
 	{
+		initialize();
 	}
 	LayoutDB(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh) : base_type(xl, yl, xh, yh) 
 	{
+		initialize();
 	}
 	LayoutDB(LayoutDB const& rhs) : base_type(rhs)
 	{
@@ -367,11 +373,28 @@ struct LayoutDB : public rectangle_data<T>
 		}
 		return *this;
 	}
+	void initialize()
+	{
+		coloring_distance = 0;
+		color_num = 3;
+		thread_num = 1;
+		input_gds = "";
+		output_gds = "";
+	}
 	void copy(LayoutDB const& rhs)
 	{
 		tPolygon = rhs.tPolygon;
 		hPolygon = rhs.hPolygon;
 		hPath = rhs.hPath;
+		// options
+		sUncolorLayer = rhs.sUncolorLayer;
+		sPrecolorLayer = rhs.sPrecolorLayer;
+		sPathLayer = rhs.sPathLayer;
+		coloring_distance = rhs.coloring_distance;
+		color_num = rhs.color_num;
+		thread_num = rhs.thread_num;
+		input_gds = rhs.input_gds;
+		output_gds = rhs.output_gds;
 	}
 
 	void add_pattern(int32_t layer, vector<point_type> const& vPoint)

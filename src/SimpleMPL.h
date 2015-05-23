@@ -29,8 +29,8 @@ class SimpleMPL
 		// do not use setS, it does not compile for subgraph
 		// do not use custom property tags, it does not compile for most utilities
 		typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
-				boost::property<boost::vertex_index_t, std::size_t, boost::property<boost::vertex_color_t, int> >, 
-				boost::property<boost::edge_index_t, std::size_t, boost::property<boost::edge_weight_t, int> >,
+				boost::property<boost::vertex_index_t, std::uint32_t, boost::property<boost::vertex_color_t, int> >, 
+				boost::property<boost::edge_index_t, std::uint32_t, boost::property<boost::edge_weight_t, int> >,
 				boost::property<boost::graph_name_t, string> > graph_type;
 #endif
 		/// top api to solve decomposition
@@ -41,14 +41,20 @@ class SimpleMPL
 		/// solve decomposition
 		void solve();
 	protected:
+		/// initialize graph from layoutdb_type
+		void construct_graph();
 		/// compute connected component 
 		void connected_component();
 		/// DFS for connected component computation
-		void depth_first_search(rectangle_pointer_type source, uint32_t comp_id, uint32_t& pattern_id);
+		void depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& pattern_id);
 		/// solve a single component 
-		void solve_component(const vector<rectangle_pointer_type>::const_iterator itBgn, const vector<rectangle_pointer_type>::const_iterator itEnd);
+		void solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd);
 
 		layoutdb_type m_db; ///< layout database and user-defined options 
+		/// adjacency list data structure for a graph 
+		vector<uint32_t> m_vVertexOrder; ///< vertex id 
+		vector<vector<uint32_t> > m_mAdjVertex; ///< adjcency list 
+		vector<uint32_t> m_vCompId; ///< independent component id 
 		uint32_t m_comp_cnt; ///< maximum number of connected components 
 };
 
