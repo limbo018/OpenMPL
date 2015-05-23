@@ -10,6 +10,7 @@
 #include <deque>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
+#include <limbo/algorithms/coloring/ILPColoring.h>
 
 namespace SimpleMPL {
 
@@ -297,6 +298,7 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 	pair<graph_type, map<vertex_descriptor, vertex_descriptor> > sg = gs.simplified_graph(); // simplified graph and vertex mapping
 
 	// solve coloring 
+#if 0
 	typedef limbo::algorithms::coloring::LPColoring<graph_type> coloring_solver_type;
 	coloring_solver_type cs (sg.first);
 	cs.stitchWeight(0.1);
@@ -321,6 +323,31 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 			vColor[ sg.second[v] ] = color;
 		}
 	}
+#else 
+	typedef limbo::algorithms::coloring::ILPColoring<graph_type> coloring_solver_type;
+	coloring_solver_type cs (sg.first);
+	cs.stitch_weight(0.1);
+	cs.color_num(m_db.color_num);
+	// set precolored vertices 
+	graph_traits<graph_type>::vertex_iterator vi, vie;
+	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
+	{
+		vertex_descriptor v = *vi;
+		int8_t color = vColor[sg.second[v]];
+		if (color >= 0 && color < m_db.color_num)
+			cs.precolor(v, color);
+	}
+	cs(); // solve coloring 
+
+	// collect coloring results from simplified graph 
+	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
+	{
+		vertex_descriptor v = *vi;
+		int8_t color = cs.color(v);
+		assert(color >= 0 && color < m_db.color_num);
+		vColor[ sg.second[v] ] = color;
+	}
+#endif
 	
 	// recover colors for simplified vertices with balanced assignment 
 	// recover merged vertices 
