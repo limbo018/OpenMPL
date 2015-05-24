@@ -34,16 +34,13 @@ endif
 
 INCLUDE = \
 		  -I $(BOOST_DIR)/include \
-		  -I $(BLIB_DIR)/lib \
 		  -I $(LIMBO_DIR) \
-		  -I $(LEMON_DIR)/include \
 		  -I $(GUROBI_HOME)/include
 
 # only gurobi60 is dynamically linked 
 # it may have problem in linking boost library (.a or .so) without -rpath
 LIBS = \
 	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -Wl,-rpath=$(BOOST_DIR)/lib \
-	   -L $(LEMON_DIR)/lib -lemon \
 	   -L $(LIMBO_DIR)/lib -lgdsparser \
 	   -L $(GUROBI_HOME)/lib -lgurobi_c++ \
 	   -L $(GUROBI_HOME)/lib -lgurobi60
