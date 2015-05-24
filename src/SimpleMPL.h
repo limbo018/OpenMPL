@@ -26,14 +26,6 @@ class SimpleMPL
 		typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
 		typedef typename layoutdb_type::path_type path_type;
 
-#if 0
-		// do not use setS, it does not compile for subgraph
-		// do not use custom property tags, it does not compile for most utilities
-		typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
-				boost::property<boost::vertex_index_t, std::uint32_t, boost::property<boost::vertex_color_t, int> >, 
-				boost::property<boost::edge_index_t, std::uint32_t, boost::property<boost::edge_weight_t, int> >,
-				boost::property<boost::graph_name_t, string> > graph_type;
-#endif
 		/// top api to solve decomposition
 		void run(int32_t argc, char** argv);
 		void read_cmd(int32_t argc, char** argv);
@@ -41,6 +33,8 @@ class SimpleMPL
 		void write_gds();
 		/// solve decomposition
 		void solve();
+		/// report statistics 
+		void report() const;
 	protected:
 		/// initialize graph from layoutdb_type
 		void construct_graph();
@@ -50,6 +44,11 @@ class SimpleMPL
 		void depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& pattern_id);
 		/// solve a single component 
 		void solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd);
+
+		/// report conflict number for a component 
+		uint32_t conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const;
+		/// report conflict number for the whole layout 
+		uint32_t conflict_num() const;
 
 		layoutdb_type m_db; ///< layout database and user-defined options 
 		/// adjacency list data structure for a graph 

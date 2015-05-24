@@ -57,10 +57,12 @@ using boost::shared_ptr;
 using boost::make_shared;
 using boost::tuple;
 using gtl::point_concept;
+using gtl::segment_concept;
 using gtl::rectangle_concept;
 using gtl::polygon_90_concept;
 using gtl::polygon_90_set_concept;
 using gtl::point_data;
+using gtl::segment_data;
 using gtl::rectangle_data;
 using gtl::polygon_90_data;
 using gtl::polygon_90_set_data;
@@ -132,6 +134,12 @@ class Rectangle : public rectangle_data<T>
 			assert_msg(gtl::xl(*this) < gtl::xh(*this) && gtl::yl(*this) < gtl::yh(*this),
 					"id = " << this->id() << " (" << gtl::xl(*this) << ", " << gtl::yl(*this) << ", " 
 					<< gtl::xh(*this) << ", " << gtl::yh(*this) << ")");
+		}
+
+		friend std::ostream& operator<<(std::ostream& os, Rectangle const& rhs)
+		{
+			os << "(" << gtl::xl(rhs) << ", " << gtl::yl(rhs) << ", " << gtl::xh(rhs) << ", " << gtl::yh(rhs) << ")";
+			return os;
 		}
 
 	private:
@@ -242,21 +250,6 @@ class Polygon : public polygon_90_data<T>
 		int32_t m_color; ///< color 
 };
 
-template <typename T>
-class Path : public vector<point_data<T> >
-{
-	public:
-		typedef T coordinate_type;
-		typedef point_data<coordinate_type> point_type;
-		typedef vector<point_type> base_type;
-
-		Path() : base_type() {}
-		Path(Path const& rhs) : base_type(rhs) {}
-
-		template <typename Iterator>
-		Path(Iterator first, Iterator last) : base_type(first, last) {}
-};
-
 } // namespace SimpleMPL
 
 /// API for Boost.Geometry 
@@ -337,7 +330,7 @@ struct LayoutDB : public rectangle_data<T>
 	typedef point_data<coordinate_type> point_type;
 	typedef Rectangle<coordinate_type> rectangle_type;
 	typedef Polygon<coordinate_type> polygon_type;
-	typedef Path<coordinate_type> path_type;
+	typedef segment_data<coordinate_type> path_type;
 	typedef shared_ptr<polygon_type> polygon_pointer_type;
 	typedef shared_ptr<rectangle_type> rectangle_pointer_type;
 	typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
@@ -352,7 +345,7 @@ struct LayoutDB : public rectangle_data<T>
 	set<int32_t> sPrecolorLayer; ///< layers that represent precolored features, they should have the same number of colors 
 	set<int32_t> sPathLayer; ///< path layers that represent conflict edges 
 	coordinate_difference coloring_distance; ///< minimum coloring distance 
-	uint32_t color_num; ///< number of colors available, only support 3 or 4
+	int32_t color_num; ///< number of colors available, only support 3 or 4
 	uint32_t thread_num; ///< number of maximum threads for parallel computation 
 
 	string input_gds; ///< input gdsii filename 
@@ -409,32 +402,24 @@ struct LayoutDB : public rectangle_data<T>
 
 	void add_pattern(int32_t layer, vector<point_type> const& vPoint)
 	{
-		assert(vPoint.size() < 6);
-		coordinate_type xl = std::numeric_limits<coordinate_type>::max();
-		coordinate_type yl = std::numeric_limits<coordinate_type>::max();
-		coordinate_type xh = std::numeric_limits<coordinate_type>::min();
-		coordinate_type yh = std::numeric_limits<coordinate_type>::min();
+		assert(vPoint.size() >= 4 && vPoint.size() < 6);
 
+		rectangle_pointer_type pPattern(new rectangle_type());
 		for (typename vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
 		{
-			xl = std::min(xl, gtl::x(*it));
-			yl = std::min(xl, gtl::y(*it));
-			xh = std::max(xh, gtl::x(*it));
-			yh = std::max(xh, gtl::y(*it));
+			if (it == vPoint.begin())
+				gtl::set_points(*pPattern, *it, *it);
+			else 
+				gtl::encompass(*pPattern, *it);
 		}
-
-		rectangle_pointer_type pPattern (new rectangle_type (xl, yl, xh, yh));
 		pPattern->layer(layer);
 		pPattern->pattern_id(vPattern.size());
 
 		// update layout boundary 
 		if (vPattern.empty()) // first call 
-			gtl::set_points(*this, gtl::construct<point_type>(xl, yl), gtl::construct<point_type>(xh, yh));
+			gtl::assign(*this, *pPattern);
 		else // bloat layout region to encompass current points 
-		{
-			gtl::encompass(*this, gtl::construct<point_type>(xl, yl));
-			gtl::encompass(*this, gtl::construct<point_type>(xh, yh));
-		}
+			gtl::encompass(*this, *pPattern);
 
 		// collect patterns 
 		bool pattern_layer_flag = true;
@@ -452,18 +437,40 @@ struct LayoutDB : public rectangle_data<T>
 
 		if (pattern_layer_flag)
 		{
-			// collect pattern 
-			vPattern.push_back(pPattern);
-			// add to rtree 
-			tPattern.insert(pPattern);
+#ifdef DEBUG
+//			if (gtl::xl(*pPattern) == 63194 && gtl::yl(*pPattern) == 41616)
+//				printf("%d, %d, %d, %d, %d\n", pPattern->layer(), gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
+#endif
+			// check duplicate and overlaps 
+			// avoid all overlaps 
+			vector<rectangle_pointer_type> vDupPattern; 
+			tPattern.query(bgi::intersects(*pPattern), std::back_inserter(vDupPattern));
+			if (!vDupPattern.empty()) 
+			{
+				cout << "Warning: " << *pPattern << " overlaps with ";
+				for (typename vector<rectangle_pointer_type>::const_iterator it = vDupPattern.begin(); it != vDupPattern.end(); ++it)
+					cout << **it << " ";
+				cout << "ignored"<< endl;
+			}
+			else 
+			{
+				// collect pattern 
+				vPattern.push_back(pPattern);
+				// add to rtree 
+				tPattern.insert(pPattern);
+			}
 		}
 	}
 	void add_path(int32_t layer, vector<point_type> const& vPoint)
 	{
-		path_type p (vPoint.begin(), vPoint.end());
-		if (hPath.count(layer))
-			hPath[layer].push_back(p);
-		else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
+		if (vPoint.size() < 2) return;
+		for (typename vector<point_type>::const_iterator it = vPoint.begin()+1; it != vPoint.end(); ++it)
+		{
+			path_type p (*(it-1), *it);
+			if (hPath.count(layer))
+				hPath[layer].push_back(p);
+			else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
+		}
 	}
 };
 

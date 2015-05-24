@@ -115,7 +115,7 @@ struct GdsReader : GdsParser::GdsDataBase
 		{
 			if (status == 1 || status == 2)
 			{
-				assert((vData.size() % 2) == 0 && vData.size() > 4);
+				assert((vData.size() % 2) == 0 && vData.size() >= 4);
 				vPoint.clear();
 				uint32_t end = vData.size();
 				// skip last point for BOX and BOUNDARY

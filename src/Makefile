@@ -58,8 +58,8 @@ LIBS = \
 #                     The latter can provide around 1 second faster in window route area calculation than the former in small benchmark.
 # ENABLE_ILP
 
-CXXFLAGS += -pthread -g #-fopenmp # -funroll-all-loops -m64 -fPIC -Wno-deprecated
-CXXFLAGS += -fmax-errors=1 #-m64 -Wno-deprecated
+CXXFLAGS += -W -Wall -Wextra -Wreturn-type -ansi -g #-fopenmp # -funroll-all-loops -m64 -fPIC -Wno-deprecated
+CXXFLAGS += -fmax-errors=1 -m64 -Wno-deprecated -DDEBUG
 
 MKDIR = if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
 BPATH = ../bin/
@@ -67,7 +67,7 @@ OPATH = ../obj/
 SRCS	= $(wildcard *.cpp)
 OBJS = $(SRCS:%.cpp=$(OPATH)%.o)
 
-EXE	 = $(BPATH)UFO
+EXE	 = $(BPATH)SimpleMPL
 
 .SUFFIXES: .cc .cpp .o .x
 
