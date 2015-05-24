@@ -8,6 +8,7 @@
 
 benchmark_dir="${BENCHMARKS_DIR}/imec_7nm/dpt_array"
 benchmark="output_1x1"
+color_num=3
 
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
@@ -20,4 +21,17 @@ gdb \
 	-uncolor_layer 211 \
 	-uncolor_layer 216 \
 	-path_layer 207 \
-	-color_num 4
+	-color_num ${color_num}
+
+
+#$LIBRARIES_DIR/memusg \
+#	./bin/SimpleMPL \
+#	-in "${benchmark_dir}/${benchmark}-flat.gds" \
+#	-out "${benchmark}-out.gds" \
+#	-uncolor_layer 208 \
+#	-uncolor_layer 209 \
+#	-uncolor_layer 210 \
+#	-uncolor_layer 211 \
+#	-uncolor_layer 216 \
+#	-path_layer 207 \
+#	-color_num ${color_num}
