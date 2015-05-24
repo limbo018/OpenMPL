@@ -39,6 +39,8 @@ void SimpleMPL::read_gds()
 	// read input gds file 
 	GdsReader<coordinate_type> reader (m_db);
 	assert_msg(reader(m_db.input_gds), "failed to read " << m_db.input_gds);
+	// must call initialize after reading 
+	m_db.initialize_data();
 }
 void SimpleMPL::write_gds()
 {
@@ -359,8 +361,8 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
 	// keep the order of simplification 
 	gs.hide_small_degree(m_db.color_num); // hide vertices with degree smaller than color_num
-	if (m_db.color_num == 3)
-		gs.merge_subK4(); // merge sub-K4 structure 
+//	if (m_db.color_num == 3)
+//		gs.merge_subK4(); // merge sub-K4 structure 
 	// collect simplified information 
 	vector<graph_simplification_type::vertex_status_type> const& vStatus = gs.status();
 	vector<vector<vertex_descriptor> > const& vChildren = gs.children();
@@ -411,7 +413,7 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 		if (color >= 0 && color < m_db.color_num)
 			cs.precolor(v, color);
 	}
-	cs(); // solve coloring 
+	double obj_value = cs(); // solve coloring 
 
 	// collect coloring results from simplified graph 
 	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
@@ -503,6 +505,10 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 		else // assign color to uncolored pattern 
 			vPattern[v]->color(vColor[i]);
 	}
+#ifdef DEBUG
+	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
+	assert(obj_value == component_conflict_num);
+#endif
 }
 
 uint32_t SimpleMPL::conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const

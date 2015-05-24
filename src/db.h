@@ -107,7 +107,7 @@ class Rectangle : public rectangle_data<T>
 			}
 			return *this;
 		}
-		virtual ~Rectangle() {this->m_valid = false;}
+		virtual ~Rectangle() {}
 
 		long internal_id() {return m_internal_id;}
 
@@ -171,9 +171,9 @@ class Rectangle : public rectangle_data<T>
 		}
 
 		long m_internal_id; ///< internal id 
-		bool m_valid; ///< 1 valid, 0 invalid, default is true 
 
 	protected:
+		bool m_valid; ///< 1 valid, 0 invalid, default is true;  
 		int8_t m_color; ///< color 
 		int32_t m_layer; ///< input layer 
 		//uint32_t m_comp_id; ///< independent component id 
@@ -333,7 +333,8 @@ struct LayoutDB : public rectangle_data<T>
 	typedef segment_data<coordinate_type> path_type;
 	typedef shared_ptr<polygon_type> polygon_pointer_type;
 	typedef shared_ptr<rectangle_type> rectangle_pointer_type;
-	typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
+	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
+	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
 
 	rtree_type tPattern; ///< rtree for components that intersects the LayoutDB
@@ -350,6 +351,17 @@ struct LayoutDB : public rectangle_data<T>
 
 	string input_gds; ///< input gdsii filename 
 	string output_gds; ///< output gdsii filename 
+
+	struct compare_rectangle_type 
+	{
+		// by x and then by y
+		bool operator() (rectangle_type const& r1, rectangle_type const& r2) const 
+		{
+			return gtl::xl(r1) < gtl::xl(r2) || (gtl::xl(r1) == gtl::xl(r2) && gtl::yl(r1) < gtl::yl(r2));
+		}
+		bool operator() (rectangle_pointer_type const& r1, rectangle_pointer_type const& r2) const 
+		{return (*this)(*r1, *r2);}
+	};
 
 	LayoutDB() : base_type() 
 	{
@@ -437,25 +449,9 @@ struct LayoutDB : public rectangle_data<T>
 
 		if (pattern_layer_flag)
 		{
-#ifdef DEBUG
-//			if (gtl::xl(*pPattern) == 63194 && gtl::yl(*pPattern) == 41616)
-//				printf("%d, %d, %d, %d, %d\n", pPattern->layer(), gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
-#endif
-			// check duplicate and overlaps 
-			// avoid all overlaps 
-			bool duplicate_flag = false;
-			for (typename rtree_type::const_query_iterator itq = tPattern.qbegin(bgi::intersects(*pPattern)); itq != tPattern.qend(); ++itq)
-			{
-				cout << "Warning: " << *pPattern << " overlaps with " << **it << " " << "ignored\n";
-				duplicate_flag = true;
-			}
-			if (!duplicate_flag)
-			{
-				// collect pattern 
-				vPattern.push_back(pPattern);
-				// add to rtree 
-				tPattern.insert(pPattern);
-			}
+			// collect pattern 
+			// initialize rtree later will contribute to higher efficiency in runtime 
+			vPattern.push_back(pPattern);
 		}
 	}
 	void add_path(int32_t layer, vector<point_type> const& vPoint)
@@ -467,6 +463,64 @@ struct LayoutDB : public rectangle_data<T>
 			if (hPath.count(layer))
 				hPath[layer].push_back(p);
 			else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
+		}
+	}
+	/// call it to initialize rtree 
+	/// it should be faster than gradually insertion 
+	void initialize_data()
+	{
+		// I assume there may be duplicate in the input gds, but no overlapping patterns 
+		// duplicates are removed with following function
+		remove_overlap();
+		// construction with packing algorithm 
+		rtree_type tTmp (vPattern.begin(), vPattern.end());
+		tPattern.swap(tTmp);
+	}
+	/// remove overlapping patterns 
+	/// based on scanline approach, horizontal sort and then vertical sort 
+	/// O(nlogn)
+	void remove_overlap()
+	{
+		std::sort(vPattern.begin(), vPattern.end(), compare_rectangle_type());
+		// only duplicate is removed so far
+		// TO DO: remove overlapping patterns 
+		uint32_t duplicate_cnt = 0;
+		for (typename vector<rectangle_pointer_type>::iterator it1 = vPattern.begin(), it2 = vPattern.begin();
+				it2 != vPattern.end(); ++it2)
+		{
+			if (it2 != vPattern.begin()) 
+			{
+				rectangle_pointer_type& pPattern1 = *it1;
+				rectangle_pointer_type& pPattern2 = *it2;
+
+				if (gtl::equivalence(*pPattern1, *pPattern2)) 
+				{
+					cout << "Warning: " << *pPattern1 << " duplicates with " << *pPattern2 << " " << "ignored " << duplicate_cnt << endl;
+					pPattern2->valid(false);
+					duplicate_cnt += 1;
+					continue;
+				}
+			}
+			it1 = it2;
+		}
+		// erase invalid patterns 
+		uint32_t invalid_cnt = 0;
+		for (typename vector<rectangle_pointer_type>::iterator it = vPattern.begin(); it != vPattern.end(); )
+		{
+			if (!(*it)->valid())
+			{
+				std::swap(*it, vPattern.back());
+				vPattern.pop_back();
+				invalid_cnt += 1;
+			}
+			else ++it;
+		}
+		assert(duplicate_cnt == invalid_cnt);
+		// update pattern_id 
+		for (uint32_t i = 0; i != vPattern.size(); ++i)
+		{
+			assert(vPattern[i]->valid());
+			vPattern[i]->pattern_id(i);
 		}
 	}
 };
