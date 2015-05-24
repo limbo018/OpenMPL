@@ -25,6 +25,7 @@ class SimpleMPL
 		typedef typename layoutdb_type::polygon_pointer_type polygon_pointer_type;
 		typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
 		typedef typename layoutdb_type::path_type path_type;
+		typedef typename layoutdb_type::rtree_type rtree_type;
 
 		/// top api to solve decomposition
 		void run(int32_t argc, char** argv);

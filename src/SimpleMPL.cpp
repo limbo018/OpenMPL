@@ -98,6 +98,20 @@ void SimpleMPL::construct_graph()
 			// bloat pPattern with minimum coloring distance 
 			gtl::bloat(rect, gtl::HORIZONTAL, m_db.coloring_distance);
 			gtl::bloat(rect, gtl::VERTICAL, m_db.coloring_distance);
+			for (rtree_type::const_query_iterator itq = m_db.tPattern.qbegin(bgi::intersects(rect));
+					itq != m_db.tPattern.qend(); ++itq)
+			{
+				rectangle_pointer_type const& pAdjPattern = *itq;
+				if (pAdjPattern != pPattern) // skip pPattern itself 
+				{
+					assert(pAdjPattern->pattern_id() != pPattern->pattern_id());
+					// we consider euclidean distance
+					gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*pAdjPattern, *pPattern);
+					if (distance < m_db.coloring_distance)
+						vAdjVertex.push_back(pAdjPattern->pattern_id());
+				}
+			}
+#if 0
 			m_db.tPattern.query(bgi::intersects(rect), std::back_inserter(vAdjPattern));
 			vAdjVertex.reserve(vAdjPattern.size()); // reserve enough memory 
 			for (vector<rectangle_pointer_type>::iterator it = vAdjPattern.begin(); 
@@ -114,6 +128,7 @@ void SimpleMPL::construct_graph()
 						vAdjVertex.push_back(pAdjPattern->pattern_id());
 				}
 			}
+#endif
 			vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
 		}
 	}

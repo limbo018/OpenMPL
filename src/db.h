@@ -443,16 +443,13 @@ struct LayoutDB : public rectangle_data<T>
 #endif
 			// check duplicate and overlaps 
 			// avoid all overlaps 
-			vector<rectangle_pointer_type> vDupPattern; 
-			tPattern.query(bgi::intersects(*pPattern), std::back_inserter(vDupPattern));
-			if (!vDupPattern.empty()) 
+			bool duplicate_flag = false;
+			for (typename rtree_type::const_query_iterator itq = tPattern.qbegin(bgi::intersects(*pPattern)); itq != tPattern.qend(); ++itq)
 			{
-				cout << "Warning: " << *pPattern << " overlaps with ";
-				for (typename vector<rectangle_pointer_type>::const_iterator it = vDupPattern.begin(); it != vDupPattern.end(); ++it)
-					cout << **it << " ";
-				cout << "ignored"<< endl;
+				cout << "Warning: " << *pPattern << " overlaps with " << **it << " " << "ignored\n";
+				duplicate_flag = true;
 			}
-			else 
+			if (!duplicate_flag)
 			{
 				// collect pattern 
 				vPattern.push_back(pPattern);
