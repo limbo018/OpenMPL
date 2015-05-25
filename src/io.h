@@ -63,8 +63,8 @@ struct GdsReader : GdsParser::GdsDataBase
 	typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
 	typedef typename layoutdb_type::path_type path_type;
 
-	string strname; // TOPCELL name, useful for dump out gds files 
-	double unit;
+	//string strname; // TOPCELL name, useful for dump out gds files 
+	//double unit;
 	int32_t layer;
 	int32_t status; // 0: not in any block, 1 in BOUNDARY or BOX block, 2 in PATH   
 	vector<point_type> vPoint;
@@ -93,7 +93,7 @@ struct GdsReader : GdsParser::GdsDataBase
 	{
 		if (ascii_record_type == "UNITS")
 		{
-			unit = vData[1]; 
+			db.unit = vData[1]; 
 		}
 		else if (ascii_record_type == "BOUNDARY" || ascii_record_type == "BOX")
 		{
@@ -146,7 +146,7 @@ struct GdsReader : GdsParser::GdsDataBase
 		{
 			assert(ascii_data_type == "STRING");
 			assert(!vData.empty());
-			strname.assign(vData.begin(), vData.end());
+			db.strname.assign(vData.begin(), vData.end());
 		}
 	}
 
@@ -181,10 +181,10 @@ struct GdsWriter
 	typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
 	typedef typename layoutdb_type::path_type path_type;
 
-	void operator() (string const& filename, layoutdb_type const& db, string const& strname = "TOPCELL") const 
+	void operator() (string const& filename, layoutdb_type const& db, string const& strname = "TOPCELL", double unit = 0.001) const 
 	{
 		GdsParser::GdsWriter gw (filename.c_str());
-		gw.gds_create_lib("POLYGONS", 0.001 /* um per bit */ );
+		gw.gds_create_lib("POLYGONS", unit /* um per bit */ );
 		gw.gds_write_bgnstr();
 		gw.gds_write_strname(strname.c_str());
 

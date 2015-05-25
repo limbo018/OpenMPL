@@ -337,9 +337,12 @@ struct LayoutDB : public rectangle_data<T>
 	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
 
+	/// layout information 
 	rtree_type tPattern; ///< rtree for components that intersects the LayoutDB
 	vector<rectangle_pointer_type> vPattern; ///< uncolored and precolored patterns 
 	map<int32_t, vector<path_type> > hPath; ///< path 
+	string strname; // TOPCELL name, useful for dump out gds files 
+	double unit; // keep output gdsii file has the same unit as input gdsii file 
 
 	/// options 
 	set<int32_t> sUncolorLayer; ///< layers that represent uncolored patterns 
@@ -390,6 +393,8 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	void initialize()
 	{
+		strname = "TOPCELL";
+		unit = 0.001;
 		coloring_distance = 0;
 		color_num = 3;
 		thread_num = 1;
@@ -401,6 +406,8 @@ struct LayoutDB : public rectangle_data<T>
 		tPattern = rhs.tPattern;
 		vPattern = rhs.vPattern;
 		hPath = rhs.hPath;
+		strname = rhs.strname;
+		unit = rhs.unit;
 		// options
 		sUncolorLayer = rhs.sUncolorLayer;
 		sPrecolorLayer = rhs.sPrecolorLayer;

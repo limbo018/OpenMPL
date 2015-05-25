@@ -44,7 +44,7 @@ class SimpleMPL
 		/// DFS for connected component computation
 		void depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& pattern_id);
 		/// solve a single component 
-		uint32_t solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd);
+		uint32_t solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
 
 		/// report conflict number for a component 
 		uint32_t conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const;

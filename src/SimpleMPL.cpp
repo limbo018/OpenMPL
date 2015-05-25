@@ -46,10 +46,16 @@ void SimpleMPL::write_gds()
 {
 	// write output gds file 
 	GdsWriter<coordinate_type> writer;
-	writer(m_db.output_gds, m_db);
+	writer(m_db.output_gds, m_db, m_db.strname, m_db.unit*1e+6);
 }
 void SimpleMPL::solve()
 {
+	if (m_db.vPattern.empty())
+	{
+		cout << "Warning: no patterns found in specified layers\n";
+		return;
+	}
+
 	this->construct_graph();
 	this->connected_component();
 
@@ -73,10 +79,10 @@ void SimpleMPL::solve()
 #endif
 		// solve component 
 		// pass iterators to save memory 
-		uint32_t component_conflict_num = this->solve_component(itBgn, itEnd);
+		uint32_t component_conflict_num = this->solve_component(itBgn, itEnd, comp_id);
 
 #ifdef DEBUG
-		//cout << comp_id << ": " << component_conflict_num << endl;
+		//cout << "(D) Component " << comp_id << ": " << component_conflict_num << " conflicts"<< endl;
 #endif
 	}
 }
@@ -100,6 +106,11 @@ void SimpleMPL::construct_graph()
 		{
 			rectangle_pointer_type const& pPattern = m_db.vPattern[v];
 			vector<uint32_t>& vAdjVertex = m_mAdjVertex[v];
+
+#ifdef DEBUG
+//			if (gtl::xl(*pPattern) == 20210 && gtl::yl(*pPattern) == 636960)
+//				cout << "hehe\n";
+#endif
 
 			// find patterns connected with pPattern 
 			// query tPattern in m_db
@@ -284,7 +295,7 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 	}
 }
 
-uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd)
+uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
@@ -520,6 +531,10 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
 	assert(obj_value == component_conflict_num);
+
+#ifdef DEBUG
+	//cout << "(D) Component has " << pattern_cnt << " patterns" << endl;
+#endif
 
 	return component_conflict_num;
 }
