@@ -181,7 +181,10 @@ struct GdsWriter
 	typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
 	typedef typename layoutdb_type::path_type path_type;
 
-	void operator() (string const& filename, layoutdb_type const& db, string const& strname = "TOPCELL", double unit = 0.001) const 
+	void operator() (string const& filename, layoutdb_type const& db, 
+			vector<pair<uint32_t, uint32_t> > const& vConflict, 
+			vector<vector<uint32_t> > const& mAdjVertex, 
+			string const& strname = "TOPCELL", double unit = 0.001) const 
 	{
 		GdsParser::GdsWriter gw (filename.c_str());
 		gw.gds_create_lib("POLYGONS", unit /* um per bit */ );
@@ -191,6 +194,9 @@ struct GdsWriter
 		// basic operation
 		// will add more 
 		(*this)(gw, db.vPattern);
+		(*this)(gw, db.vPattern, vConflict, 100+db.color_num); // conflict layer 
+		(*this)(gw, db.vPattern, mAdjVertex, 100+db.color_num+1);
+		//(*this)(gw, db.hPath); // draw edges if there exits 
 
 		gw.gds_write_endstr();
 		gw.gds_write_endlib(); 
@@ -203,6 +209,76 @@ struct GdsWriter
 			gw.write_box(100+rect.color(), 0, 
 					gtl::xl(rect), gtl::yl(rect), 
 					gtl::xh(rect), gtl::yh(rect));
+		}
+	}
+	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect, 
+			vector<pair<uint32_t, uint32_t> > const& vConflict, const int32_t layer) const
+	{
+		for (vector<pair<uint32_t, uint32_t> >::const_iterator it = vConflict.begin(); it != vConflict.end(); ++it)
+		{
+			rectangle_type const& rect1 = *(vRect[it->first]);
+			rectangle_type const& rect2 = *(vRect[it->second]);
+			gw.write_box(layer, 0, 
+					gtl::xl(rect1), gtl::yl(rect1), 
+					gtl::xh(rect1), gtl::yh(rect1));
+			gw.write_box(layer, 0, 
+					gtl::xl(rect2), gtl::yl(rect2), 
+					gtl::xh(rect2), gtl::yh(rect2));
+		}
+	}
+	void operator() (GdsParser::GdsWriter& gw, map<int32_t, vector<path_type> > const& hPath) const 
+	{
+		for (typename map<int32_t, vector<path_type> >::const_iterator it1 = hPath.begin(); it1 != hPath.end(); ++it1)
+		{
+			const int32_t layer = it1->first;
+			vector<path_type> const& vPath = it1->second;
+			for (typename vector<path_type>::const_iterator it2 = vPath.begin(); it2 != vPath.end(); ++it2)
+			{
+				path_type const& path = *it2;
+				// create a path
+				gw.gds_write_path();
+				gw.gds_write_layer(layer);
+				gw.gds_write_datatype(0);
+				gw.gds_write_pathtype(2); // extended square ends
+				gw.gds_write_width(5); // 5 nm wide
+
+				int32_t x[2] = {gtl::x(gtl::low(path)), gtl::x(gtl::high(path))};
+				int32_t y[2] = {gtl::y(gtl::low(path)), gtl::y(gtl::high(path))};
+
+				gw.gds_write_xy(x, y, 2);
+				gw.gds_write_endel();
+			}
+		}
+	}
+	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect, vector<vector<uint32_t> > const& mAdjVertex, const int32_t layer) const 
+	{
+		for (uint32_t i = 0; i != mAdjVertex.size(); ++i)
+		{
+			for (uint32_t j = 0; j != mAdjVertex[i].size(); ++j)
+			{
+				uint32_t v = i;
+				uint32_t u = mAdjVertex[i][j];
+				// create a path from v to u 
+				if (v < u) // avoid duplicate 
+				{
+					// create a path
+					gw.gds_write_path();
+					gw.gds_write_layer(layer);
+					gw.gds_write_datatype(0);
+					gw.gds_write_pathtype(2); // extended square ends
+					gw.gds_write_width(5); // 5 nm wide
+
+					point_type vc;
+					point_type uc;
+					gtl::center(vc, *vRect[v]);
+					gtl::center(uc, *vRect[u]);
+					int32_t x[2] = {gtl::x(vc), gtl::x(uc)};
+					int32_t y[2] = {gtl::y(vc), gtl::y(uc)};
+
+					gw.gds_write_xy(x, y, 2);
+					gw.gds_write_endel();
+				}
+			}
 		}
 	}
 };

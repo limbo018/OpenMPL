@@ -46,7 +46,7 @@ void SimpleMPL::write_gds()
 {
 	// write output gds file 
 	GdsWriter<coordinate_type> writer;
-	writer(m_db.output_gds, m_db, m_db.strname, m_db.unit*1e+6);
+	writer(m_db.output_gds, m_db, m_vConflict, m_mAdjVertex, m_db.strname, m_db.unit*1e+6);
 }
 void SimpleMPL::solve()
 {
@@ -213,6 +213,7 @@ void SimpleMPL::construct_graph()
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db.color_num, 0);
+	m_vConflict.clear();
 }
 
 void SimpleMPL::connected_component()
@@ -580,6 +581,7 @@ uint32_t SimpleMPL::conflict_num(const vector<uint32_t>::const_iterator itBgn, c
 
 uint32_t SimpleMPL::conflict_num() const
 {
+	m_vConflict.clear();
 	vector<rectangle_pointer_type> const& vPattern = m_db.vPattern;
 	uint32_t cnt = 0;
 	for (uint32_t v = 0; v != vPattern.size(); ++v)
@@ -593,7 +595,12 @@ uint32_t SimpleMPL::conflict_num() const
 				int8_t color2 = vPattern[u]->color();
 				if (color2 >= 0 && color2 < m_db.color_num)
 				{
-					if (color1 == color2) ++cnt;
+					if (color1 == color2) 
+					{
+						++cnt; 
+						if (v < u) // avoid duplicate 
+							m_vConflict.push_back(make_pair(v, u));
+					}
 				}
 				else ++cnt; // uncolored vertex is counted as conflict 
 			}

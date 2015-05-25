@@ -49,6 +49,7 @@ class SimpleMPL
 		/// report conflict number for a component 
 		uint32_t conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const;
 		/// report conflict number for the whole layout 
+		/// collect conflict patterns to m_vConflict
 		uint32_t conflict_num() const;
 
 		layoutdb_type m_db; ///< layout database and user-defined options 
@@ -57,7 +58,12 @@ class SimpleMPL
 		vector<vector<uint32_t> > m_mAdjVertex; ///< adjcency list 
 		vector<uint32_t> m_vCompId; ///< independent component id 
 		uint32_t m_comp_cnt; ///< maximum number of connected components 
+
+		/// density balancing 
 		vector<uint32_t> m_vColorDensity; ///< number of colors used so far 
+
+		/// conflict report 
+		mutable vector<pair<uint32_t, uint32_t> > m_vConflict; ///< conflict patterns  
 };
 
 } // namespace SimpleMPL

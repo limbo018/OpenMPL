@@ -6,26 +6,37 @@
 #########################################################################
 #!/bin/bash
 
-benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm"
-benchmark="Via2_local_precolor.gds"
 color_num=3
+benchmark="output_1x1-flat.gds"
+#benchmark="Via2_local_precolor.gds"
+
+if [[ $benchmark == output_* ]]; then 
+	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm/dpt_array"
+elif [[ $benchmark == Via2_local_precolor* ]]; then
+	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm"
+fi
 
 output="${benchmark%.*}-out.gds"
 
-# this parameter works for via2.gds 
-#gdb \
-#	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
-#	--args ./bin/SimpleMPL \
-#	-in "${benchmark_dir}/${benchmark}" \
-#	-out "${output}" \
-#	-uncolor_layer 208 \
-#	-uncolor_layer 209 \
-#	-uncolor_layer 210 \
-#	-uncolor_layer 211 \
-#	-uncolor_layer 216 \
-#	-path_layer 207 \
-#	-color_num ${color_num}
+if [[ $benchmark == output_* ]]; then 
 
+# this parameter works for output_1x1.gds 
+gdb \
+	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
+	--args ./bin/SimpleMPL \
+	-in "${benchmark_dir}/${benchmark}" \
+	-out "${output}" \
+	-uncolor_layer 208 \
+	-uncolor_layer 209 \
+	-uncolor_layer 210 \
+	-uncolor_layer 211 \
+	-uncolor_layer 216 \
+	-path_layer 207 \
+	-color_num ${color_num}
+
+elif [[ $benchmark == Via2_local_precolor* ]]; then
+
+# this parameter works for Via2_local_precolor.gds
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
 	--args ./bin/SimpleMPL \
@@ -37,6 +48,8 @@ gdb \
 	-precolor_layer 203 \
 	-coloring_distance 1300 \
 	-color_num ${color_num}
+
+fi
 
 #./bin/SimpleMPL \
 #	-in "${benchmark_dir}/${benchmark}-flat.gds" \
