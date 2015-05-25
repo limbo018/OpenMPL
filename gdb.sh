@@ -23,6 +23,16 @@ gdb \
 	-path_layer 207 \
 	-color_num ${color_num}
 
+#./bin/SimpleMPL \
+#	-in "${benchmark_dir}/${benchmark}-flat.gds" \
+#	-out "${benchmark}-out.gds" \
+#	-uncolor_layer 208 \
+#	-uncolor_layer 209 \
+#	-uncolor_layer 210 \
+#	-uncolor_layer 211 \
+#	-uncolor_layer 216 \
+#	-path_layer 207 \
+#	-color_num ${color_num} > log
 
 #$LIBRARIES_DIR/memusg \
 #	./bin/SimpleMPL \

@@ -67,9 +67,17 @@ void SimpleMPL::solve()
 		// construct a component 
 		vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
 		vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
+#ifdef DEBUG
+//		if (comp_id == 4693)
+//			cout << "hehe\n";
+#endif
 		// solve component 
 		// pass iterators to save memory 
-		this->solve_component(itBgn, itEnd);
+		uint32_t component_conflict_num = this->solve_component(itBgn, itEnd);
+
+#ifdef DEBUG
+		//cout << comp_id << ": " << component_conflict_num << endl;
+#endif
 	}
 }
 void SimpleMPL::report() const 
@@ -276,9 +284,9 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 	}
 }
 
-void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd)
+uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd)
 {
-	if (itBgn == itEnd) return;
+	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
 #ifdef DEBUG
 	for (vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
@@ -361,8 +369,11 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
 	// keep the order of simplification 
 	gs.hide_small_degree(m_db.color_num); // hide vertices with degree smaller than color_num
-//	if (m_db.color_num == 3)
-//		gs.merge_subK4(); // merge sub-K4 structure 
+#if 0
+	// applicable for checker, but no guarantee for minimal conflicts 
+	if (m_db.color_num == 3)
+		gs.merge_subK4(); // merge sub-K4 structure 
+#endif
 	// collect simplified information 
 	vector<graph_simplification_type::vertex_status_type> const& vStatus = gs.status();
 	vector<vector<vertex_descriptor> > const& vChildren = gs.children();
@@ -370,7 +381,8 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 	pair<graph_type, map<vertex_descriptor, vertex_descriptor> > sg = gs.simplified_graph(); // simplified graph and vertex mapping
 
 #ifdef DEBUG
-	//gs.write_simplified_graph_dot("graph_simpl");
+	if (0)
+		gs.write_simplified_graph_dot("graph_simpl");
 #endif
 
 	// solve coloring 
@@ -455,7 +467,7 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 			if (vColor[u] >= 0)
 			{
 				assert(vColor[u] < m_db.color_num);
-				vUnusedColor[u] = false;
+				vUnusedColor[vColor[u]] = false;
 			}
 		}
 
@@ -505,10 +517,11 @@ void SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, co
 		else // assign color to uncolored pattern 
 			vPattern[v]->color(vColor[i]);
 	}
-#ifdef DEBUG
+
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
 	assert(obj_value == component_conflict_num);
-#endif
+
+	return component_conflict_num;
 }
 
 uint32_t SimpleMPL::conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const
