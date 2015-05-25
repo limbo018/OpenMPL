@@ -89,6 +89,8 @@ void SimpleMPL::solve()
 void SimpleMPL::report() const 
 {
 	cout << "(I) Conflict number = " << conflict_num() << endl;
+	for (uint32_t i = 0; i != m_db.color_num; ++i)
+		cout << "(I) Color " << i << " density = " << m_vColorDensity[i] << endl;
 }
 
 void SimpleMPL::construct_graph()
@@ -210,6 +212,7 @@ void SimpleMPL::construct_graph()
 		}
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
+	m_vColorDensity.assign(m_db.color_num, 0);
 }
 
 void SimpleMPL::connected_component()
@@ -498,15 +501,16 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 
 		// choose the color with largest distance 
 		int8_t best_color = -1;
-		coordinate_difference best_dist = std::numeric_limits<coordinate_difference>::min();
+		double best_score = std::numeric_limits<double>::min();
 		for (int8_t i = 0; i != m_db.color_num; ++i)
 		{
 			if (vUnusedColor[i])
 			{
-				if (best_dist < vDist[i])
+				double cur_score = (double)vDist[i]/(1+m_vColorDensity[i]);
+				if (best_score < cur_score)
 				{
 					best_color = i;
-					best_dist = vDist[i];
+					best_score = cur_score;
 				}
 			}
 		}
@@ -527,6 +531,13 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 			assert(vPattern[v]->color() == vColor[i]);
 		else // assign color to uncolored pattern 
 			vPattern[v]->color(vColor[i]);
+	}
+
+	// update global color density map 
+	for (uint32_t i = 0; i != pattern_cnt; ++i)
+	{
+#pragma omp atomic
+		++m_vColorDensity[vColor[i]];
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);

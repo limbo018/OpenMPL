@@ -57,6 +57,7 @@ class SimpleMPL
 		vector<vector<uint32_t> > m_mAdjVertex; ///< adjcency list 
 		vector<uint32_t> m_vCompId; ///< independent component id 
 		uint32_t m_comp_cnt; ///< maximum number of connected components 
+		vector<uint32_t> m_vColorDensity; ///< number of colors used so far 
 };
 
 } // namespace SimpleMPL
