@@ -9,6 +9,7 @@
 #include <stack>
 #include <deque>
 #include <boost/graph/graphviz.hpp>
+#include <boost/timer/timer.hpp>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
 #include <limbo/algorithms/coloring/ILPColoring.h>
@@ -36,6 +37,7 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 }
 void SimpleMPL::read_gds()
 {
+	boost::timer::auto_cpu_timer timer;
 	// read input gds file 
 	GdsReader<coordinate_type> reader (m_db);
 	assert_msg(reader(m_db.input_gds), "failed to read " << m_db.input_gds);
@@ -44,6 +46,7 @@ void SimpleMPL::read_gds()
 }
 void SimpleMPL::write_gds()
 {
+	boost::timer::auto_cpu_timer timer;
 	if (m_db.output_gds.empty()) 
 	{
 		cout << "(W) Output file not specified, no file generated\n";
@@ -55,6 +58,7 @@ void SimpleMPL::write_gds()
 }
 void SimpleMPL::solve()
 {
+	boost::timer::auto_cpu_timer timer;
 	if (m_db.vPattern.empty())
 	{
 		cout << "(W) No patterns found in specified layers\n";

@@ -7,7 +7,7 @@
 #!/bin/bash
 
 color_num=3
-benchmark="output_4x4-flat.gds"
+benchmark="output_20x20-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
