@@ -7,7 +7,7 @@
 #!/bin/bash
 
 color_num=3
-benchmark="output_1x1-flat.gds"
+benchmark="output_4x4-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
@@ -16,7 +16,8 @@ elif [[ $benchmark == Via2_local_precolor* ]]; then
 	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm"
 fi
 
-output="${benchmark%.*}-out.gds"
+#output="${benchmark%.*}-out.gds"
+output=""
 
 if [[ $benchmark == output_* ]]; then 
 

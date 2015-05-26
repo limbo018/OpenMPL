@@ -419,6 +419,15 @@ struct LayoutDB : public rectangle_data<T>
 		output_gds = rhs.output_gds;
 	}
 
+	void add(int32_t layer, vector<point_type> const& vPoint)
+	{
+		// classify features 
+		// sometimes path may be defined as boundary 
+		if (sPathLayer.count(layer))
+			this->add_path(layer, vPoint);
+		else 
+			this->add_pattern(layer, vPoint);
+	}
 	void add_pattern(int32_t layer, vector<point_type> const& vPoint)
 	{
 		assert(vPoint.size() >= 4 && vPoint.size() < 6);
@@ -464,6 +473,29 @@ struct LayoutDB : public rectangle_data<T>
 	void add_path(int32_t layer, vector<point_type> const& vPoint)
 	{
 		if (vPoint.size() < 2) return;
+		else if (vPoint.size() == 4) // probably it is initialized from boundary 
+		{
+			typename gtl::coordinate_traits<coordinate_type>::coordinate_distance dist[] = {
+				gtl::euclidean_distance(vPoint[0], vPoint[1]),
+				gtl::euclidean_distance(vPoint[1], vPoint[2])
+			};
+			// simply check if one edge is much longer than the other and choose the longer one  
+			int32_t offset = -1;
+			if (dist[0] > 10*dist[1])
+				offset = 0;
+			else if (10*dist[0] < dist[1])
+				offset = 1;
+			if (offset >= 0)
+			{
+				path_type p (vPoint[offset], vPoint[offset+1]);
+				if (hPath.count(layer))
+					hPath[layer].push_back(p);
+				else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
+				return;
+			}
+		}
+
+		// initialized from path 
 		for (typename vector<point_type>::const_iterator it = vPoint.begin()+1; it != vPoint.end(); ++it)
 		{
 			path_type p (*(it-1), *it);
@@ -502,7 +534,9 @@ struct LayoutDB : public rectangle_data<T>
 
 				if (gtl::equivalence(*pPattern1, *pPattern2)) 
 				{
-					cout << "Warning: " << *pPattern1 << " duplicates with " << *pPattern2 << " " << "ignored " << duplicate_cnt << endl;
+#ifdef DEBUG
+					cout << "(W) " << *pPattern1 << " duplicates with " << *pPattern2 << " " << "ignored " << duplicate_cnt << endl;
+#endif
 					pPattern2->valid(false);
 					duplicate_cnt += 1;
 					continue;
@@ -510,6 +544,7 @@ struct LayoutDB : public rectangle_data<T>
 			}
 			it1 = it2;
 		}
+		cout << "(I) Ignored " << duplicate_cnt << " duplicate patterns" << endl;
 		// erase invalid patterns 
 		uint32_t invalid_cnt = 0;
 		for (typename vector<rectangle_pointer_type>::iterator it = vPattern.begin(); it != vPattern.end(); )

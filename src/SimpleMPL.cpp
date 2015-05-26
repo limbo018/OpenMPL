@@ -44,6 +44,11 @@ void SimpleMPL::read_gds()
 }
 void SimpleMPL::write_gds()
 {
+	if (m_db.output_gds.empty()) 
+	{
+		cout << "(W) Output file not specified, no file generated\n";
+		return;
+	}
 	// write output gds file 
 	GdsWriter<coordinate_type> writer;
 	writer(m_db.output_gds, m_db, m_vConflict, m_mAdjVertex, m_db.strname, m_db.unit*1e+6);
@@ -52,7 +57,7 @@ void SimpleMPL::solve()
 {
 	if (m_db.vPattern.empty())
 	{
-		cout << "Warning: no patterns found in specified layers\n";
+		cout << "(W) No patterns found in specified layers\n";
 		return;
 	}
 
@@ -67,8 +72,9 @@ void SimpleMPL::solve()
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 	}
 
+	printf("(I) Solving %u independent components...\n", m_comp_cnt);
 #pragma omp parallel for
-	for (uint32_t comp_id = 0; comp_id != m_comp_cnt; ++comp_id)
+	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
 	{
 		// construct a component 
 		vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
@@ -89,15 +95,17 @@ void SimpleMPL::solve()
 void SimpleMPL::report() const 
 {
 	cout << "(I) Conflict number = " << conflict_num() << endl;
-	for (uint32_t i = 0; i != m_db.color_num; ++i)
+	for (int32_t i = 0; i != m_db.color_num; ++i)
 		cout << "(I) Color " << i << " density = " << m_vColorDensity[i] << endl;
 }
 
 void SimpleMPL::construct_graph()
 {
+	printf("(I) Constructing graph for %lu patterns...\n", m_db.vPattern.size());
 	// construct vertices 
 	// assume vertices start from 0 and end with vertex_num-1
 	uint32_t vertex_num = m_db.vPattern.size();
+	uint32_t edge_num = 0;
 	m_vVertexOrder.resize(vertex_num, std::numeric_limits<uint32_t>::max()); 
 
 	// construct edges 
@@ -134,25 +142,8 @@ void SimpleMPL::construct_graph()
 						vAdjVertex.push_back(pAdjPattern->pattern_id());
 				}
 			}
-#if 0
-			m_db.tPattern.query(bgi::intersects(rect), std::back_inserter(vAdjPattern));
-			vAdjVertex.reserve(vAdjPattern.size()); // reserve enough memory 
-			for (vector<rectangle_pointer_type>::iterator it = vAdjPattern.begin(); 
-					it != vAdjPattern.end(); ++it)
-			{
-				// add pAdjPattern to stack 
-				rectangle_pointer_type const& pAdjPattern = *it;
-				if (pAdjPattern != pPattern) // skip pPattern itself 
-				{
-					assert(pAdjPattern->pattern_id() != pPattern->pattern_id());
-					// we consider euclidean distance
-					gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*pAdjPattern, *pPattern);
-					if (distance < m_db.coloring_distance)
-						vAdjVertex.push_back(pAdjPattern->pattern_id());
-				}
-			}
-#endif
 			vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
+			edge_num += vAdjVertex.size();
 		}
 	}
 	else // construct from conflict edges in hPath
@@ -209,15 +200,20 @@ void SimpleMPL::construct_graph()
 			set<uint32_t> sAdjVertex (vAdjVertex.begin(), vAdjVertex.end());
 			vAdjVertex.resize(sAdjVertex.size()); // shrink to fit 
 			vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
+			edge_num += vAdjVertex.size();
 		}
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db.color_num, 0);
 	m_vConflict.clear();
+
+	// report statistics 
+	printf("(I) %u vertices, %u edges\n", vertex_num, edge_num);
 }
 
 void SimpleMPL::connected_component()
 {
+	printf("(I) Computing connected components...\n");
 	uint32_t comp_id = 0;
 	uint32_t order_id = 0; // position in an ordered pattern array with grouped components 
 
@@ -241,32 +237,12 @@ void SimpleMPL::connected_component()
 		assert(m_vCompId[v] != std::numeric_limits<uint32_t>::max()); 
 #endif
 
-#if 0
 	// reorder with order_id 
-	// to save memory, use an approach very like swap which takes O(nlogn)
-	for (uint32_t v = 0, order = m_vVertexOrder[v]; v != vertex_num; )
-	{
-		if (order != std::numeric_limits<uint32_t>::max() && v != order)
-		{
-			uint32_t tmp_v = order;
-			uint32_t tmp_order = m_vVertexOrder[tmp_v];
-			m_vVertexOrder[order] = v; // move v to position order 
-			m_vVertexOrder[v] = std::numeric_limits<uint32_t>::max(); // set position v to empty
-			v = tmp_v;
-			order = tmp_order;
-			if (order == std::numeric_limits<uint32_t>::max()) // if we replaced an empty position, go back to 0 
-			{v = 0; order = m_vVertexOrder[0];}
-			else assert(v != order);
-		}
-		else {++v; order = m_vVertexOrder[v];} 
-	}
-#else 
+	// maybe there is a way to save memory 
 	vector<uint32_t> vTmpOrder (m_vVertexOrder.size());
 	for (uint32_t v = 0; v != vertex_num; ++v)
 		vTmpOrder[m_vVertexOrder[v]] = v;
-	// it may be better to use move in c++11 
-	std::copy(vTmpOrder.begin(), vTmpOrder.end(), m_vVertexOrder.begin());
-#endif
+	std::swap(m_vVertexOrder, vTmpOrder);
 
 #ifdef DEBUG
 	// check ordered 
@@ -440,6 +416,7 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 		if (color >= 0 && color < m_db.color_num)
 			cs.precolor(v, color);
 	}
+	cs.threads(1);
 	double obj_value = cs(); // solve coloring 
 
 	// collect coloring results from simplified graph 
@@ -535,10 +512,13 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 	}
 
 	// update global color density map 
+	// if parallelization is enabled, there will be uncertainty in the density map 
+	// because the density is being updated while being read 
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
 	{
+		uint32_t& color_density = m_vColorDensity[vColor[i]];
 #pragma omp atomic
-		++m_vColorDensity[vColor[i]];
+		++color_density;
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);

@@ -55,8 +55,8 @@ LIBS = \
 #                     The latter can provide around 1 second faster in window route area calculation than the former in small benchmark.
 # ENABLE_ILP
 
-CXXFLAGS += -W -Wall -Wextra -Wreturn-type -ansi -g #-fopenmp # -funroll-all-loops -m64 -fPIC -Wno-deprecated
-CXXFLAGS += -fmax-errors=1 -m64 -Wno-deprecated -DDEBUG
+CXXFLAGS += -W -Wall -Wextra -Wreturn-type -ansi -g -fopenmp # -funroll-all-loops -m64 -fPIC -Wno-deprecated
+CXXFLAGS += -fmax-errors=1 -m64 -Wno-deprecated -O2 #-DDEBUG
 
 MKDIR = if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
 BPATH = ../bin/

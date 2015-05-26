@@ -126,18 +126,11 @@ struct GdsReader : GdsParser::GdsDataBase
 		}
 		else if (ascii_record_type == "ENDEL")
 		{
-			if (status == 1)
+			if (status == 1 || status == 2)
 			{
 				assert(layer != -1);
 
-				db.add_pattern(layer, vPoint);
-
-				status = 0;
-			}
-			else if (status == 2)
-			{
-				assert(layer != -1);
-				db.add_path(layer, vPoint);
+				db.add(layer, vPoint);
 
 				status = 0;
 			}
