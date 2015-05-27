@@ -23,6 +23,7 @@
 #include <boost/geometry/geometries/adapted/boost_polygon.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #if 0
 // for rtree 
@@ -109,10 +110,9 @@ class Rectangle : public rectangle_data<T>
 		}
 		virtual ~Rectangle() {}
 
+#ifdef DEBUG
 		long internal_id() {return m_internal_id;}
-
-		bool valid() const {return m_valid;}
-		void valid(bool v) {m_valid = v;}
+#endif
 
 		int8_t color() const {return m_color;}
 		void color(int8_t c) {m_color = c;}
@@ -126,16 +126,6 @@ class Rectangle : public rectangle_data<T>
 		uint32_t pattern_id() const {return m_pattern_id;}
 		void pattern_id(uint32_t p) {m_pattern_id = p;}
 
-		// for debug 
-		void check() 
-		{
-			assert_msg(this->valid(), "id = " << this->id() << " (" << gtl::xl(*this) << ", " << gtl::yl(*this) << ", " 
-					<< gtl::xh(*this) << ", " << gtl::yh(*this) << ")");
-			assert_msg(gtl::xl(*this) < gtl::xh(*this) && gtl::yl(*this) < gtl::yh(*this),
-					"id = " << this->id() << " (" << gtl::xl(*this) << ", " << gtl::yl(*this) << ", " 
-					<< gtl::xh(*this) << ", " << gtl::yh(*this) << ")");
-		}
-
 		friend std::ostream& operator<<(std::ostream& os, Rectangle const& rhs)
 		{
 			os << "(" << gtl::xl(rhs) << ", " << gtl::yl(rhs) << ", " << gtl::xh(rhs) << ", " << gtl::yh(rhs) << ")";
@@ -148,9 +138,10 @@ class Rectangle : public rectangle_data<T>
 			m_color = m_layer = -1;
 			//m_comp_id = std::numeric_limits<uint32_t>::max();
 			m_pattern_id = std::numeric_limits<uint32_t>::max();
-			m_valid = true;
+#ifdef DEBUG
 #pragma omp critical 
 			m_internal_id = generate_id();
+#endif
 		}
 		void copy(Rectangle const& rhs)
 		{
@@ -158,8 +149,9 @@ class Rectangle : public rectangle_data<T>
 			this->m_layer = rhs.m_layer;
 			//this->m_comp_id = rhs.m_comp_id;
 			this->m_pattern_id = rhs.m_pattern_id;
-			this->m_valid = rhs.m_valid;
+#ifdef DEBUG
 			this->m_internal_id = rhs.m_internal_id;
+#endif
 		}
 		static long generate_id()
 		{
@@ -170,10 +162,11 @@ class Rectangle : public rectangle_data<T>
 			return cnt;
 		}
 
+#ifdef DEBUG
 		long m_internal_id; ///< internal id 
+#endif
 
 	protected:
-		bool m_valid; ///< 1 valid, 0 invalid, default is true;  
 		int8_t m_color; ///< color 
 		int32_t m_layer; ///< input layer 
 		//uint32_t m_comp_id; ///< independent component id 
@@ -263,6 +256,16 @@ struct indexable< boost::shared_ptr<Box> >
     typedef Box const& result_type;
     result_type operator()(V const& v) const { return *v; }
 };
+
+template <typename Box>
+struct indexable< Box* >
+{
+    typedef Box* V;
+
+    typedef Box const& result_type;
+    result_type operator()(V const& v) const { return *v; }
+};
+
 }}} // namespace boost // namespace geometry // namespace index
 
 namespace boost { namespace geometry { namespace traits {
@@ -331,8 +334,10 @@ struct LayoutDB : public rectangle_data<T>
 	typedef Rectangle<coordinate_type> rectangle_type;
 	typedef Polygon<coordinate_type> polygon_type;
 	typedef segment_data<coordinate_type> path_type;
-	typedef shared_ptr<polygon_type> polygon_pointer_type;
-	typedef shared_ptr<rectangle_type> rectangle_pointer_type;
+	//typedef shared_ptr<polygon_type> polygon_pointer_type;
+	typedef polygon_type* polygon_pointer_type;
+	//typedef shared_ptr<rectangle_type> rectangle_pointer_type;
+	typedef rectangle_type* rectangle_pointer_type;
 	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
 	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
@@ -380,6 +385,9 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	~LayoutDB()
 	{
+		// recycle 
+		for (typename vector<rectangle_pointer_type>::iterator it = vPattern.begin(); it != vPattern.end(); ++it)
+			delete *it;
 	}
 
 	LayoutDB& operator=(LayoutDB const& rhs)
@@ -469,6 +477,8 @@ struct LayoutDB : public rectangle_data<T>
 			// initialize rtree later will contribute to higher efficiency in runtime 
 			vPattern.push_back(pPattern);
 		}
+		else // recycle if it is not shared_ptr
+			delete pPattern;
 	}
 	void add_path(int32_t layer, vector<point_type> const& vPoint)
 	{
@@ -523,6 +533,11 @@ struct LayoutDB : public rectangle_data<T>
 		std::sort(vPattern.begin(), vPattern.end(), compare_rectangle_type());
 		// only duplicate is removed so far
 		// TO DO: remove overlapping patterns 
+		boost::dynamic_bitset<uint32_t, std::allocator<uint32_t> > vValid (vPattern.size()); // use a bit set to record validity 
+		vValid.set(); // set all to 1
+#ifdef DEBUG
+		assert(vValid[0] && vValid[vPattern.size()-1]);
+#endif
 		uint32_t duplicate_cnt = 0;
 		for (typename vector<rectangle_pointer_type>::iterator it1 = vPattern.begin(), it2 = vPattern.begin();
 				it2 != vPattern.end(); ++it2)
@@ -537,7 +552,7 @@ struct LayoutDB : public rectangle_data<T>
 #ifdef DEBUG
 					cout << "(W) " << *pPattern1 << " duplicates with " << *pPattern2 << " " << "ignored " << duplicate_cnt << endl;
 #endif
-					pPattern2->valid(false);
+					vValid[pPattern2->pattern_id()] = false;
 					duplicate_cnt += 1;
 					continue;
 				}
@@ -547,23 +562,25 @@ struct LayoutDB : public rectangle_data<T>
 		cout << "(I) Ignored " << duplicate_cnt << " duplicate patterns" << endl;
 		// erase invalid patterns 
 		uint32_t invalid_cnt = 0;
-		for (typename vector<rectangle_pointer_type>::iterator it = vPattern.begin(); it != vPattern.end(); )
+		for (uint32_t i = 0; i < vPattern.size(); )
 		{
-			if (!(*it)->valid())
+			if (!vValid[vPattern[i]->pattern_id()])
 			{
-				std::swap(*it, vPattern.back());
+				std::swap(vPattern[i], vPattern.back());
+				delete vPattern.back(); // recycle 
 				vPattern.pop_back();
 				invalid_cnt += 1;
 			}
-			else ++it;
+			else ++i;
 		}
 		assert(duplicate_cnt == invalid_cnt);
+#ifdef DEBUG
+		for (uint32_t i = 0; i != vPattern.size(); ++i)
+			assert(vValid[vPattern[i]->pattern_id()]);
+#endif
 		// update pattern_id 
 		for (uint32_t i = 0; i != vPattern.size(); ++i)
-		{
-			assert(vPattern[i]->valid());
 			vPattern[i]->pattern_id(i);
-		}
 	}
 };
 

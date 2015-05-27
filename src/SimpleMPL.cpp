@@ -355,7 +355,7 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 		ofstream out ("graph_init.gv");
 		boost::write_graphviz_dp(out, dg, dp, string("id"));
 		out.close();
-		system("dot -Tpdf graph_init.gv -o graph_init.pdf");
+		::system("dot -Tpdf graph_init.gv -o graph_init.pdf");
 	}
 #endif
 	// graph simplification 
