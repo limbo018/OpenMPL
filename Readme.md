@@ -5,11 +5,11 @@
 
 ---------
 ## Features
-Contact layer decomposition 
-Support 3 or 4 coloring 
-Density control
-Multi-threading
-Small memory usage
+ * Contact layer decomposition 
+ * Support 3 or 4 coloring 
+ * Density control
+ * Multi-threading
+ * Small memory usage
 
 
 ---------
