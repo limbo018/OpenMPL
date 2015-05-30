@@ -139,7 +139,9 @@ class Rectangle : public rectangle_data<T>
 			//m_comp_id = std::numeric_limits<uint32_t>::max();
 			m_pattern_id = std::numeric_limits<uint32_t>::max();
 #ifdef DEBUG
+#ifdef _OPENMP
 #pragma omp critical 
+#endif
 			m_internal_id = generate_id();
 #endif
 		}
@@ -157,7 +159,9 @@ class Rectangle : public rectangle_data<T>
 		{
 			static long cnt = -1;
 			assert(cnt < std::numeric_limits<long>::max());
+#ifdef _OPENMP
 #pragma omp atomic 
+#endif
 			cnt += 1;
 			return cnt;
 		}
@@ -225,14 +229,18 @@ class Polygon : public polygon_90_data<T>
 	protected:
 		void initialize()
 		{
+#ifdef _OPENMP
 #pragma omp critical 
+#endif
 			m_id = generate_id();
 		}
 		static long generate_id()
 		{
 			static long cnt = -1;
 			assert(cnt < std::numeric_limits<long>::max());
+#ifdef _OPENMP
 #pragma omp atomic 
+#endif
 			cnt += 1;
 			return cnt;
 		}
@@ -356,6 +364,7 @@ struct LayoutDB : public rectangle_data<T>
 	coordinate_difference coloring_distance; ///< minimum coloring distance 
 	int32_t color_num; ///< number of colors available, only support 3 or 4
 	uint32_t thread_num; ///< number of maximum threads for parallel computation 
+	bool verbose; ///< control screen message 
 
 	string input_gds; ///< input gdsii filename 
 	string output_gds; ///< output gdsii filename 
@@ -406,6 +415,7 @@ struct LayoutDB : public rectangle_data<T>
 		coloring_distance = 0;
 		color_num = 3;
 		thread_num = 1;
+		verbose = false;
 		input_gds = "";
 		output_gds = "";
 	}
@@ -423,6 +433,7 @@ struct LayoutDB : public rectangle_data<T>
 		coloring_distance = rhs.coloring_distance;
 		color_num = rhs.color_num;
 		thread_num = rhs.thread_num;
+		verbose = rhs.verbose;
 		input_gds = rhs.input_gds;
 		output_gds = rhs.output_gds;
 	}
@@ -559,7 +570,7 @@ struct LayoutDB : public rectangle_data<T>
 			}
 			it1 = it2;
 		}
-		cout << "(I) Ignored " << duplicate_cnt << " duplicate patterns" << endl;
+		printf("(I) Ignored %u duplicate patterns\n", duplicate_cnt);
 		// erase invalid patterns 
 		uint32_t invalid_cnt = 0;
 		for (uint32_t i = 0; i < vPattern.size(); )

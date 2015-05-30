@@ -38,6 +38,7 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 void SimpleMPL::read_gds()
 {
 	boost::timer::auto_cpu_timer timer;
+	printf("(I) Reading input file %s\n", m_db.input_gds.c_str());
 	// read input gds file 
 	GdsReader<coordinate_type> reader (m_db);
 	assert_msg(reader(m_db.input_gds), "failed to read " << m_db.input_gds);
@@ -77,23 +78,30 @@ void SimpleMPL::solve()
 	}
 
 	printf("(I) Solving %u independent components...\n", m_comp_cnt);
-#pragma omp parallel for
-	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	// thread number controled by user option 
+#ifdef _OPENMP
+#pragma omp parallel num_threads (m_db.thread_num)
+#endif
 	{
-		// construct a component 
-		vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
-		vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
-#ifdef DEBUG
-//		if (comp_id == 4693)
-//			cout << "hehe\n";
+#ifdef _OPENMP
+#pragma omp for
 #endif
-		// solve component 
-		// pass iterators to save memory 
-		uint32_t component_conflict_num = this->solve_component(itBgn, itEnd, comp_id);
+		for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+		{
+			// construct a component 
+			vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
+			vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
+#ifdef DEBUG
+			//		if (comp_id == 4693)
+			//			cout << "hehe\n";
+#endif
+			// solve component 
+			// pass iterators to save memory 
+			uint32_t component_conflict_num = this->solve_component(itBgn, itEnd, comp_id);
 
-#ifdef DEBUG
-		//cout << "(D) Component " << comp_id << ": " << component_conflict_num << " conflicts"<< endl;
-#endif
+			if (m_db.verbose)
+				printf("(D) Component %u: solved with %u conflicts\n", comp_id, component_conflict_num);
+		}
 	}
 }
 void SimpleMPL::report() const 
@@ -521,16 +529,17 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
 	{
 		uint32_t& color_density = m_vColorDensity[vColor[i]];
+#ifdef _OPENMP
 #pragma omp atomic
+#endif
 		++color_density;
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
 	assert(obj_value == component_conflict_num);
 
-#ifdef DEBUG
-	//cout << "(D) Component has " << pattern_cnt << " patterns" << endl;
-#endif
+	if (m_db.verbose)
+		printf("(D) Component %u has %u patterns, %u conflicts\n", comp_id, pattern_cnt, component_conflict_num);
 
 	return component_conflict_num;
 }

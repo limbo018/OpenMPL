@@ -1,31 +1,22 @@
 #==========================================================================
-#                         C++ Compiler
+#                         Compilation Flags
 # ==========================================================================
-# search for suitable g++
-# c++11 is required
-CXX49 = $(shell which g++-4.9)
-CXX48 = $(shell which g++48)
-CXX47 = $(shell which g++47)
 
-# search for g++-4.9, g++48, then g++47, then g++
-ifneq ($(CXX49),)
-	CXX = g++-4.9
-	# g++-4.9 support colored error information
-	CXXFLAGS += -fdiagnostics-color=always #-static # no static option under mac 
-else 
-	ifneq ($(CXX48),)
-		CXX = g++48
-		CXXFLAGS += -fmax-errors=1 #-static
-	else
-		ifneq ($(CXX47),)
-			CXX = g++47
-			CXXFLAGS += -fmax-errors=1 #-static
-		else 
-			CXX = g++
-			# no fmax-errors for gcc-4.4 
-			# the g++ in Oracle is not built staticly 
-		endif
-	endif
+# default DBG is off
+DBG = 0
+
+UNAME_S = $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	-include Unix.mk
+endif 
+ifeq ($(UNAME_S), Darwin)
+	-include Darwin.mk
+endif 
+
+ifeq ($(DBG), 1)
+	CXXFLAGS = $(CXXFLAGS_DEBUG)
+else
+	CXXFLAGS = $(CXXFLAGS_RELEASE)
 endif
 
 #==========================================================================
@@ -49,38 +40,46 @@ LIBS = \
 # ==========================================================================
 #                         Standard Setting
 # ==========================================================================
-# compilation flags
-# STATWINDOW_POLYGON: if defined, store pointer of polygons in each window; 
-#                     otherwise store pointer of decomposed rectangles from these polygons.
-#                     The latter can provide around 1 second faster in window route area calculation than the former in small benchmark.
-# ENABLE_ILP
-
-CXXFLAGS += -W -Wall -Wextra -Wreturn-type -ansi -g -fopenmp # -funroll-all-loops -m64 -fPIC -Wno-deprecated
-CXXFLAGS += -fmax-errors=1 -m64 -Wno-deprecated -O2 #-DDEBUG
 
 MKDIR = if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
-BPATH = ../bin/
-OPATH = ../obj/
-SRCS	= $(wildcard *.cpp)
-OBJS = $(SRCS:%.cpp=$(OPATH)%.o)
+EXEDIR = ../bin
+OBJDIR = ../obj
+LIBDIR = ../lib
+SRCS = $(wildcard *.cpp)
+OBJS = $(SRCS:%.cpp=$(OBJDIR)/%.o)
+OBJS_NOMAIN = $(filter-out $(OBJDIR)/main.o, $(OBJS)) # filter out main.o 
+DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source
 
-EXE	 = $(BPATH)SimpleMPL
+LIB = $(LIBDIR)/SimpleMPL.a
+EXE	= $(EXEDIR)/SimpleMPL
 
 .SUFFIXES: .cc .cpp .o .x
 
-all: $(EXE) tags
+all: $(EXE) $(LIB)
 
-$(EXE): $(OBJS)
+$(EXE): $(OBJDIR)/main.o $(LIB)
 	@$(MKDIR)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LIBS) 
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIB) $(LIBS) 
 
-$(OPATH)%.o:%.cpp
+$(LIB): $(OBJS)
+	@$(MKDIR)
+	$(AR) $(ARFLAGS) $(LIB) $(OBJS_NOMAIN)
+
+$(OBJDIR)/%.o:%.cpp
 	@$(MKDIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $< $(INCLUDE)
 
-tags: $(SRCS)
-	ctags -R *
+# rule to generate a dep file by using the C preprocessor
+# (see man cpp for details on the -MM and -MT options)
+$(OBJDIR)/%.d:%.cpp
+	$(CXX) $(CXXFLAGS) $< -MM -MT $(@:%.d=%.o) >$@
 
-clean:
-	rm -f *.o *~ $(EXE) $(OPATH)*
+-include $(DEPS)
+
+.PHONY: clean
+clean: cleandep
+	rm -f $(LIB) $(EXE) $(OBJS)
 	
+.PHONY: cleandep
+cleandep:
+	rm -f $(DEPS)

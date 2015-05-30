@@ -6,12 +6,15 @@
  ************************************************************************/
 
 #include <iostream>
+#include <boost/timer/timer.hpp>
 #include "SimpleMPL.h"
 using std::cout;
 using std::endl;
 
 int main(int argc, char** argv)
 {
+	boost::timer::auto_cpu_timer timer;
+
 	SimpleMPL::SimpleMPL mpl;
 	mpl.run(argc, argv);
 
