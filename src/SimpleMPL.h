@@ -18,14 +18,14 @@ class SimpleMPL
 	public:
 		typedef int32_t coordinate_type;
 		typedef LayoutDB<coordinate_type> layoutdb_type;
-		typedef typename layoutdb_type::coordinate_difference coordinate_difference;
-		typedef typename layoutdb_type::point_type point_type;
-		typedef typename layoutdb_type::rectangle_type rectangle_type;
-		typedef typename layoutdb_type::polygon_type polygon_type;
-		typedef typename layoutdb_type::polygon_pointer_type polygon_pointer_type;
-		typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
-		typedef typename layoutdb_type::path_type path_type;
-		typedef typename layoutdb_type::rtree_type rtree_type;
+		typedef layoutdb_type::coordinate_difference coordinate_difference;
+		typedef layoutdb_type::point_type point_type;
+		typedef layoutdb_type::rectangle_type rectangle_type;
+		typedef layoutdb_type::polygon_type polygon_type;
+		typedef layoutdb_type::polygon_pointer_type polygon_pointer_type;
+		typedef layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
+		typedef layoutdb_type::path_type path_type;
+		typedef layoutdb_type::rtree_type rtree_type;
 
 		/// top api to solve decomposition
 		void run(int32_t argc, char** argv);

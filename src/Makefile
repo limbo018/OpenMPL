@@ -75,7 +75,7 @@ $(OBJDIR)/%.o:%.cpp
 # rule to generate a dep file by using the C preprocessor
 # (see man cpp for details on the -MM and -MT options)
 $(OBJDIR)/%.d:%.cpp
-	$(CXX) $(CXXFLAGS) $< -MM -MT $(@:%.d=%.o) >$@
+	$(CXX) $(CXXFLAGS) $< -MM -MT $(@:%.d=%.o) >$@ $(INCLUDE)
 
 -include $(DEPS)
 

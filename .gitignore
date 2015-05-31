@@ -4,3 +4,5 @@ obj
 *.pdf
 *.gds
 src/tags
+bin/*
+lib/*

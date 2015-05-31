@@ -309,9 +309,9 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 			property<graph_name_t, string> > graph_type;
 	typedef property<vertex_index_t, uint32_t> VertexId;
 	typedef property<edge_index_t, uint32_t> EdgeID;
-	typedef typename graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
-	typedef typename graph_traits<graph_type>::edge_descriptor edge_descriptor;
-	typedef typename property_map<graph_type, edge_weight_t>::type edge_weight_map_type;
+	typedef graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
+	typedef graph_traits<graph_type>::edge_descriptor edge_descriptor;
+	typedef property_map<graph_type, edge_weight_t>::type edge_weight_map_type;
 
 	uint32_t pattern_cnt = itEnd-itBgn;
 	// decomposition graph 
