@@ -29,11 +29,14 @@ INCLUDE = \
 		  -I $(GUROBI_HOME)/include
 
 # only gurobi60 is dynamically linked 
-# it may have problem in linking boost library (.a or .so) without -rpath
+# static libraries have .a as suffix in both unix and darwin 
+# but dynamic libraries have different suffixes 
 LIBS = \
-	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -Wl,-rpath=$(BOOST_DIR)/lib \
-	   -L $(LIMBO_DIR)/lib -lgdsparser \
-	   -L $(GUROBI_HOME)/lib -lgurobi_c++ \
+	   $(BOOST_DIR)/lib/libboost_system.a \
+	   $(BOOST_DIR)/lib/libboost_timer.a \
+	   $(BOOST_DIR)/lib/libboost_chrono.a \
+	   $(LIMBO_DIR)/lib/libgdsparser.a \
+	   $(GUROBI_HOME)/lib/libgurobi_c++.a \
 	   -L $(GUROBI_HOME)/lib -lgurobi60
 
 

@@ -10,9 +10,8 @@ else
 	CXX = g++
 	AR = ar
 endif
-endif
 
-CXXFLAGS_BASIC = -ferror-limit=1 -W -Wall -Wextra -Wreturn-type -ansi -m64 -Wno-deprecated
+CXXFLAGS_BASIC = -ferror-limit=1 -W -Wall -Wextra -Wreturn-type -m64 -Wno-deprecated
 CXXFLAGS_DEBUG = -g -DDEBUG $(CXXFLAGS_BASIC) 
 CXXFLAGS_RELEASE = -O4 -fopenmp $(CXXFLAGS_BASIC) 
 
