@@ -2,10 +2,10 @@ obj
 *.gv
 *.dot
 *.pdf
-*.gds
 src/tags
 lib/*
 
 bin/.out
 bin/SimpleMPL
 bin/.log
+bin/*.gds
