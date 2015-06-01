@@ -351,23 +351,23 @@ struct LayoutDB : public rectangle_data<T>
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
 
 	/// layout information 
-	rtree_type tPattern; ///< rtree for components that intersects the LayoutDB
-	vector<rectangle_pointer_type> vPattern; ///< uncolored and precolored patterns 
-	map<int32_t, vector<path_type> > hPath; ///< path 
-	string strname; // TOPCELL name, useful for dump out gds files 
-	double unit; // keep output gdsii file has the same unit as input gdsii file 
+	rtree_type tPattern;                       ///< rtree for components that intersects the LayoutDB
+	vector<rectangle_pointer_type> vPattern;   ///< uncolored and precolored patterns 
+	map<int32_t, vector<path_type> > hPath;    ///< path 
+	string strname;                            // TOPCELL name, useful for dump out gds files 
+	double unit;                               // keep output gdsii file has the same unit as input gdsii file 
 
 	/// options 
-	set<int32_t> sUncolorLayer; ///< layers that represent uncolored patterns 
-	set<int32_t> sPrecolorLayer; ///< layers that represent precolored features, they should have the same number of colors 
-	set<int32_t> sPathLayer; ///< path layers that represent conflict edges 
-	coordinate_difference coloring_distance; ///< minimum coloring distance 
-	int32_t color_num; ///< number of colors available, only support 3 or 4
-	uint32_t thread_num; ///< number of maximum threads for parallel computation 
-	bool verbose; ///< control screen message 
+	set<int32_t> sUncolorLayer;                ///< layers that represent uncolored patterns 
+	set<int32_t> sPrecolorLayer;               ///< layers that represent precolored features, they should have the same number of colors 
+	set<int32_t> sPathLayer;                   ///< path layers that represent conflict edges 
+	coordinate_difference coloring_distance;   ///< minimum coloring distance 
+	int32_t  color_num;                        ///< number of colors available, only support 3 or 4
+	uint32_t thread_num;                       ///< number of maximum threads for parallel computation 
+	bool     verbose;                          ///< control screen message 
 
-	string input_gds; ///< input gdsii filename 
-	string output_gds; ///< output gdsii filename 
+	string   input_gds;                        ///< input gdsii filename 
+	string   output_gds;                       ///< output gdsii filename 
 
 	struct compare_rectangle_type 
 	{
@@ -410,32 +410,32 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	void initialize()
 	{
-		strname = "TOPCELL";
-		unit = 0.001;
+		strname           = "TOPCELL";
+		unit              = 0.001;
 		coloring_distance = 0;
-		color_num = 3;
-		thread_num = 1;
-		verbose = false;
-		input_gds = "";
-		output_gds = "";
+		color_num         = 3;
+		thread_num        = 1;
+		verbose           = false;
+		input_gds         = "";
+		output_gds        = "out.gds";
 	}
 	void copy(LayoutDB const& rhs)
 	{
 		tPattern = rhs.tPattern;
 		vPattern = rhs.vPattern;
-		hPath = rhs.hPath;
-		strname = rhs.strname;
-		unit = rhs.unit;
+		hPath    = rhs.hPath;
+		strname  = rhs.strname;
+		unit     = rhs.unit;
 		// options
-		sUncolorLayer = rhs.sUncolorLayer;
-		sPrecolorLayer = rhs.sPrecolorLayer;
-		sPathLayer = rhs.sPathLayer;
+		sUncolorLayer     = rhs.sUncolorLayer;
+		sPrecolorLayer    = rhs.sPrecolorLayer;
+		sPathLayer        = rhs.sPathLayer;
 		coloring_distance = rhs.coloring_distance;
-		color_num = rhs.color_num;
-		thread_num = rhs.thread_num;
-		verbose = rhs.verbose;
-		input_gds = rhs.input_gds;
-		output_gds = rhs.output_gds;
+		color_num         = rhs.color_num;
+		thread_num        = rhs.thread_num;
+		verbose           = rhs.verbose;
+		input_gds         = rhs.input_gds;
+		output_gds        = rhs.output_gds;
 	}
 
 	void add(int32_t layer, vector<point_type> const& vPoint)

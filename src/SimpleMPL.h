@@ -36,6 +36,8 @@ class SimpleMPL
 		void solve();
 		/// report statistics 
 		void report() const;
+        /// print welcome information
+        void print_welcome();
 	protected:
 		/// initialize graph from layoutdb_type
 		void construct_graph();

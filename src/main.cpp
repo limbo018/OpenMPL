@@ -13,9 +13,11 @@ using std::endl;
 
 int main(int argc, char** argv)
 {
+	SimpleMPL::SimpleMPL mpl;
+    mpl.print_welcome();
+
 	boost::timer::auto_cpu_timer timer;
 
-	SimpleMPL::SimpleMPL mpl;
 	mpl.run(argc, argv);
 
 	return 0;

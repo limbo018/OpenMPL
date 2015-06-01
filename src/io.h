@@ -287,13 +287,30 @@ struct CmdParser
 	layoutdb_type& db;
 
 	CmdParser(layoutdb_type& _db) : db(_db) {}
+
+    void print_usage()
+    {
+        printf("\n");
+        printf("========================================================================\n");
+        printf("                            SimpleMPL 1.X Usage                         \n");
+        printf("\"-in\"                 : followed by input gds name. \n");
+        printf("\"-output\"             : followed by output gds name (default: \"output.gds\"). \n");
+        printf("\"-coloring_distance\"  : followed by integer indicating number of coloring distance. \n");
+        printf("\"-color_num\"          : followed by integer indicating number of masks (colors). \n");
+        printf("\"-thread_num\"         : followed by integer, maximum thread number\n");
+        printf("\"-precolor_layer\"     : followed by an integer, pre-coloring layer\n");
+        printf("\"-uncolor_layer\"      : followed by an integer, layer for coloring\n");
+        printf("========================================================================\n");
+        printf("\n");
+    }
+
 	bool operator()(int argc, char** argv)
 	{
-		if (argc < 4) 
-		{
-			cout << "too few arguments" << endl;
-			return false;
-		}
+		//if (argc < 4) 
+		//{
+		//	cout << "too few arguments" << endl;
+		//	return false;
+		//}
 		argc--;
 		argv++;
 		while (argc--)
@@ -345,6 +362,11 @@ struct CmdParser
 				argc--;
 				argv++;
 				db.sUncolorLayer.insert(atoi(*argv));
+			}
+			else if (strcmp(*argv, "-help") == 0)
+			{
+                print_usage();
+                exit(0);
 			}
 			else 
 			{

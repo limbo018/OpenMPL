@@ -33,8 +33,12 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 {
 	// read command 
 	CmdParser<coordinate_type> cmd (m_db);
-	assert_msg(cmd(argc, argv), "failed to parse command");
+	assert_msg(cmd(argc, argv),             "failed to parse command");
+    assert_msg(!m_db.input_gds.empty(),     "should specify input gds name");
+    assert_msg(m_db.coloring_distance>0,    "should set coloring_distance (>0)");
+    assert_msg(!m_db.sUncolorLayer.empty(), "should set uncolor_layer");
 }
+
 void SimpleMPL::read_gds()
 {
 	boost::timer::auto_cpu_timer timer;
@@ -45,6 +49,7 @@ void SimpleMPL::read_gds()
 	// must call initialize after reading 
 	m_db.initialize_data();
 }
+
 void SimpleMPL::write_gds()
 {
 	boost::timer::auto_cpu_timer timer;
@@ -55,8 +60,10 @@ void SimpleMPL::write_gds()
 	}
 	// write output gds file 
 	GdsWriter<coordinate_type> writer;
+	printf("(I) Write output gds file: %s\n", m_db.output_gds.c_str());
 	writer(m_db.output_gds, m_db, m_vConflict, m_mAdjVertex, m_db.strname, m_db.unit*1e+6);
 }
+
 void SimpleMPL::solve()
 {
 	boost::timer::auto_cpu_timer timer;
@@ -104,6 +111,7 @@ void SimpleMPL::solve()
 		}
 	}
 }
+
 void SimpleMPL::report() const 
 {
 	cout << "(I) Conflict number = " << conflict_num() << endl;
@@ -602,6 +610,19 @@ uint32_t SimpleMPL::conflict_num() const
 	}
 	// conflicts will be counted twice 
 	return (cnt>>1);
+}
+
+void SimpleMPL::print_welcome()
+{
+  printf("\n\n");
+  printf("=======================================================================\n");
+  printf("                      SimpleMPL - Version 1.0                        \n");
+  printf("                                by                                   \n");  
+  printf("                   Yibo Lin, Bei Yu, and  David Z. Pan               \n");
+  printf("               ECE Department, University of Texas at Austin         \n");
+  printf("                         Copyright (c) 2015                          \n");
+  printf("            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     \n");
+  printf("=======================================================================\n");
 }
 
 } // namespace SimpleMPL
