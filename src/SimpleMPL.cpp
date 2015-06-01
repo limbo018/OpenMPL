@@ -295,7 +295,9 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 	}
 }
 
-uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+uint32_t
+SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+//{{{
 {
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
@@ -551,6 +553,8 @@ uint32_t SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn
 
 	return component_conflict_num;
 }
+//}}}
+
 
 uint32_t SimpleMPL::conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const
 {

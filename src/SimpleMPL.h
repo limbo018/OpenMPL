@@ -56,10 +56,10 @@ class SimpleMPL
 
 		layoutdb_type m_db; ///< layout database and user-defined options 
 		/// adjacency list data structure for a graph 
-		vector<uint32_t> m_vVertexOrder; ///< vertex id 
-		vector<vector<uint32_t> > m_mAdjVertex; ///< adjcency list 
-		vector<uint32_t> m_vCompId; ///< independent component id 
-		uint32_t m_comp_cnt; ///< maximum number of connected components 
+		vector<uint32_t>          m_vVertexOrder; ///< vertex id
+		vector<vector<uint32_t> > m_mAdjVertex;   ///< adjcency list
+		vector<uint32_t>          m_vCompId;      ///< independent component id
+		uint32_t                  m_comp_cnt;     ///< max# of connected components
 
 		/// density balancing 
 		vector<uint32_t> m_vColorDensity; ///< number of colors used so far 
