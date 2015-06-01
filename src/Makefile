@@ -37,7 +37,12 @@ LIBS = \
 	   $(BOOST_DIR)/lib/libboost_chrono.a \
 	   $(LIMBO_DIR)/lib/libgdsparser.a \
 	   $(GUROBI_HOME)/lib/libgurobi_c++.a \
-	   -L $(GUROBI_HOME)/lib -lgurobi60
+	   -L $(GUROBI_HOME)/lib -lgurobi60 
+
+# boost chrono links to to librt.a under Linux
+ifeq ($(UNAME_S), Linux)
+	LIBS += -lrt
+endif 
 
 
 # ==========================================================================
