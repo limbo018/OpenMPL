@@ -4,5 +4,8 @@ obj
 *.pdf
 *.gds
 src/tags
-bin/*
 lib/*
+
+bin/.out
+bin/SimpleMPL
+bin/.log
