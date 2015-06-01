@@ -58,7 +58,7 @@ EXE	= $(EXEDIR)/SimpleMPL
 
 .SUFFIXES: .cc .cpp .o .x
 
-all: $(EXE) $(LIB)
+all: $(EXE) $(LIB) tags
 
 $(EXE): $(OBJDIR)/main.o $(LIB)
 	@$(MKDIR)
@@ -76,6 +76,10 @@ $(OBJDIR)/%.o:%.cpp
 # (see man cpp for details on the -MM and -MT options)
 $(OBJDIR)/%.d:%.cpp
 	$(CXX) $(CXXFLAGS) $< -MM -MT $(@:%.d=%.o) >$@ $(INCLUDE)
+
+tags: $(SRCS)
+	ctags -R *
+
 
 -include $(DEPS)
 

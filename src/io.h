@@ -56,12 +56,12 @@ struct GdsReader : GdsParser::GdsDataBase
 {
 	typedef T coordinate_type;
 	typedef LayoutDB<coordinate_type> layoutdb_type;
-	typedef typename layoutdb_type::point_type point_type;
-	typedef typename layoutdb_type::rectangle_type rectangle_type;
-	typedef typename layoutdb_type::polygon_type polygon_type;
-	typedef typename layoutdb_type::polygon_pointer_type polygon_pointer_type;
-	typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
-	typedef typename layoutdb_type::path_type path_type;
+	typedef typename layoutdb_type::point_type              point_type;
+	typedef typename layoutdb_type::rectangle_type          rectangle_type;
+	typedef typename layoutdb_type::polygon_type            polygon_type;
+	typedef typename layoutdb_type::polygon_pointer_type    polygon_pointer_type;
+	typedef typename layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;
+	typedef typename layoutdb_type::path_type               path_type;
 
 	//string strname; // TOPCELL name, useful for dump out gds files 
 	//double unit;
