@@ -187,7 +187,7 @@ struct GdsWriter
 		// basic operation
 		// will add more 
 		(*this)(gw, db.vPattern);
-		(*this)(gw, db.vPattern, vConflict, 100+db.color_num); // conflict layer 
+		(*this)(gw, db.vPattern, vConflict,  100+db.color_num);   // conflict layer 
 		(*this)(gw, db.vPattern, mAdjVertex, 100+db.color_num+1);
 		//(*this)(gw, db.hPath); // draw edges if there exits 
 
