@@ -21,3 +21,7 @@ CXXFLAGS_DEBUG = -g -DDEBUG $(CXXFLAGS_BASIC)
 CXXFLAGS_RELEASE = -O3 -fopenmp $(CXXFLAGS_BASIC) 
 
 ARFLAGS = rvs
+
+# boost chrono links to to librt.a under Linux
+LIBS = -lrt
+

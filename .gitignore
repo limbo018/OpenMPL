@@ -9,3 +9,4 @@ bin/.out
 bin/SimpleMPL
 bin/.log
 bin/*.gds
+bin/bench/*.ascii

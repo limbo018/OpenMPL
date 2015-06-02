@@ -4,6 +4,8 @@
 
 # default DBG is off
 DBG = 0
+# default GUROBI is off 
+GUROBI = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -19,6 +21,8 @@ else
 	CXXFLAGS = $(CXXFLAGS_RELEASE)
 endif
 
+CXXFLAGS += -DGUROBI=$(GUROBI)
+
 #==========================================================================
 #                         Special Library
 # ==========================================================================
@@ -31,19 +35,13 @@ INCLUDE = \
 # only gurobi60 is dynamically linked 
 # static libraries have .a as suffix in both unix and darwin 
 # but dynamic libraries have different suffixes 
-LIBS = \
+LIBS += \
 	   $(BOOST_DIR)/lib/libboost_system.a \
 	   $(BOOST_DIR)/lib/libboost_timer.a \
 	   $(BOOST_DIR)/lib/libboost_chrono.a \
 	   $(LIMBO_DIR)/lib/libgdsparser.a \
 	   $(GUROBI_HOME)/lib/libgurobi_c++.a \
 	   -L $(GUROBI_HOME)/lib -lgurobi60 
-
-# boost chrono links to to librt.a under Linux
-ifeq ($(UNAME_S), Linux)
-	LIBS += -lrt
-endif 
-
 
 # ==========================================================================
 #                         Standard Setting

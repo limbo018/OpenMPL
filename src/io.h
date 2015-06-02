@@ -184,22 +184,24 @@ struct GdsWriter
 		gw.gds_write_bgnstr();
 		gw.gds_write_strname(strname.c_str());
 
+		// if there are precolored patterns, keep the same layer convention 
+		int32_t layer_offset = (db.sPrecolorLayer.empty())? 100 : *db.sPrecolorLayer.begin();
 		// basic operation
 		// will add more 
-		(*this)(gw, db.vPattern);
-		(*this)(gw, db.vPattern, vConflict,  100+db.color_num);   // conflict layer 
-		(*this)(gw, db.vPattern, mAdjVertex, 100+db.color_num+1);
+		(*this)(gw, db.vPattern, layer_offset);
+		(*this)(gw, db.vPattern, vConflict,  layer_offset+db.color_num);   // conflict layer 
+		(*this)(gw, db.vPattern, mAdjVertex, layer_offset+db.color_num+1); // draw edges 
 		//(*this)(gw, db.hPath); // draw edges if there exits 
 
 		gw.gds_write_endstr();
 		gw.gds_write_endlib(); 
 	}
-	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect) const 
+	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
 	{
 		for (typename vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
 		{
 			rectangle_type const& rect = **it;
-			gw.write_box(100+rect.color(), 0, 
+			gw.write_box(layer_offset+rect.color(), 0, 
 					gtl::xl(rect), gtl::yl(rect), 
 					gtl::xh(rect), gtl::yh(rect));
 		}
@@ -295,11 +297,12 @@ struct CmdParser
         printf("                            SimpleMPL 1.X Usage                         \n");
         printf("\"-in\"                 : followed by input gds name. \n");
         printf("\"-output\"             : followed by output gds name (default: \"output.gds\"). \n");
-        printf("\"-coloring_distance\"  : followed by integer indicating number of coloring distance. \n");
+        printf("\"-coloring_distance\"  : followed by floating point number indicating number of coloring distance in micron. \n");
         printf("\"-color_num\"          : followed by integer indicating number of masks (colors). \n");
         printf("\"-thread_num\"         : followed by integer, maximum thread number\n");
         printf("\"-precolor_layer\"     : followed by an integer, pre-coloring layer\n");
         printf("\"-uncolor_layer\"      : followed by an integer, layer for coloring\n");
+        printf("\"-path_layer\"         : followed by an integer, layer for conflict edges\n");
         printf("========================================================================\n");
         printf("\n");
     }
@@ -331,7 +334,7 @@ struct CmdParser
 			{
 				argc--;
 				argv++;
-				db.coloring_distance = atol(*argv);
+				db.coloring_distance_micron = atof(*argv);
 			}
 			else if (strcmp(*argv, "-color_num") == 0)
 			{
@@ -362,6 +365,16 @@ struct CmdParser
 				argc--;
 				argv++;
 				db.sUncolorLayer.insert(atoi(*argv));
+			}
+			else if (strcmp(*argv, "-algo") == 0)
+			{
+				argc--;
+				argv++;
+				if (limbo::iequals(*argv, "ILP")) 
+					db.algo = layoutdb_type::ILP;
+				else if (limbo::iequals(*argv, "BACKTRACK"))
+					db.algo = layoutdb_type::BACKTRACK;
+				else printf("(W) Unknown algorithm type %s, set to default\n", *argv);
 			}
 			else if (strcmp(*argv, "-help") == 0)
 			{

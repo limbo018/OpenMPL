@@ -11,8 +11,12 @@
 #include <boost/graph/graphviz.hpp>
 #include <boost/timer/timer.hpp>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
-#include <limbo/algorithms/coloring/LPColoring.h>
+
+// only valid when gurobi is available 
+#if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
+#endif
+#include <limbo/algorithms/coloring/BacktrackColoring.h>
 
 namespace SimpleMPL {
 
@@ -33,10 +37,17 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 {
 	// read command 
 	CmdParser<coordinate_type> cmd (m_db);
+	// check options 
 	assert_msg(cmd(argc, argv),             "failed to parse command");
     assert_msg(!m_db.input_gds.empty(),     "should specify input gds name");
-    assert_msg(m_db.coloring_distance>0,    "should set coloring_distance (>0)");
+    assert_msg(m_db.coloring_distance_micron>0 || !m_db.sPathLayer.empty(),    "should set coloring_distance_micron (>0) or specify path_layer for conflict edges");
     assert_msg(!m_db.sUncolorLayer.empty(), "should set uncolor_layer");
+	// check algorithm type in run time 
+#if GUROBI == 1
+	assert_msg(m_db.algo == layoutdb_type::ILP || m_db.algo == layoutdb_type::BACKTRACK, "only ILP and BACKTRACK algorithms are available");
+#else 
+	assert_msg(m_db.algo == layoutdb_type::BACKTRACK, "only BACKTRACK algorithm is available");
+#endif
 }
 
 void SimpleMPL::read_gds()
@@ -48,6 +59,8 @@ void SimpleMPL::read_gds()
 	assert_msg(reader(m_db.input_gds), "failed to read " << m_db.input_gds);
 	// must call initialize after reading 
 	m_db.initialize_data();
+	// report data 
+	m_db.rpt_data();
 }
 
 void SimpleMPL::write_gds()
@@ -222,6 +235,8 @@ void SimpleMPL::construct_graph()
 			vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
 			edge_num += vAdjVertex.size();
 		}
+		m_db.coloring_distance_micron = m_db.coloring_distance*(m_db.unit*1e+6);
+		printf("(I) Estimated coloring distance from conflict edges = %lld (%g um)", m_db.coloring_distance, m_db.coloring_distance_micron);
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db.color_num, 0);
@@ -399,36 +414,25 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 #endif
 
 	// solve coloring 
-#if 0
-	typedef limbo::algorithms::coloring::LPColoring<graph_type> coloring_solver_type;
-	coloring_solver_type cs (sg.first);
-	cs.stitchWeight(0.1);
-	cs.conflictCost(false);
-	cs.stitchMode(false);
-	cs.roundingScheme(coloring_solver_type::DIRECT_ILP);
-	// THREE or FOUR 
-	if (m_db.color_num == 3)
-		cs.colorNum(coloring_solver_type::THREE);
-	else 
-		cs.colorNum(coloring_solver_type::FOUR);
-	cs(); // solve coloring 
-
-	// collect coloring results from simplified graph 
+	typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
+	coloring_solver_type* pcs = NULL;
+	switch (m_db.algo)
 	{
-		graph_traits<graph_type>::vertex_iterator vi, vie;
-		for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
-		{
-			vertex_descriptor v = *vi;
-			int8_t color = cs.cg_vertexColor(v);
-			assert(color >= 0 && color < m_db.color_num);
-			vColor[ sg.second[v] ] = color;
-		}
-	}
+		case layoutdb_type::ILP:
+#if GUROBI == 1
+			pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg.first);
 #else 
-	typedef limbo::algorithms::coloring::ILPColoring<graph_type> coloring_solver_type;
-	coloring_solver_type cs (sg.first);
-	cs.stitch_weight(0.1);
-	cs.color_num(m_db.color_num);
+			pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg.first);
+#endif
+			break;
+		case layoutdb_type::BACKTRACK:
+			pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg.first);
+			break;
+		default: assert_msg(0, "unknown algorithm type");
+	}
+
+	pcs->stitch_weight(0.1);
+	pcs->color_num(m_db.color_num);
 	// set precolored vertices 
 	graph_traits<graph_type>::vertex_iterator vi, vie;
 	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
@@ -436,20 +440,20 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		vertex_descriptor v = *vi;
 		int8_t color = vColor[sg.second[v]];
 		if (color >= 0 && color < m_db.color_num)
-			cs.precolor(v, color);
+			pcs->precolor(v, color);
 	}
-	cs.threads(1);
-	double obj_value = cs(); // solve coloring 
+	pcs->threads(1);
+	double obj_value = (*pcs)(); // solve coloring 
 
 	// collect coloring results from simplified graph 
 	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
 	{
 		vertex_descriptor v = *vi;
-		int8_t color = cs.color(v);
+		int8_t color = pcs->color(v);
 		assert(color >= 0 && color < m_db.color_num);
 		vColor[ sg.second[v] ] = color;
 	}
-#endif
+	delete pcs;
 	
 	// recover colors for simplified vertices with balanced assignment 
 	// recover merged vertices 

@@ -350,24 +350,33 @@ struct LayoutDB : public rectangle_data<T>
 	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
 
+	enum AlgorithmType {
+		ILP = 0,          // only valid when gurobi is available
+		BACKTRACK = 1     // no dependency 
+	};
+
 	/// layout information 
 	rtree_type tPattern;                       ///< rtree for components that intersects the LayoutDB
 	vector<rectangle_pointer_type> vPattern;   ///< uncolored and precolored patterns 
 	map<int32_t, vector<path_type> > hPath;    ///< path 
-	string strname;                            // TOPCELL name, useful for dump out gds files 
-	double unit;                               // keep output gdsii file has the same unit as input gdsii file 
+	string strname;                            ///< TOPCELL name, useful for dump out gds files 
+	double unit;                               ///< keep output gdsii file has the same unit as input gdsii file 
 
 	/// options 
 	set<int32_t> sUncolorLayer;                ///< layers that represent uncolored patterns 
 	set<int32_t> sPrecolorLayer;               ///< layers that represent precolored features, they should have the same number of colors 
 	set<int32_t> sPathLayer;                   ///< path layers that represent conflict edges 
-	coordinate_difference coloring_distance;   ///< minimum coloring distance 
+	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_micron and unit
+	double coloring_distance_micron;           ///< minimum coloring distance in micron, set from command line 
 	int32_t  color_num;                        ///< number of colors available, only support 3 or 4
 	uint32_t thread_num;                       ///< number of maximum threads for parallel computation 
 	bool     verbose;                          ///< control screen message 
 
 	string   input_gds;                        ///< input gdsii filename 
 	string   output_gds;                       ///< output gdsii filename 
+
+	/// algorithm options 
+	AlgorithmType algo;                        ///< control algorithms used to solve coloring problem 
 
 	struct compare_rectangle_type 
 	{
@@ -410,14 +419,16 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	void initialize()
 	{
-		strname           = "TOPCELL";
-		unit              = 0.001;
-		coloring_distance = 0;
-		color_num         = 3;
-		thread_num        = 1;
-		verbose           = false;
-		input_gds         = "";
-		output_gds        = "out.gds";
+		strname                  = "TOPCELL";
+		unit                     = 0.001;
+		coloring_distance        = 0;
+		coloring_distance_micron = 0;
+		color_num                = 3;
+		thread_num               = 1;
+		verbose                  = false;
+		input_gds                = "";
+		output_gds               = "out.gds";
+		algo                     = BACKTRACK;
 	}
 	void copy(LayoutDB const& rhs)
 	{
@@ -431,11 +442,13 @@ struct LayoutDB : public rectangle_data<T>
 		sPrecolorLayer    = rhs.sPrecolorLayer;
 		sPathLayer        = rhs.sPathLayer;
 		coloring_distance = rhs.coloring_distance;
+		coloring_distance_micron = rhs.coloring_distance_micron;
 		color_num         = rhs.color_num;
 		thread_num        = rhs.thread_num;
 		verbose           = rhs.verbose;
 		input_gds         = rhs.input_gds;
 		output_gds        = rhs.output_gds;
+		algo              = rhs.algo;
 	}
 
 	void add(int32_t layer, vector<point_type> const& vPoint)
@@ -529,6 +542,8 @@ struct LayoutDB : public rectangle_data<T>
 	/// it should be faster than gradually insertion 
 	void initialize_data()
 	{
+		// remember to set coloring_distance from coloring_distance_micron and unit 
+		coloring_distance = (coordinate_difference)round(coloring_distance_micron/(unit*1e+6));
 		// I assume there may be duplicate in the input gds, but no overlapping patterns 
 		// duplicates are removed with following function
 		remove_overlap();
@@ -592,6 +607,41 @@ struct LayoutDB : public rectangle_data<T>
 		// update pattern_id 
 		for (uint32_t i = 0; i != vPattern.size(); ++i)
 			vPattern[i]->pattern_id(i);
+	}
+	void rpt_data() const
+	{
+		printf("(I) Input data...\n");
+		printf("(I) Total patterns # = %lu\n", vPattern.size());
+		printf("(I) Coloring distance = %lld db ( %g um )\n", coloring_distance, coloring_distance_micron);
+		printf("(I) Color num = %d\n", color_num);
+		printf("(I) Thread num = %u\n", thread_num);
+		printf("(I) Uncolored layer # = %lu", sUncolorLayer.size());
+		if (!sUncolorLayer.empty())
+		{
+			printf(" ( ");
+			for (set<int32_t>::const_iterator it = sUncolorLayer.begin(); it != sUncolorLayer.end(); ++it)
+				printf("%d ", *it);
+			printf(")");
+		}
+		printf("\n");
+		printf("(I) Precolored layer # = %lu", sPrecolorLayer.size());
+		if (!sPrecolorLayer.empty())
+		{
+			printf(" ( ");
+			for (set<int32_t>::const_iterator it = sPrecolorLayer.begin(); it != sPrecolorLayer.end(); ++it)
+				printf("%d ", *it);
+			printf(")");
+		}
+		printf("\n");
+		printf("(I) Path layer # = %lu", sPathLayer.size());
+		if (!sPathLayer.empty())
+		{
+			printf(" ( ");
+			for (set<int32_t>::const_iterator it = sPathLayer.begin(); it != sPathLayer.end(); ++it)
+				printf("%d ", *it);
+			printf(")");
+		}
+		printf("\n");
 	}
 };
 

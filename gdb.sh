@@ -49,7 +49,7 @@ gdb \
 	-precolor_layer 201 \
 	-precolor_layer 202 \
 	-precolor_layer 203 \
-	-coloring_distance 1300 \
+	-coloring_distance 0.13 \
 	-color_num ${color_num} \
 	-thread_num ${thread_num}
 
