@@ -7,8 +7,8 @@
 #!/bin/bash
 
 color_num=3
-thread_num=8
-benchmark="output_2x2-flat.gds"
+thread_num=1
+benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
@@ -35,7 +35,8 @@ gdb \
 	-uncolor_layer 216 \
 	-path_layer 207 \
 	-color_num ${color_num} \
-	-thread_num ${thread_num}
+	-thread_num ${thread_num} \
+	-verbose
 
 elif [[ $benchmark == Via2_local_precolor* ]]; then
 

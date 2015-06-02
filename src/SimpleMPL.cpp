@@ -236,7 +236,7 @@ void SimpleMPL::construct_graph()
 			edge_num += vAdjVertex.size();
 		}
 		m_db.coloring_distance_micron = m_db.coloring_distance*(m_db.unit*1e+6);
-		printf("(I) Estimated coloring distance from conflict edges = %lld (%g um)", m_db.coloring_distance, m_db.coloring_distance_micron);
+		printf("(I) Estimated coloring distance from conflict edges = %lld (%g um)\n", m_db.coloring_distance, m_db.coloring_distance_micron);
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db.color_num, 0);
@@ -339,6 +339,10 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	//typedef property_map<graph_type, edge_weight_t>::type edge_weight_map_type;
 
 	uint32_t pattern_cnt = itEnd-itBgn;
+
+	if (m_db.verbose)
+		fprintf(stderr, "(D) Component %u has %u patterns...", comp_id, pattern_cnt);
+
 	// decomposition graph 
 	graph_type dg (pattern_cnt);
 	vector<int8_t> vColor (pattern_cnt, -1); // coloring results 
@@ -553,7 +557,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	assert(obj_value == component_conflict_num);
 
 	if (m_db.verbose)
-		printf("(D) Component %u has %u patterns, %u conflicts\n", comp_id, pattern_cnt, component_conflict_num);
+		fprintf(stderr, "%u conflicts\n", component_conflict_num);
 
 	return component_conflict_num;
 }

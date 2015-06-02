@@ -376,6 +376,10 @@ struct CmdParser
 					db.algo = layoutdb_type::BACKTRACK;
 				else printf("(W) Unknown algorithm type %s, set to default\n", *argv);
 			}
+			else if (strcmp(*argv, "-verbose") == 0)
+			{
+				db.verbose = true;
+			}
 			else if (strcmp(*argv, "-help") == 0)
 			{
                 print_usage();
