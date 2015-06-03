@@ -8,6 +8,7 @@
 
 color_num=3
 thread_num=1
+algo=ILP
 benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 
@@ -36,6 +37,7 @@ gdb \
 	-path_layer 207 \
 	-color_num ${color_num} \
 	-thread_num ${thread_num} \
+	-algo ${algo} \
 	-verbose
 
 elif [[ $benchmark == Via2_local_precolor* ]]; then
@@ -52,7 +54,8 @@ gdb \
 	-precolor_layer 203 \
 	-coloring_distance 0.13 \
 	-color_num ${color_num} \
-	-thread_num ${thread_num}
+	-thread_num ${thread_num} \
+	-algo ${algo}
 
 fi
 

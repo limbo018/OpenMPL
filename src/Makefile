@@ -2,10 +2,14 @@
 #                         Compilation Flags
 # ==========================================================================
 
+# recommend make command: make -j LEMONCBC=1 
+
 # default DBG is off
 DBG = 0
 # default GUROBI is off 
 GUROBI = 0
+# default LEMONCBC is off 
+LEMONCBC = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -21,7 +25,7 @@ else
 	CXXFLAGS = $(CXXFLAGS_RELEASE)
 endif
 
-CXXFLAGS += -DGUROBI=$(GUROBI)
+CXXFLAGS += -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC)
 
 #==========================================================================
 #                         Special Library
@@ -29,8 +33,7 @@ CXXFLAGS += -DGUROBI=$(GUROBI)
 
 INCLUDE = \
 		  -I $(BOOST_DIR)/include \
-		  -I $(LIMBO_DIR) \
-		  -I $(GUROBI_HOME)/include
+		  -I $(LIMBO_DIR)
 
 # only gurobi60 is dynamically linked 
 # static libraries have .a as suffix in both unix and darwin 
@@ -39,9 +42,30 @@ LIBS += \
 	   $(BOOST_DIR)/lib/libboost_system.a \
 	   $(BOOST_DIR)/lib/libboost_timer.a \
 	   $(BOOST_DIR)/lib/libboost_chrono.a \
-	   $(LIMBO_DIR)/lib/libgdsparser.a \
-	   $(GUROBI_HOME)/lib/libgurobi_c++.a \
-	   -L $(GUROBI_HOME)/lib -lgurobi60 
+	   $(LIMBO_DIR)/lib/libgdsparser.a 
+
+# GUROBI 
+ifeq ($(GUROBI), 1)
+INCLUDE += -I $(GUROBI_HOME)/include
+LIBS += $(GUROBI_HOME)/lib/libgurobi_c++.a \
+		-L $(GUROBI_HOME)/lib -lgurobi60 
+endif 
+# Cbc lemon api (Cbc must be installed with static flag and lemon must be installed with Cbc as MIP solver)
+ifeq ($(LEMONCBC), 1)
+INCLUDE += -I $(CBC_DIR)/include \
+		   -I $(LEMON_DIR)/include
+LIBS += $(CBC_DIR)/lib/libCbc.so \
+		$(CBC_DIR)/lib/libCbcSolver.so \
+		$(CBC_DIR)/lib/libCgl.so \
+		$(CBC_DIR)/lib/libClp.so \
+		$(CBC_DIR)/lib/libCoinUtils.so \
+		$(CBC_DIR)/lib/libOsiCbc.so \
+		$(CBC_DIR)/lib/libOsiClp.so \
+		$(CBC_DIR)/lib/libOsi.so \
+		$(LEMON_DIR)/lib/libemon.a \
+		-lz -lbz2 \
+		-Wl,-rpath,$(CBC_DIR)/lib:$(LEMON_DIR)/lib
+endif
 
 # ==========================================================================
 #                         Standard Setting

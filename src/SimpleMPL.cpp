@@ -16,6 +16,9 @@
 #if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
 #endif
+#if LEMONCBC == 1
+#include <limbo/algorithms/coloring/ILPColoringLemonCbc.h>
+#endif
 #include <limbo/algorithms/coloring/BacktrackColoring.h>
 
 namespace SimpleMPL {
@@ -43,7 +46,7 @@ void SimpleMPL::read_cmd(int argc, char** argv)
     assert_msg(m_db.coloring_distance_micron>0 || !m_db.sPathLayer.empty(),    "should set coloring_distance_micron (>0) or specify path_layer for conflict edges");
     assert_msg(!m_db.sUncolorLayer.empty(), "should set uncolor_layer");
 	// check algorithm type in run time 
-#if GUROBI == 1
+#if GUROBI == 1 || LEMONCBC == 1
 	assert_msg(m_db.algo == layoutdb_type::ILP || m_db.algo == layoutdb_type::BACKTRACK, "only ILP and BACKTRACK algorithms are available");
 #else 
 	assert_msg(m_db.algo == layoutdb_type::BACKTRACK, "only BACKTRACK algorithm is available");
@@ -112,8 +115,8 @@ void SimpleMPL::solve()
 			vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
 			vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
 #ifdef DEBUG
-			//		if (comp_id == 4693)
-			//			cout << "hehe\n";
+//					if (comp_id != 9941)
+//						continue;
 #endif
 			// solve component 
 			// pass iterators to save memory 
@@ -314,6 +317,10 @@ uint32_t
 SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 //{{{
 {
+#ifdef DEBUG
+	const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
+	//const uint32_t dbg_comp_id = 9941;
+#endif
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
 #ifdef DEBUG
@@ -381,7 +388,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	}
 
 #ifdef DEBUG
-	if (0)
+	if (comp_id == dbg_comp_id)
 	{
 		boost::dynamic_properties dp;
 		dp.property("id", boost::get(boost::vertex_index, dg));
@@ -413,7 +420,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	pair<graph_type, map<vertex_descriptor, vertex_descriptor> > sg = gs.simplified_graph(); // simplified graph and vertex mapping
 
 #ifdef DEBUG
-	if (0)
+	if (comp_id == dbg_comp_id)
 		gs.write_simplified_graph_dot("graph_simpl");
 #endif
 
@@ -425,7 +432,9 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		case layoutdb_type::ILP:
 #if GUROBI == 1
 			pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg.first);
-#else 
+#elif LEMONCBC == 1
+			pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg.first);
+#else
 			pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg.first);
 #endif
 			break;

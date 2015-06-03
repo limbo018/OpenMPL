@@ -642,6 +642,14 @@ struct LayoutDB : public rectangle_data<T>
 			printf(")");
 		}
 		printf("\n");
+		const char* buf;
+		switch (algo)
+		{
+			case ILP: buf = "ILP"; break;
+			case BACKTRACK: buf = "BACKTRACK"; break;
+			default: buf = "UNKNOWN"; break;
+		}
+		printf("(I) Algorithm = %s\n", buf);
 	}
 };
 
