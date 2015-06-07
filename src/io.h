@@ -300,6 +300,7 @@ struct CmdParser
         printf("\"-coloring_distance\"  : followed by floating point number indicating number of coloring distance in micron. \n");
         printf("\"-color_num\"          : followed by integer indicating number of masks (colors). \n");
         printf("\"-thread_num\"         : followed by integer, maximum thread number\n");
+        printf("\"-simplify_level\"     : followed by integer, graph simplification level, 0|1|2\n");
         printf("\"-precolor_layer\"     : followed by an integer, pre-coloring layer\n");
         printf("\"-uncolor_layer\"      : followed by an integer, layer for coloring\n");
         printf("\"-path_layer\"         : followed by an integer, layer for conflict edges\n");
@@ -341,6 +342,12 @@ struct CmdParser
 				argc--;
 				argv++;
 				db.color_num = atoi(*argv);
+			}
+			else if (strcmp(*argv, "-simplify_level") == 0)
+			{
+				argc--;
+				argv++;
+				db.simplify_level = atoi(*argv);
 			}
 			else if (strcmp(*argv, "-thread_num") == 0)
 			{

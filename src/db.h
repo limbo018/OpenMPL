@@ -369,6 +369,7 @@ struct LayoutDB : public rectangle_data<T>
 	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_micron and unit
 	double coloring_distance_micron;           ///< minimum coloring distance in micron, set from command line 
 	int32_t  color_num;                        ///< number of colors available, only support 3 or 4
+	uint32_t simplify_level;                   ///< simplification level 0|1|2, default is 1
 	uint32_t thread_num;                       ///< number of maximum threads for parallel computation 
 	bool     verbose;                          ///< control screen message 
 
@@ -424,6 +425,7 @@ struct LayoutDB : public rectangle_data<T>
 		coloring_distance        = 0;
 		coloring_distance_micron = 0;
 		color_num                = 3;
+		simplify_level           = 2;
 		thread_num               = 1;
 		verbose                  = false;
 		input_gds                = "";
@@ -444,6 +446,7 @@ struct LayoutDB : public rectangle_data<T>
 		coloring_distance = rhs.coloring_distance;
 		coloring_distance_micron = rhs.coloring_distance_micron;
 		color_num         = rhs.color_num;
+		simplify_level    = rhs.simplify_level;
 		thread_num        = rhs.thread_num;
 		verbose           = rhs.verbose;
 		input_gds         = rhs.input_gds;
@@ -614,6 +617,7 @@ struct LayoutDB : public rectangle_data<T>
 		printf("(I) Total patterns # = %lu\n", vPattern.size());
 		printf("(I) Coloring distance = %lld db ( %g um )\n", coloring_distance, coloring_distance_micron);
 		printf("(I) Color num = %d\n", color_num);
+		printf("(I) Simplification level = %u\n", simplify_level);
 		printf("(I) Thread num = %u\n", thread_num);
 		printf("(I) Uncolored layer # = %lu", sUncolorLayer.size());
 		if (!sUncolorLayer.empty())
@@ -645,7 +649,15 @@ struct LayoutDB : public rectangle_data<T>
 		const char* buf;
 		switch (algo)
 		{
-			case ILP: buf = "ILP"; break;
+			case ILP: 
+#if GUROBI == 1
+				buf = "ILP (Gurobi)"; 
+#elif LEMONCBC == 1
+				buf = "ILP (CBC)";
+#else
+				buf = "ILP";
+#endif
+				break;
 			case BACKTRACK: buf = "BACKTRACK"; break;
 			default: buf = "UNKNOWN"; break;
 		}

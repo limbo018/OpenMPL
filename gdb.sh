@@ -6,12 +6,13 @@
 #########################################################################
 #!/bin/bash
 
-color_num=3
+color_num=4
+simplify_level=2
 thread_num=1
-algo=BACKTRACK
-#benchmark="output_1x1-flat.gds"
+algo=BACKTRACK # BACKTRACK or ILP
+benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
-benchmark="via2_local_precolor.gds"
+#benchmark="via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm/dpt_array"
@@ -39,9 +40,10 @@ gdb \
 	-uncolor_layer 216 \
 	-path_layer 207 \
 	-color_num ${color_num} \
+	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
-	-algo ${algo} \
-	-verbose
+	-algo ${algo} #\
+#	-verbose
 
 elif [[ $benchmark == Via2_local_precolor* ]]; then
 
@@ -57,8 +59,10 @@ gdb \
 	-precolor_layer 203 \
 	-coloring_distance 0.13 \
 	-color_num ${color_num} \
+	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
-	-algo ${algo}
+	-algo ${algo} \
+	-verbose
 
 elif [[ $benchmark == via2_local_precolor* ]]; then
 
@@ -74,8 +78,10 @@ gdb \
 	-precolor_layer 203 \
 	-coloring_distance 0.13 \
 	-color_num ${color_num} \
+	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
-	-algo ${algo}
+	-algo ${algo} \
+	-verbose
 
 fi
 

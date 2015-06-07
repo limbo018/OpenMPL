@@ -318,8 +318,8 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 //{{{
 {
 #ifdef DEBUG
-	//const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
-	const uint32_t dbg_comp_id = 0;
+	const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
+	//const uint32_t dbg_comp_id = 4180;
 #endif
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
@@ -404,20 +404,16 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 #endif
 	// graph simplification 
 	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
-	graph_simplification_type gs (dg);
+	graph_simplification_type gs (dg, m_db.color_num);
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
 	// keep the order of simplification 
-	gs.hide_small_degree(m_db.color_num); // hide vertices with degree smaller than color_num
-#if 0
-	// applicable for checker, but no guarantee for minimal conflicts 
-	if (m_db.color_num == 3)
-		gs.merge_subK4(); // merge sub-K4 structure 
-#endif
-	gs.articulation_points(); // find articulation points and divide graph into components 
-	gs.connected_component(); // connected components must be called explicitly 
+	if (m_db.simplify_level == 0)
+		gs.simplify(graph_simplification_type::NONE);
+	else if (m_db.simplify_level == 1)
+		gs.simplify(graph_simplification_type::HIDE_SMALL_DEGREE);
+	else if (m_db.simplify_level == 2)
+		gs.simplify(graph_simplification_type::HIDE_SMALL_DEGREE | graph_simplification_type::BICONNECTED_COMPONENT);
 	// collect simplified information 
-	//vector<graph_simplification_type::vertex_status_type> const& vStatus = gs.status();
-	//vector<vector<vertex_descriptor> > const& vChildren = gs.children();
 	stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 
 #ifdef DEBUG
@@ -438,6 +434,8 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		vector<vertex_descriptor>& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
 
 		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
+
+		vSubColor.assign(num_vertices(sg), -1);
 
 		// solve coloring 
 		typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
@@ -485,24 +483,9 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		delete pcs;
 	}
 
-	// recover colors for articulation points by rotation 
-	gs.recover_articulation_points(mSubColor, mSimpl2Orig, m_db.color_num);
-	// map mSubColor to vColor
-	for (uint32_t sub_comp_id = 0; sub_comp_id < mSubColor.size(); ++sub_comp_id)
-	{
-		vector<int8_t> const& vSubColor = mSubColor[sub_comp_id];
-		vector<vertex_descriptor> const& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
-		for (uint32_t subv = 0; subv < vSubColor.size(); ++subv)
-		{
-			vertex_descriptor v = vSimpl2Orig[subv];
-			if (vColor[v] >= 0)
-				assert(vColor[v] == vSubColor[subv]);
-			else 
-				vColor[v] = vSubColor[subv];
-		}
-	}
-	// recover merged vertices 
-	//gs.recover_merge_subK4(vColor);
+	// recover color assignment according to the simplification level set previously 
+	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
+	gs.recover(vColor, mSubColor, mSimpl2Orig);
 
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
