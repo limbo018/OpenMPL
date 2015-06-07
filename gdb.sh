@@ -6,7 +6,7 @@
 #########################################################################
 #!/bin/bash
 
-color_num=4
+color_num=3
 simplify_level=2
 thread_num=1
 algo=BACKTRACK # BACKTRACK or ILP
