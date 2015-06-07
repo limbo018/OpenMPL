@@ -366,8 +366,8 @@ struct LayoutDB : public rectangle_data<T>
 	set<int32_t> sUncolorLayer;                ///< layers that represent uncolored patterns 
 	set<int32_t> sPrecolorLayer;               ///< layers that represent precolored features, they should have the same number of colors 
 	set<int32_t> sPathLayer;                   ///< path layers that represent conflict edges 
-	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_micron and unit
-	double coloring_distance_micron;           ///< minimum coloring distance in micron, set from command line 
+	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_nm and unit
+	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
 	int32_t  color_num;                        ///< number of colors available, only support 3 or 4
 	uint32_t simplify_level;                   ///< simplification level 0|1|2, default is 1
 	uint32_t thread_num;                       ///< number of maximum threads for parallel computation 
@@ -423,7 +423,7 @@ struct LayoutDB : public rectangle_data<T>
 		strname                  = "TOPCELL";
 		unit                     = 0.001;
 		coloring_distance        = 0;
-		coloring_distance_micron = 0;
+		coloring_distance_nm     = 0;
 		color_num                = 3;
 		simplify_level           = 2;
 		thread_num               = 1;
@@ -444,7 +444,7 @@ struct LayoutDB : public rectangle_data<T>
 		sPrecolorLayer    = rhs.sPrecolorLayer;
 		sPathLayer        = rhs.sPathLayer;
 		coloring_distance = rhs.coloring_distance;
-		coloring_distance_micron = rhs.coloring_distance_micron;
+		coloring_distance_nm = rhs.coloring_distance_nm;
 		color_num         = rhs.color_num;
 		simplify_level    = rhs.simplify_level;
 		thread_num        = rhs.thread_num;
@@ -545,8 +545,8 @@ struct LayoutDB : public rectangle_data<T>
 	/// it should be faster than gradually insertion 
 	void initialize_data()
 	{
-		// remember to set coloring_distance from coloring_distance_micron and unit 
-		coloring_distance = (coordinate_difference)round(coloring_distance_micron/(unit*1e+6));
+		// remember to set coloring_distance from coloring_distance_nm and unit 
+		coloring_distance = (coordinate_difference)round(coloring_distance_nm/(unit*1e+9));
 		// I assume there may be duplicate in the input gds, but no overlapping patterns 
 		// duplicates are removed with following function
 		remove_overlap();
@@ -615,7 +615,7 @@ struct LayoutDB : public rectangle_data<T>
 	{
 		printf("(I) Input data...\n");
 		printf("(I) Total patterns # = %lu\n", vPattern.size());
-		printf("(I) Coloring distance = %lld db ( %g um )\n", coloring_distance, coloring_distance_micron);
+		printf("(I) Coloring distance = %lld db ( %g nm )\n", coloring_distance, coloring_distance_nm);
 		printf("(I) Color num = %d\n", color_num);
 		printf("(I) Simplification level = %u\n", simplify_level);
 		printf("(I) Thread num = %u\n", thread_num);
@@ -697,6 +697,16 @@ struct geometry_concept<SimpleMPL::LayoutDB<T> >
       return true;
     }
     return false;
+  }
+
+/// bug in boost library
+  template <typename T>
+  typename enable_if< typename gtl_and_3<y_r_edist2, typename is_rectangle_concept<typename geometry_concept<SimpleMPL::Rectangle<T> >::type>::type,
+                                                          typename is_rectangle_concept<typename geometry_concept<SimpleMPL::Rectangle<T> >::type>::type>::type,
+                       typename rectangle_distance_type<SimpleMPL::Rectangle<T> >::type>::type
+  euclidean_distance(const SimpleMPL::Rectangle<T> & lvalue, const SimpleMPL::Rectangle<T>& rvalue) {
+    typename rectangle_distance_type<SimpleMPL::Rectangle<T> >::type val = square_euclidean_distance(lvalue, rvalue); // originally the result is cast to int, which causes overflow 
+    return std::sqrt(val);
   }
 
 }} // namespace boost // namespace polygon

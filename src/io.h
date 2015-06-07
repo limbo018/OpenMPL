@@ -297,7 +297,7 @@ struct CmdParser
         printf("                            SimpleMPL 1.X Usage                         \n");
         printf("\"-in\"                 : followed by input gds name. \n");
         printf("\"-output\"             : followed by output gds name (default: \"output.gds\"). \n");
-        printf("\"-coloring_distance\"  : followed by floating point number indicating number of coloring distance in micron. \n");
+        printf("\"-coloring_distance\"  : followed by floating point number indicating number of coloring distance in nanometer. \n");
         printf("\"-color_num\"          : followed by integer indicating number of masks (colors). \n");
         printf("\"-thread_num\"         : followed by integer, maximum thread number\n");
         printf("\"-simplify_level\"     : followed by integer, graph simplification level, 0|1|2\n");
@@ -335,7 +335,7 @@ struct CmdParser
 			{
 				argc--;
 				argv++;
-				db.coloring_distance_micron = atof(*argv);
+				db.coloring_distance_nm = atof(*argv);
 			}
 			else if (strcmp(*argv, "-color_num") == 0)
 			{

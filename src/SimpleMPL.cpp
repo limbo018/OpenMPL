@@ -43,7 +43,7 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 	// check options 
 	assert_msg(cmd(argc, argv),             "failed to parse command");
     assert_msg(!m_db.input_gds.empty(),     "should specify input gds name");
-    assert_msg(m_db.coloring_distance_micron>0 || !m_db.sPathLayer.empty(),    "should set coloring_distance_micron (>0) or specify path_layer for conflict edges");
+    assert_msg(m_db.coloring_distance_nm>0 || !m_db.sPathLayer.empty(),    "should set coloring_distance_nm (>0) or specify path_layer for conflict edges");
     assert_msg(!m_db.sUncolorLayer.empty(), "should set uncolor_layer");
 	// check algorithm type in run time 
 #if GUROBI == 1 || LEMONCBC == 1
@@ -238,8 +238,8 @@ void SimpleMPL::construct_graph()
 			vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
 			edge_num += vAdjVertex.size();
 		}
-		m_db.coloring_distance_micron = m_db.coloring_distance*(m_db.unit*1e+6);
-		printf("(I) Estimated coloring distance from conflict edges = %lld (%g um)\n", m_db.coloring_distance, m_db.coloring_distance_micron);
+		m_db.coloring_distance_nm = m_db.coloring_distance*(m_db.unit*1e+9);
+		printf("(I) Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db.coloring_distance, m_db.coloring_distance_nm);
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db.color_num, 0);
@@ -517,7 +517,14 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 			// skip uncolored vertices 
 			if (vColor[u] < 0) continue; 
 			// we consider euclidean distance
+#ifdef DEBUG
+			if (comp_id == 599 && v == 129 && u == 146)
+				printf("stop\n");
+#endif
 			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*vPattern[*(itBgn+v)], *vPattern[*(itBgn+u)]);
+#ifdef DEBUG
+			assert(vColor[u] < m_db.color_num && distance >= 0);
+#endif
 			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
 		}
 

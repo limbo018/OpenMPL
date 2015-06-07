@@ -10,9 +10,9 @@ color_num=3
 simplify_level=2
 thread_num=1
 algo=BACKTRACK # BACKTRACK or ILP
-benchmark="output_1x1-flat.gds"
+#benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
-#benchmark="via2_local_precolor.gds"
+benchmark="via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm/dpt_array"
@@ -57,7 +57,7 @@ gdb \
 	-precolor_layer 201 \
 	-precolor_layer 202 \
 	-precolor_layer 203 \
-	-coloring_distance 0.13 \
+	-coloring_distance 130 \
 	-color_num ${color_num} \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
@@ -76,7 +76,7 @@ gdb \
 	-precolor_layer 201 \
 	-precolor_layer 202 \
 	-precolor_layer 203 \
-	-coloring_distance 0.13 \
+	-coloring_distance 130 \
 	-color_num ${color_num} \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
