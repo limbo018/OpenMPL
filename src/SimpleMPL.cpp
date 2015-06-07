@@ -318,8 +318,8 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 //{{{
 {
 #ifdef DEBUG
-	const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
-	//const uint32_t dbg_comp_id = 4180;
+	//const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
+	const uint32_t dbg_comp_id = 1075;
 #endif
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
