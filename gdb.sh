@@ -8,14 +8,17 @@
 
 color_num=3
 thread_num=1
-algo=ILP
-benchmark="output_1x1-flat.gds"
+algo=BACKTRACK
+#benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
+benchmark="via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm/dpt_array"
 elif [[ $benchmark == Via2_local_precolor* ]]; then
 	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm"
+elif [[ $benchmark == via2_local_precolor* ]]; then
+	benchmark_dir="./bin/bench"
 fi
 
 #output="${benchmark%.*}-out.gds"
@@ -43,6 +46,23 @@ gdb \
 elif [[ $benchmark == Via2_local_precolor* ]]; then
 
 # this parameter works for Via2_local_precolor.gds
+gdb \
+	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
+	--args ./bin/SimpleMPL \
+	-in "${benchmark_dir}/${benchmark}" \
+	-out "${output}" \
+	-uncolor_layer 100 \
+	-precolor_layer 201 \
+	-precolor_layer 202 \
+	-precolor_layer 203 \
+	-coloring_distance 0.13 \
+	-color_num ${color_num} \
+	-thread_num ${thread_num} \
+	-algo ${algo}
+
+elif [[ $benchmark == via2_local_precolor* ]]; then
+
+# this parameter works for via2_local_precolor.gds
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
 	--args ./bin/SimpleMPL \

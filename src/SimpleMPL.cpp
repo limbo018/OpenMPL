@@ -318,8 +318,8 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 //{{{
 {
 #ifdef DEBUG
-	const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
-	//const uint32_t dbg_comp_id = 9941;
+	//const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
+	const uint32_t dbg_comp_id = 0;
 #endif
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
@@ -413,76 +413,98 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	if (m_db.color_num == 3)
 		gs.merge_subK4(); // merge sub-K4 structure 
 #endif
+	gs.articulation_points(); // find articulation points and divide graph into components 
+	gs.connected_component(); // connected components must be called explicitly 
 	// collect simplified information 
-	vector<graph_simplification_type::vertex_status_type> const& vStatus = gs.status();
-	vector<vector<vertex_descriptor> > const& vChildren = gs.children();
+	//vector<graph_simplification_type::vertex_status_type> const& vStatus = gs.status();
+	//vector<vector<vertex_descriptor> > const& vChildren = gs.children();
 	stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
-	pair<graph_type, map<vertex_descriptor, vertex_descriptor> > sg = gs.simplified_graph(); // simplified graph and vertex mapping
 
 #ifdef DEBUG
 	if (comp_id == dbg_comp_id)
 		gs.write_simplified_graph_dot("graph_simpl");
 #endif
 
-	// solve coloring 
-	typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
-	coloring_solver_type* pcs = NULL;
-	switch (m_db.algo)
+	// in order to recover color from articulation points 
+	// we have to record all components and mappings 
+	// but graph is not necessary 
+	vector<vector<int8_t> > mSubColor (gs.num_component());
+	vector<vector<vertex_descriptor> > mSimpl2Orig (gs.num_component());
+	double acc_obj_value = 0;
+	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
-		case layoutdb_type::ILP:
-#if GUROBI == 1
-			pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg.first);
-#elif LEMONCBC == 1
-			pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg.first);
-#else
-			pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg.first);
-#endif
-			break;
-		case layoutdb_type::BACKTRACK:
-			pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg.first);
-			break;
-		default: assert_msg(0, "unknown algorithm type");
-	}
+		graph_type sg;
+		vector<int8_t>& vSubColor = mSubColor[sub_comp_id];
+		vector<vertex_descriptor>& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
 
-	pcs->stitch_weight(0.1);
-	pcs->color_num(m_db.color_num);
-	// set precolored vertices 
-	graph_traits<graph_type>::vertex_iterator vi, vie;
-	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
-	{
-		vertex_descriptor v = *vi;
-		int8_t color = vColor[sg.second[v]];
-		if (color >= 0 && color < m_db.color_num)
-			pcs->precolor(v, color);
-	}
-	pcs->threads(1);
-	double obj_value = (*pcs)(); // solve coloring 
+		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 
-	// collect coloring results from simplified graph 
-	for (tie(vi, vie) = vertices(sg.first); vi != vie; ++vi)
-	{
-		vertex_descriptor v = *vi;
-		int8_t color = pcs->color(v);
-		assert(color >= 0 && color < m_db.color_num);
-		vColor[ sg.second[v] ] = color;
-	}
-	delete pcs;
-	
-	// recover colors for simplified vertices with balanced assignment 
-	// recover merged vertices 
-	for (uint32_t v = 0; v != vStatus.size(); ++v)
-	{
-		if (vStatus[v] == graph_simplification_type::GOOD)
+		// solve coloring 
+		typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
+		coloring_solver_type* pcs = NULL;
+		switch (m_db.algo)
 		{
-			assert(vColor[v] >= 0 && vColor[v] < m_db.color_num);
-			for (uint32_t j = 0; j != vChildren[v].size(); ++j)
-			{
-				vertex_descriptor u = vChildren[v][j];
-				if (v != u) 
-					vColor[u] = vColor[v];
-			}
+			case layoutdb_type::ILP:
+#if GUROBI == 1
+				pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg);
+#elif LEMONCBC == 1
+				pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg);
+#else
+				pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg);
+#endif
+				break;
+			case layoutdb_type::BACKTRACK:
+				pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg);
+				break;
+			default: assert_msg(0, "unknown algorithm type");
+		}
+
+		pcs->stitch_weight(0.1);
+		pcs->color_num(m_db.color_num);
+		// set precolored vertices 
+		graph_traits<graph_type>::vertex_iterator vi, vie;
+		for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+		{
+			vertex_descriptor v = *vi;
+			int8_t color = vColor[vSimpl2Orig[v]];
+			if (color >= 0 && color < m_db.color_num)
+				pcs->precolor(v, color);
+		}
+		pcs->threads(1);
+		double obj_value = (*pcs)(); // solve coloring 
+		acc_obj_value += obj_value;
+
+		// collect coloring results from simplified graph 
+		for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+		{
+			vertex_descriptor v = *vi;
+			int8_t color = pcs->color(v);
+			assert(color >= 0 && color < m_db.color_num);
+			vSubColor[v] = color;
+		}
+		delete pcs;
+	}
+
+	// recover colors for articulation points by rotation 
+	gs.recover_articulation_points(mSubColor, mSimpl2Orig, m_db.color_num);
+	// map mSubColor to vColor
+	for (uint32_t sub_comp_id = 0; sub_comp_id < mSubColor.size(); ++sub_comp_id)
+	{
+		vector<int8_t> const& vSubColor = mSubColor[sub_comp_id];
+		vector<vertex_descriptor> const& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
+		for (uint32_t subv = 0; subv < vSubColor.size(); ++subv)
+		{
+			vertex_descriptor v = vSimpl2Orig[subv];
+			if (vColor[v] >= 0)
+				assert(vColor[v] == vSubColor[subv]);
+			else 
+				vColor[v] = vSubColor[subv];
 		}
 	}
+	// recover merged vertices 
+	//gs.recover_merge_subK4(vColor);
+
+	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
 	while (!vHiddenVertices.empty())
 	{
@@ -563,7 +585,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
-	assert(obj_value == component_conflict_num);
+	assert(acc_obj_value == component_conflict_num);
 
 	if (m_db.verbose)
 		fprintf(stderr, "%u conflicts\n", component_conflict_num);
