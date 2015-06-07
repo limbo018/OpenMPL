@@ -517,10 +517,6 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 			// skip uncolored vertices 
 			if (vColor[u] < 0) continue; 
 			// we consider euclidean distance
-#ifdef DEBUG
-			if (comp_id == 599 && v == 129 && u == 146)
-				printf("stop\n");
-#endif
 			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*vPattern[*(itBgn+v)], *vPattern[*(itBgn+u)]);
 #ifdef DEBUG
 			assert(vColor[u] < m_db.color_num && distance >= 0);
