@@ -38,11 +38,16 @@ INCLUDE = \
 # only gurobi60 is dynamically linked 
 # static libraries have .a as suffix in both unix and darwin 
 # but dynamic libraries have different suffixes 
-LIBS += \
+LIBS = \
 	   $(BOOST_DIR)/lib/libboost_system.a \
 	   $(BOOST_DIR)/lib/libboost_timer.a \
 	   $(BOOST_DIR)/lib/libboost_chrono.a \
 	   $(LIMBO_DIR)/lib/libgdsparser.a 
+
+# boost chrono links to to librt.a under Linux
+ifeq ($(UNAME_S), Linux)
+LIBS += -lrt
+endif 
 
 # GUROBI 
 ifeq ($(GUROBI), 1)
