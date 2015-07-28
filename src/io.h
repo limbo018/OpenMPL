@@ -19,6 +19,7 @@
 #include <boost/lexical_cast.hpp>
 #include <limbo/parsers/gdsii/stream/GdsReader.h>
 #include <limbo/parsers/gdsii/stream/GdsWriter.h>
+#include <limbo/programoptions/ProgramOptions.h>
 
 #include "db.h"
 
@@ -290,115 +291,55 @@ struct CmdParser
 
 	CmdParser(layoutdb_type& _db) : db(_db) {}
 
-    void print_usage()
-    {
-        printf("\n");
-        printf("========================================================================\n");
-        printf("                            SimpleMPL 1.X Usage                         \n");
-        printf("\"-in\"                 : followed by input gds name. \n");
-        printf("\"-output\"             : followed by output gds name (default: \"output.gds\"). \n");
-        printf("\"-coloring_distance\"  : followed by floating point number indicating number of coloring distance in nanometer. \n");
-        printf("\"-color_num\"          : followed by integer indicating number of masks (colors). \n");
-        printf("\"-thread_num\"         : followed by integer, maximum thread number\n");
-        printf("\"-simplify_level\"     : followed by integer, graph simplification level, 0|1|2\n");
-        printf("\"-precolor_layer\"     : followed by an integer, pre-coloring layer\n");
-        printf("\"-uncolor_layer\"      : followed by an integer, layer for coloring\n");
-        printf("\"-path_layer\"         : followed by an integer, layer for conflict edges\n");
-        printf("========================================================================\n");
-        printf("\n");
-    }
-
 	bool operator()(int argc, char** argv)
 	{
-		//if (argc < 4) 
-		//{
-		//	cout << "too few arguments" << endl;
-		//	return false;
-		//}
-		argc--;
-		argv++;
-		while (argc--)
-		{
-			if (strcmp(*argv, "-in") == 0)
-			{
-				argc--;
-				argv++;
-				db.input_gds = *argv;
-			}
-			else if (strcmp(*argv, "-out") == 0)
-			{
-				argc--;
-				argv++;
-				db.output_gds = *argv;
-			}
-			else if (strcmp(*argv, "-coloring_distance") == 0)
-			{
-				argc--;
-				argv++;
-				db.coloring_distance_nm = atof(*argv);
-			}
-			else if (strcmp(*argv, "-color_num") == 0)
-			{
-				argc--;
-				argv++;
-				db.color_num = atoi(*argv);
-			}
-			else if (strcmp(*argv, "-simplify_level") == 0)
-			{
-				argc--;
-				argv++;
-				db.simplify_level = atoi(*argv);
-			}
-			else if (strcmp(*argv, "-thread_num") == 0)
-			{
-				argc--;
-				argv++;
-				db.thread_num = atoi(*argv);
-			}
-			else if (strcmp(*argv, "-path_layer") == 0)
-			{
-				argc--;
-				argv++;
-				db.sPathLayer.insert(atoi(*argv));
-			}
-			else if (strcmp(*argv, "-precolor_layer") == 0)
-			{
-				argc--;
-				argv++;
-				db.sPrecolorLayer.insert(atoi(*argv));
-			}
-			else if (strcmp(*argv, "-uncolor_layer") == 0)
-			{
-				argc--;
-				argv++;
-				db.sUncolorLayer.insert(atoi(*argv));
-			}
-			else if (strcmp(*argv, "-algo") == 0)
-			{
-				argc--;
-				argv++;
-				if (limbo::iequals(*argv, "ILP")) 
-					db.algo = layoutdb_type::ILP;
-				else if (limbo::iequals(*argv, "BACKTRACK"))
-					db.algo = layoutdb_type::BACKTRACK;
-				else printf("(W) Unknown algorithm type %s, set to default\n", *argv);
-			}
-			else if (strcmp(*argv, "-verbose") == 0)
-			{
-				db.verbose = true;
-			}
-			else if (strcmp(*argv, "-help") == 0)
-			{
-                print_usage();
-                exit(0);
-			}
-			else 
-			{
-				cout << "unknown command: " << *argv << endl;
-				return false;
-			}
-			argv++;
-		}
+        bool help = false;
+        string algo_str;
+        // append options here 
+        typedef limbo::programoptions::ProgramOptions po_type;
+        using limbo::programoptions::Value;
+        po_type desc (std::string("SimpleMPL 1.X Usage"));
+        desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true))
+            .add_option(Value<string>("-in", &db.input_gds, "input gds file name").required(true))
+            .add_option(Value<string>("-out", &db.output_gds, "output gds file name").default_value("output.gds"))
+            .add_option(Value<double>("-coloring_distance", &db.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(0))
+            .add_option(Value<int32_t>("-color_num", &db.color_num, "an integer indicating number of masks (colors)").required(true))
+            .add_option(Value<int32_t>("-simplify_level", &db.simplify_level, "an integer indicating graph simplification level <0|1|2>").default_value(2))
+            .add_option(Value<int32_t>("-thread_num", &db.thread_num, "an integer indicating maximum thread number").default_value(1))
+            .add_option(Value<set<int32_t> >("-path_layer", &db.sPathLayer, "an integer indicating layer for conflict edges"))
+            .add_option(Value<set<int32_t> >("-precolor_layer", &db.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
+            .add_option(Value<set<int32_t> >("-uncolor_layer", &db.sUncolorLayer, "an integer indicating layer for coloring").required(true))
+            .add_option(Value<string>("-algo", &algo_str, "algorithm type <ILP|BACKTRACK>").default_value("BACKTRACK"))
+            .add_option(Value<bool>("-verbose", &db.verbose, "control screen messages").toggle(true).default_value(false).toggle_value(true))
+            ;
+        try
+        {
+            desc.parse(argc, argv);
+
+            // print help message 
+            if (help)
+            {
+                std::cout << desc << "\n";
+                exit(1);
+            }
+
+            // post processing algo_str 
+            if (limbo::iequals(algo_str, "ILP")) 
+                db.algo = layoutdb_type::ILP;
+            else if (limbo::iequals(algo_str, "BACKTRACK"))
+                db.algo = layoutdb_type::BACKTRACK;
+            else printf("(W) Unknown algorithm type %s, set to default\n", algo_str.c_str());
+
+            // check condition 
+            assert_msg(db.coloring_distance_nm > 0 || !db.sPathLayer.empty(),    "should set coloring_distance_nm (>0) or specify path_layer for conflict edges");
+        }
+        catch (std::exception& e)
+        {
+            // print help message and error message 
+            std::cout << desc << "\n";
+            printf("(E) %s\n", e.what());
+            return false;
+        }
 		return true;
 	}
 };

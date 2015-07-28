@@ -171,8 +171,8 @@ class Rectangle : public rectangle_data<T>
 #endif
 
 	protected:
-		int8_t m_color; ///< color 
-		int32_t m_layer; ///< input layer 
+		int32_t m_color : 4; ///< color, 4-bit is enough  
+		int32_t m_layer : 28; ///< input layer, 28-bit is enough
 		//uint32_t m_comp_id; ///< independent component id 
 		uint32_t m_pattern_id; ///< index in the pattern array 
 };
@@ -368,10 +368,10 @@ struct LayoutDB : public rectangle_data<T>
 	set<int32_t> sPathLayer;                   ///< path layers that represent conflict edges 
 	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_nm and unit
 	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
-	int32_t  color_num;                        ///< number of colors available, only support 3 or 4
-	uint32_t simplify_level;                   ///< simplification level 0|1|2, default is 1
-	uint32_t thread_num;                       ///< number of maximum threads for parallel computation 
-	bool     verbose;                          ///< control screen message 
+	int32_t color_num;                         ///< number of colors available, only support 3 or 4
+	int32_t simplify_level;                    ///< simplification level 0|1|2, default is 1
+	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
+	bool verbose;                              ///< control screen message 
 
 	string   input_gds;                        ///< input gdsii filename 
 	string   output_gds;                       ///< output gdsii filename 

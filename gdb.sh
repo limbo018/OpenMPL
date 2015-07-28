@@ -8,16 +8,16 @@
 
 color_num=3
 simplify_level=2
-thread_num=1
+thread_num=4
 algo=BACKTRACK # BACKTRACK or ILP
-#benchmark="output_1x1-flat.gds"
+benchmark="output_20x20-flat.gds"
 #benchmark="Via2_local_precolor.gds"
-benchmark="via2_local_precolor.gds"
+#benchmark="via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
-	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm/dpt_array"
+	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm/dpt_array"
 elif [[ $benchmark == Via2_local_precolor* ]]; then
-	benchmark_dir="/home/usr1/shared_benchmarks/imec_7nm"
+	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm"
 elif [[ $benchmark == via2_local_precolor* ]]; then
 	benchmark_dir="./bin/bench"
 fi

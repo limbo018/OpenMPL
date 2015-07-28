@@ -41,10 +41,8 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 	// read command 
 	CmdParser<coordinate_type> cmd (m_db);
 	// check options 
-	assert_msg(cmd(argc, argv),             "failed to parse command");
-    assert_msg(!m_db.input_gds.empty(),     "should specify input gds name");
-    assert_msg(m_db.coloring_distance_nm>0 || !m_db.sPathLayer.empty(),    "should set coloring_distance_nm (>0) or specify path_layer for conflict edges");
-    assert_msg(!m_db.sUncolorLayer.empty(), "should set uncolor_layer");
+    bool flag = cmd(argc, argv);
+	assert_msg(flag,             "failed to parse command");
 	// check algorithm type in run time 
 #if GUROBI == 1 || LEMONCBC == 1
 	assert_msg(m_db.algo == layoutdb_type::ILP || m_db.algo == layoutdb_type::BACKTRACK, "only ILP and BACKTRACK algorithms are available");
@@ -641,7 +639,7 @@ uint32_t SimpleMPL::conflict_num() const
 	return (cnt>>1);
 }
 
-void SimpleMPL::print_welcome()
+void SimpleMPL::print_welcome() const
 {
   printf("\n\n");
   printf("=======================================================================\n");

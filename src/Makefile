@@ -42,7 +42,8 @@ LIBS = \
 	   $(BOOST_DIR)/lib/libboost_system.a \
 	   $(BOOST_DIR)/lib/libboost_timer.a \
 	   $(BOOST_DIR)/lib/libboost_chrono.a \
-	   $(LIMBO_DIR)/lib/libgdsparser.a 
+	   $(LIMBO_DIR)/lib/libgdsparser.a \
+	   $(LIMBO_DIR)/lib/libprogramoptions.a
 
 # boost chrono links to to librt.a under Linux
 ifeq ($(UNAME_S), Linux)
