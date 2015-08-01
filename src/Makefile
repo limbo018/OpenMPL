@@ -38,38 +38,29 @@ INCLUDE = \
 # only gurobi60 is dynamically linked 
 # static libraries have .a as suffix in both unix and darwin 
 # but dynamic libraries have different suffixes 
-LIBS = \
-	   $(BOOST_DIR)/lib/libboost_system.a \
-	   $(BOOST_DIR)/lib/libboost_timer.a \
-	   $(BOOST_DIR)/lib/libboost_chrono.a \
-	   $(LIMBO_DIR)/lib/libgdsparser.a \
-	   $(LIMBO_DIR)/lib/libprogramoptions.a
+LIBS = -Wl,-Bstatic \
+	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -lboost_chrono \
+	   -L $(LIMBO_DIR)/lib -lgdsparser -lprogramoptions
 
 # boost chrono links to to librt.a under Linux
 ifeq ($(UNAME_S), Linux)
-LIBS += -lrt
+LIBS += -Wl,-Bstatic -lrt
 endif 
 
 # GUROBI 
 ifeq ($(GUROBI), 1)
 INCLUDE += -I $(GUROBI_HOME)/include
-LIBS += $(GUROBI_HOME)/lib/libgurobi_c++.a \
-		-L $(GUROBI_HOME)/lib -lgurobi60 
+LIBS += -L $(GUROBI_HOME)/lib \
+		-Wl,-Bstatic -lgurobi_c++ \
+		-Wl,-Bdynamic -lgurobi60
 endif 
 # Cbc lemon api (Cbc must be installed with static flag and lemon must be installed with Cbc as MIP solver)
 ifeq ($(LEMONCBC), 1)
 INCLUDE += -I $(CBC_DIR)/include \
 		   -I $(LEMON_DIR)/include
-LIBS += $(CBC_DIR)/lib/libCbc.so \
-		$(CBC_DIR)/lib/libCbcSolver.so \
-		$(CBC_DIR)/lib/libCgl.so \
-		$(CBC_DIR)/lib/libClp.so \
-		$(CBC_DIR)/lib/libCoinUtils.so \
-		$(CBC_DIR)/lib/libOsiCbc.so \
-		$(CBC_DIR)/lib/libOsiClp.so \
-		$(CBC_DIR)/lib/libOsi.so \
-		$(LEMON_DIR)/lib/libemon.a \
-		-lz -lbz2 \
+LIBS += -L $(CBC_DIR)/lib -Wl,-Bdynamic -lCbc -lCbcSolver -lCgl -lClp -lCoinUtils -lOsiCbc -lOsiClp -lOsi \
+		-L $(LEMON_DIR)/lib -Wl,-Bstatic -lemon \
+		-Wl,-Bdynamic -lz -lbz2 \
 		-Wl,-rpath,$(CBC_DIR)/lib:$(LEMON_DIR)/lib
 endif
 
