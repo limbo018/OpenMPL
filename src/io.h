@@ -299,17 +299,17 @@ struct CmdParser
         typedef limbo::programoptions::ProgramOptions po_type;
         using limbo::programoptions::Value;
         po_type desc (std::string("SimpleMPL 1.X Usage"));
-        desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true))
+        desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true).help(true))
             .add_option(Value<string>("-in", &db.input_gds, "input gds file name").required(true))
             .add_option(Value<string>("-out", &db.output_gds, "output gds file name").default_value("output.gds"))
             .add_option(Value<double>("-coloring_distance", &db.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(0))
             .add_option(Value<int32_t>("-color_num", &db.color_num, "an integer indicating number of masks (colors)").required(true))
-            .add_option(Value<int32_t>("-simplify_level", &db.simplify_level, "an integer indicating graph simplification level <0|1|2>").default_value(2))
+            .add_option(Value<int32_t>("-simplify_level", &db.simplify_level, "an integer indicating graph simplification level < 0|1|2 >").default_value(2))
             .add_option(Value<int32_t>("-thread_num", &db.thread_num, "an integer indicating maximum thread number").default_value(1))
             .add_option(Value<set<int32_t> >("-path_layer", &db.sPathLayer, "an integer indicating layer for conflict edges"))
             .add_option(Value<set<int32_t> >("-precolor_layer", &db.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
             .add_option(Value<set<int32_t> >("-uncolor_layer", &db.sUncolorLayer, "an integer indicating layer for coloring").required(true))
-            .add_option(Value<string>("-algo", &algo_str, "algorithm type <ILP|BACKTRACK>").default_value("BACKTRACK"))
+            .add_option(Value<string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value("BACKTRACK"))
             .add_option(Value<bool>("-verbose", &db.verbose, "control screen messages").toggle(true).default_value(false).toggle_value(true))
             ;
         try
