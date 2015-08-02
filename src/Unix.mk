@@ -21,3 +21,7 @@ CXXFLAGS_DEBUG = -g -DDEBUG $(CXXFLAGS_BASIC)
 CXXFLAGS_RELEASE = -O3 -fopenmp $(CXXFLAGS_BASIC) 
 
 ARFLAGS = rvs
+
+# gcc linker provides fine link control, while clang does not
+STATIC_LINK_FLAG = -Wl,-Bstatic
+DYNAMIC_LINK_FLAG = -Wl,-Bdynamic
