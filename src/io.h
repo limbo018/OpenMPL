@@ -5,8 +5,8 @@
     > Created Time: Thu 06 Nov 2014 08:53:46 AM CST
  ************************************************************************/
 
-#ifndef _SIMPLEMPL_IO_H
-#define _SIMPLEMPL_IO_H
+#ifndef SIMPLEMPL_IO_H
+#define SIMPLEMPL_IO_H
 
 #include <iostream>
 #include <string>
@@ -23,7 +23,7 @@
 
 #include "db.h"
 
-namespace SimpleMPL {
+SIMPLEMPL_BEGIN_NAMESPACE
 
 using std::cout;
 using std::endl;
@@ -116,7 +116,7 @@ struct GdsReader : GdsParser::GdsDataBase
 		{
 			if (status == 1 || status == 2)
 			{
-				assert((vData.size() % 2) == 0 && vData.size() >= 4);
+				mplAssert((vData.size() & 1) == 0 && vData.size() >= 4);
 				vPoint.clear();
 				uint32_t end = vData.size();
 				// skip last point for BOX and BOUNDARY
@@ -129,7 +129,7 @@ struct GdsReader : GdsParser::GdsDataBase
 		{
 			if (status == 1 || status == 2)
 			{
-				assert(layer != -1);
+				mplAssert(layer != -1);
 
 				db.add(layer, vPoint);
 
@@ -138,8 +138,8 @@ struct GdsReader : GdsParser::GdsDataBase
 		}
 		else if (ascii_record_type == "STRNAME")
 		{
-			assert(ascii_data_type == "STRING");
-			assert(!vData.empty());
+			mplAssert(ascii_data_type == "STRING");
+			mplAssert(!vData.empty());
 			db.strname.assign(vData.begin(), vData.end());
 		}
 	}
@@ -325,25 +325,33 @@ struct CmdParser
 
             // post processing algo_str 
             if (limbo::iequals(algo_str, "ILP")) 
-                db.algo = layoutdb_type::ILP;
+            {
+#if GUROBI == 1
+                db.algo = AlgorithmTypeEnum::ILP_GURBOI;
+#elif LEMONCBC == 1
+                db.algo = AlgorithmTypeEnum::ILP_CBC;
+#else 
+                mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default\n");
+#endif
+            }
             else if (limbo::iequals(algo_str, "BACKTRACK"))
-                db.algo = layoutdb_type::BACKTRACK;
-            else printf("(W) Unknown algorithm type %s, set to default\n", algo_str.c_str());
+                db.algo = AlgorithmTypeEnum::BACKTRACK;
+            else mplPrint(kWARN, "Unknown algorithm type %s, set to default\n", algo_str.c_str());
 
             // check condition 
-            assert_msg(db.coloring_distance_nm > 0 || !db.sPathLayer.empty(),    "should set coloring_distance_nm (>0) or specify path_layer for conflict edges");
+            mplAssertMsg(db.coloring_distance_nm > 0 || !db.sPathLayer.empty(), "should set positive coloring_distance_nm or specify path_layer for conflict edges");
         }
         catch (std::exception& e)
         {
             // print help message and error message 
             std::cout << desc << "\n";
-            printf("(E) %s\n", e.what());
+            mplPrint(kERROR, "%s\n", e.what());
             return false;
         }
 		return true;
 	}
 };
 
-} // namespace SimpleMPL 
+SIMPLEMPL_END_NAMESPACE
 
 #endif 

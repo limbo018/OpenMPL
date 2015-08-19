@@ -5,8 +5,8 @@
     > Created Time: Thu 06 Nov 2014 09:04:57 AM CST
  ************************************************************************/
 
-#ifndef _SIMPLEMPL_DB_H
-#define _SIMPLEMPL_DB_H
+#ifndef SIMPLEMPL_DB_H
+#define SIMPLEMPL_DB_H
 
 #include <iostream>
 #include <vector>
@@ -25,22 +25,14 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/dynamic_bitset.hpp>
 
-#if 0
-// for rtree 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
-#endif 
-
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
-// for Polygon2Rectangle
-#include <limbo/geometry/api/BoostPolygonApi.h>
-#include <limbo/geometry/Polygon2Rectangle.h>
+#include "GeometryApi.h"
+#include "msg.h"
+#include "enums.h"
 
-namespace SimpleMPL {
+SIMPLEMPL_BEGIN_NAMESPACE
 
 using std::cout;
 using std::endl;
@@ -158,7 +150,7 @@ class Rectangle : public rectangle_data<T>
 		static long generate_id()
 		{
 			static long cnt = -1;
-			assert(cnt < std::numeric_limits<long>::max());
+			mplAssert(cnt < std::numeric_limits<long>::max());
 #ifdef _OPENMP
 #pragma omp atomic 
 #endif
@@ -204,28 +196,6 @@ class Polygon : public polygon_90_data<T>
 			//this->m_bbox = rhs.m_bbox;
 		}
 
-#if 0
-		//vector<rectangle_pointer_type> const& polyrect() const {return m_vPolyRect;}
-		//vector<rectangle_pointer_type>& polyrect() {return m_vPolyRect;}
-		rectangle_type bbox() const
-		{
-			coordinate_type xl = std::numeric_limits<coordinate_type>::max();
-			coordinate_type yl = std::numeric_limits<coordinate_type>::max();
-			coordinate_type xh = std::numeric_limits<coordinate_type>::min();
-			coordinate_type yh = std::numeric_limits<coordinate_type>::min();
-			for (BOOST_AUTO(it, this->begin()); it != this->end(); ++it)
-			{
-				xl = std::min(xl, gtl::x(*it));
-				yl = std::min(yl, gtl::y(*it));
-				xh = std::max(xh, gtl::x(*it));
-				yh = std::max(yh, gtl::y(*it));
-			}
-			// gtl::construct<rectangle_type> is not defined
-			// so here directly use rectangle_type's constructor
-			return rectangle_type(xl, yl, xh, yh);
-		}
-#endif
-
 	protected:
 		void initialize()
 		{
@@ -237,7 +207,7 @@ class Polygon : public polygon_90_data<T>
 		static long generate_id()
 		{
 			static long cnt = -1;
-			assert(cnt < std::numeric_limits<long>::max());
+			mplAssert(cnt < std::numeric_limits<long>::max());
 #ifdef _OPENMP
 #pragma omp atomic 
 #endif
@@ -251,85 +221,6 @@ class Polygon : public polygon_90_data<T>
 		int32_t m_color; ///< color 
 };
 
-} // namespace SimpleMPL
-
-/// API for Boost.Geometry 
-namespace boost { namespace geometry { namespace index {
-
-template <typename Box>
-struct indexable< boost::shared_ptr<Box> >
-{
-    typedef boost::shared_ptr<Box> V;
-
-    typedef Box const& result_type;
-    result_type operator()(V const& v) const { return *v; }
-};
-
-template <typename Box>
-struct indexable< Box* >
-{
-    typedef Box* V;
-
-    typedef Box const& result_type;
-    result_type operator()(V const& v) const { return *v; }
-};
-
-}}} // namespace boost // namespace geometry // namespace index
-
-namespace boost { namespace geometry { namespace traits {
-
-//////// for rectangles ////////
-template <typename CoordinateType>
-struct tag<SimpleMPL::Rectangle<CoordinateType> > : public tag<typename SimpleMPL::Rectangle<CoordinateType>::base_type>
-{};
-
-
-template <typename CoordinateType>
-struct point_type<SimpleMPL::Rectangle<CoordinateType> >
-{
-    typedef typename SimpleMPL::Rectangle<CoordinateType>::point_type type;
-};
-
-
-template <typename CoordinateType>
-struct indexed_access
-<
-    SimpleMPL::Rectangle<CoordinateType>,
-    min_corner, 0
-> : public indexed_access<typename SimpleMPL::Rectangle<CoordinateType>::base_type, min_corner, 0>
-{};
-
-
-template <typename CoordinateType>
-struct indexed_access
-<
-    SimpleMPL::Rectangle<CoordinateType>,
-    min_corner, 1
-> : public indexed_access<typename SimpleMPL::Rectangle<CoordinateType>::base_type, min_corner, 1>
-{};
-
-
-template <typename CoordinateType>
-struct indexed_access
-<
-    SimpleMPL::Rectangle<CoordinateType>,
-    max_corner, 0
-> : public indexed_access<typename SimpleMPL::Rectangle<CoordinateType>::base_type, max_corner, 0>
-{};
-
-
-template <typename CoordinateType>
-struct indexed_access
-<
-    SimpleMPL::Rectangle<CoordinateType>,
-    max_corner, 1
-> : public indexed_access<typename SimpleMPL::Rectangle<CoordinateType>::base_type, max_corner, 1>
-{};
-
-}}} // namespace boost // namespace geometry // namespace traits
-
-namespace SimpleMPL {
-
 /// current implementation assume all the input patterns are rectangles 
 template <typename T>
 struct LayoutDB : public rectangle_data<T>
@@ -342,18 +233,11 @@ struct LayoutDB : public rectangle_data<T>
 	typedef Rectangle<coordinate_type> rectangle_type;
 	typedef Polygon<coordinate_type> polygon_type;
 	typedef segment_data<coordinate_type> path_type;
-	//typedef shared_ptr<polygon_type> polygon_pointer_type;
 	typedef polygon_type* polygon_pointer_type;
-	//typedef shared_ptr<rectangle_type> rectangle_pointer_type;
 	typedef rectangle_type* rectangle_pointer_type;
 	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
 	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
-
-	enum AlgorithmType {
-		ILP = 0,          // only valid when gurobi is available
-		BACKTRACK = 1     // no dependency 
-	};
 
 	/// layout information 
 	rtree_type tPattern;                       ///< rtree for components that intersects the LayoutDB
@@ -430,7 +314,7 @@ struct LayoutDB : public rectangle_data<T>
 		verbose                  = false;
 		input_gds                = "";
 		output_gds               = "out.gds";
-		algo                     = BACKTRACK;
+		algo                     = AlgorithmTypeEnum::BACKTRACK;
 	}
 	void copy(LayoutDB const& rhs)
 	{
@@ -465,7 +349,7 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	void add_pattern(int32_t layer, vector<point_type> const& vPoint)
 	{
-		assert(vPoint.size() >= 4 && vPoint.size() < 6);
+		mplAssert(vPoint.size() >= 4 && vPoint.size() < 6);
 
 		rectangle_pointer_type pPattern(new rectangle_type());
 		for (typename vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
@@ -527,7 +411,7 @@ struct LayoutDB : public rectangle_data<T>
 				path_type p (vPoint[offset], vPoint[offset+1]);
 				if (hPath.count(layer))
 					hPath[layer].push_back(p);
-				else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
+				else mplAssert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
 				return;
 			}
 		}
@@ -538,7 +422,7 @@ struct LayoutDB : public rectangle_data<T>
 			path_type p (*(it-1), *it);
 			if (hPath.count(layer))
 				hPath[layer].push_back(p);
-			else assert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
+			else mplAssert(hPath.insert(make_pair(layer, vector<path_type>(1, p))).second);
 		}
 	}
 	/// call it to initialize rtree 
@@ -565,7 +449,7 @@ struct LayoutDB : public rectangle_data<T>
 		boost::dynamic_bitset<uint32_t, std::allocator<uint32_t> > vValid (vPattern.size()); // use a bit set to record validity 
 		vValid.set(); // set all to 1
 #ifdef DEBUG
-		assert(vValid[0] && vValid[vPattern.size()-1]);
+		mplAssert(vValid[0] && vValid[vPattern.size()-1]);
 #endif
 		uint32_t duplicate_cnt = 0;
 		for (typename vector<rectangle_pointer_type>::iterator it1 = vPattern.begin(), it2 = vPattern.begin();
@@ -588,7 +472,8 @@ struct LayoutDB : public rectangle_data<T>
 			}
 			it1 = it2;
 		}
-		printf("(I) Ignored %u duplicate patterns\n", duplicate_cnt);
+        mplPrint(kINFO, "Ignored %u duplicate patterns\n", duplicate_cnt);
+
 		// erase invalid patterns 
 		uint32_t invalid_cnt = 0;
 		for (uint32_t i = 0; i < vPattern.size(); )
@@ -602,10 +487,10 @@ struct LayoutDB : public rectangle_data<T>
 			}
 			else ++i;
 		}
-		assert(duplicate_cnt == invalid_cnt);
+		mplAssert(duplicate_cnt == invalid_cnt);
 #ifdef DEBUG
 		for (uint32_t i = 0; i != vPattern.size(); ++i)
-			assert(vValid[vPattern[i]->pattern_id()]);
+			mplAssert(vValid[vPattern[i]->pattern_id()]);
 #endif
 		// update pattern_id 
 		for (uint32_t i = 0; i != vPattern.size(); ++i)
@@ -613,144 +498,43 @@ struct LayoutDB : public rectangle_data<T>
 	}
 	void rpt_data() const
 	{
-		printf("(I) Input data...\n");
-		printf("(I) Total patterns # = %lu\n", vPattern.size());
-		printf("(I) Coloring distance = %lld db ( %g nm )\n", coloring_distance, coloring_distance_nm);
-		printf("(I) Color num = %d\n", color_num);
-		printf("(I) Simplification level = %u\n", simplify_level);
-		printf("(I) Thread num = %u\n", thread_num);
-		printf("(I) Uncolored layer # = %lu", sUncolorLayer.size());
+		mplPrint(kINFO, "Input data...\n");
+		mplPrint(kINFO, "Total patterns # = %lu\n", vPattern.size());
+		mplPrint(kINFO, "Coloring distance = %lld db ( %g nm )\n", coloring_distance, coloring_distance_nm);
+		mplPrint(kINFO, "Color num = %d\n", color_num);
+		mplPrint(kINFO, "Simplification level = %u\n", simplify_level);
+		mplPrint(kINFO, "Thread num = %u\n", thread_num);
+		mplPrint(kINFO, "Uncolored layer # = %lu", sUncolorLayer.size());
 		if (!sUncolorLayer.empty())
 		{
-			printf(" ( ");
+			mplPrint(kNONE, " ( ");
 			for (set<int32_t>::const_iterator it = sUncolorLayer.begin(); it != sUncolorLayer.end(); ++it)
-				printf("%d ", *it);
-			printf(")");
+				mplPrint(kNONE, "%d ", *it);
+			mplPrint(kNONE, ")");
 		}
-		printf("\n");
-		printf("(I) Precolored layer # = %lu", sPrecolorLayer.size());
+		mplPrint(kNONE, "\n");
+		mplPrint(kINFO, "Precolored layer # = %lu", sPrecolorLayer.size());
 		if (!sPrecolorLayer.empty())
 		{
-			printf(" ( ");
+			mplPrint(kNONE, " ( ");
 			for (set<int32_t>::const_iterator it = sPrecolorLayer.begin(); it != sPrecolorLayer.end(); ++it)
-				printf("%d ", *it);
-			printf(")");
+				mplPrint(kNONE, "%d ", *it);
+			mplPrint(kNONE, ")");
 		}
-		printf("\n");
-		printf("(I) Path layer # = %lu", sPathLayer.size());
+		mplPrint(kNONE, "\n");
+		mplPrint(kINFO, "Path layer # = %lu", sPathLayer.size());
 		if (!sPathLayer.empty())
 		{
-			printf(" ( ");
+			mplPrint(kNONE, " ( ");
 			for (set<int32_t>::const_iterator it = sPathLayer.begin(); it != sPathLayer.end(); ++it)
-				printf("%d ", *it);
-			printf(")");
+				mplPrint(kNONE, "%d ", *it);
+			mplPrint(kNONE, ")");
 		}
-		printf("\n");
-		const char* buf;
-		switch (algo)
-		{
-			case ILP: 
-#if GUROBI == 1
-				buf = "ILP (Gurobi)"; 
-#elif LEMONCBC == 1
-				buf = "ILP (CBC)";
-#else
-				buf = "ILP";
-#endif
-				break;
-			case BACKTRACK: buf = "BACKTRACK"; break;
-			default: buf = "UNKNOWN"; break;
-		}
-		printf("(I) Algorithm = %s\n", buf);
+		mplPrint(kNONE, "\n");
+		mplPrint(kINFO, "Algorithm = %s\n", std::string(algo).c_str());
 	}
 };
 
-} // namespace SimpleMPL
-
-/// API for Boost.Polygon
-namespace boost { namespace polygon {
-
-/// necessary for customized rectangle types 
-template <typename T>
-struct geometry_concept<SimpleMPL::Rectangle<T> > 
-{
-	typedef rectangle_concept type;
-};
-template <typename T>
-struct geometry_concept<SimpleMPL::LayoutDB<T> > 
-{
-	typedef rectangle_concept type;
-};
-
-/// bug in boost library in the following function
-/// function intersects and intersect do not always return the same results (when consider_touch = false)
-/// create a specialization to resolve it 
-  template <typename T>
-  typename enable_if< typename gtl_and_3<y_r_b_intersect3, typename is_mutable_rectangle_concept<typename geometry_concept<SimpleMPL::Rectangle<T> >::type>::type,
-                                         typename is_rectangle_concept<typename geometry_concept<SimpleMPL::Rectangle<T> >::type>::type>::type,
-                       bool>::type
-  intersect(SimpleMPL::Rectangle<T>& rectangle, const SimpleMPL::Rectangle<T>& b, bool consider_touch = true) {
-	  // the original version is "intersects(rectangle, b)" without consider_touch 
-    if(intersects(rectangle, b, consider_touch)) {
-      intersect(rectangle, horizontal(b), HORIZONTAL, consider_touch);
-      intersect(rectangle, vertical(b), VERTICAL, consider_touch);
-      return true;
-    }
-    return false;
-  }
-
-/// bug in boost library
-  template <typename T>
-  typename enable_if< typename gtl_and_3<y_r_edist2, typename is_rectangle_concept<typename geometry_concept<SimpleMPL::Rectangle<T> >::type>::type,
-                                                          typename is_rectangle_concept<typename geometry_concept<SimpleMPL::Rectangle<T> >::type>::type>::type,
-                       typename rectangle_distance_type<SimpleMPL::Rectangle<T> >::type>::type
-  euclidean_distance(const SimpleMPL::Rectangle<T> & lvalue, const SimpleMPL::Rectangle<T>& rvalue) {
-    typename rectangle_distance_type<SimpleMPL::Rectangle<T> >::type val = square_euclidean_distance(lvalue, rvalue); // originally the result is cast to int, which causes overflow 
-    return std::sqrt(val);
-  }
-
-}} // namespace boost // namespace polygon
-
-/// API for limbo::geometry
-namespace limbo { namespace geometry {
-
-/// \brief specialization for SimpleMPL::Rectangle
-template <typename T>
-struct rectangle_traits<SimpleMPL::Rectangle<T> >// : public rectangle_traits<boost::polygon::rectangle_data<T> >
-{
-	typedef T coordinate_type;
-	typedef SimpleMPL::Rectangle<coordinate_type> rectangle_type;
-
-	static coordinate_type get(const typename rectangle_type::base_type& rect, direction_2d const& dir) 
-	{
-		switch (dir)
-		{
-			case LEFT: return boost::polygon::xl(rect);
-			case BOTTOM: return boost::polygon::yl(rect);
-			case RIGHT: return boost::polygon::xh(rect);
-			case TOP: return boost::polygon::yh(rect);
-			default: assert_msg(0, "unknown direction_2d type");
-		}
-	}
-	static void set(typename rectangle_type::base_type& rect, direction_2d const& dir, coordinate_type const& value) 
-	{
-		switch (dir)
-		{
-			case LEFT: boost::polygon::xl(rect, value); break;
-			case BOTTOM: boost::polygon::yl(rect, value); break;
-			case RIGHT: boost::polygon::xh(rect, value); break;
-			case TOP: boost::polygon::yh(rect, value); break;
-			default: assert_msg(0, "unknown direction_2d type");
-		}
-	}
-	static rectangle_type construct(coordinate_type const& xl, coordinate_type const& yl, 
-			coordinate_type const& xh, coordinate_type const& yh) 
-	{
-		return rectangle_type(xl, yl, xh, yh); 
-	}
-};
-
-}} // namespace limbo // namespace geometry
-
+SIMPLEMPL_END_NAMESPACE
 
 #endif 

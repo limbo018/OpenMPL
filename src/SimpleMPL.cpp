@@ -21,7 +21,7 @@
 #endif
 #include <limbo/algorithms/coloring/BacktrackColoring.h>
 
-namespace SimpleMPL {
+SIMPLEMPL_BEGIN_NAMESPACE
 
 using std::cout;
 using std::endl;
@@ -41,23 +41,16 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 	// read command 
 	CmdParser<coordinate_type> cmd (m_db);
 	// check options 
-    bool flag = cmd(argc, argv);
-	assert_msg(flag,             "failed to parse command");
-	// check algorithm type in run time 
-#if GUROBI == 1 || LEMONCBC == 1
-	assert_msg(m_db.algo == layoutdb_type::ILP || m_db.algo == layoutdb_type::BACKTRACK, "only ILP and BACKTRACK algorithms are available");
-#else 
-	assert_msg(m_db.algo == layoutdb_type::BACKTRACK, "only BACKTRACK algorithm is available");
-#endif
+    mplAssertMsg(cmd(argc, argv), "failed to parse command");
 }
 
 void SimpleMPL::read_gds()
 {
 	boost::timer::auto_cpu_timer timer;
-	printf("(I) Reading input file %s\n", m_db.input_gds.c_str());
+	mplPrint(kINFO, "Reading input file %s\n", m_db.input_gds.c_str());
 	// read input gds file 
 	GdsReader<coordinate_type> reader (m_db);
-	assert_msg(reader(m_db.input_gds), "failed to read " << m_db.input_gds);
+    mplAssertMsg(reader(m_db.input_gds), "failed to read %s", m_db.input_gds.c_str());
 	// must call initialize after reading 
 	m_db.initialize_data();
 	// report data 
@@ -69,12 +62,12 @@ void SimpleMPL::write_gds()
 	boost::timer::auto_cpu_timer timer;
 	if (m_db.output_gds.empty()) 
 	{
-		cout << "(W) Output file not specified, no file generated\n";
+        mplPrint(kWARN, "Output file not specified, no file generated\n");
 		return;
 	}
 	// write output gds file 
 	GdsWriter<coordinate_type> writer;
-	printf("(I) Write output gds file: %s\n", m_db.output_gds.c_str());
+	mplPrint(kINFO, "Write output gds file: %s\n", m_db.output_gds.c_str());
 	writer(m_db.output_gds, m_db, m_vConflict, m_mAdjVertex, m_db.strname, m_db.unit*1e+6);
 }
 
@@ -83,7 +76,7 @@ void SimpleMPL::solve()
 	boost::timer::auto_cpu_timer timer;
 	if (m_db.vPattern.empty())
 	{
-		cout << "(W) No patterns found in specified layers\n";
+        mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
 
@@ -98,7 +91,7 @@ void SimpleMPL::solve()
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 	}
 
-	printf("(I) Solving %u independent components...\n", m_comp_cnt);
+	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
 	// thread number controled by user option 
 #ifdef _OPENMP
 #pragma omp parallel num_threads (m_db.thread_num)
@@ -121,21 +114,21 @@ void SimpleMPL::solve()
 			uint32_t component_conflict_num = this->solve_component(itBgn, itEnd, comp_id);
 
 			if (m_db.verbose)
-				printf("(D) Component %u: solved with %u conflicts\n", comp_id, component_conflict_num);
+				mplPrint(kDEBUG, "Component %u: solved with %u conflicts\n", comp_id, component_conflict_num);
 		}
 	}
 }
 
 void SimpleMPL::report() const 
 {
-	cout << "(I) Conflict number = " << conflict_num() << endl;
+    mplPrint(kINFO, "Conflict number = %u\n", conflict_num());
 	for (int32_t i = 0; i != m_db.color_num; ++i)
-		cout << "(I) Color " << i << " density = " << m_vColorDensity[i] << endl;
+        mplPrint(kINFO, "Color %i density = %g\n", i, m_vColorDensity[i]);
 }
 
 void SimpleMPL::construct_graph()
 {
-	printf("(I) Constructing graph for %lu patterns...\n", m_db.vPattern.size());
+	mplPrint(kINFO, "Constructing graph for %lu patterns...\n", m_db.vPattern.size());
 	// construct vertices 
 	// assume vertices start from 0 and end with vertex_num-1
 	uint32_t vertex_num = m_db.vPattern.size();
@@ -169,7 +162,7 @@ void SimpleMPL::construct_graph()
 				rectangle_pointer_type const& pAdjPattern = *itq;
 				if (pAdjPattern != pPattern) // skip pPattern itself 
 				{
-					assert(pAdjPattern->pattern_id() != pPattern->pattern_id());
+					mplAssert(pAdjPattern->pattern_id() != pPattern->pattern_id());
 					// we consider euclidean distance
 					gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*pAdjPattern, *pPattern);
 					if (distance < m_db.coloring_distance)
@@ -204,16 +197,16 @@ void SimpleMPL::construct_graph()
 				if (vPattern1.size() > 1)
 				{
 					for (uint32_t i = 0; i != vPattern1.size(); ++i)
-						printf("%d, %d, %d, %d, %d\n", vPattern1[i]->layer(), gtl::xl(*vPattern1[i]), gtl::yl(*vPattern1[i]), gtl::xh(*vPattern1[i]), gtl::yh(*vPattern1[i]));
+						mplPrint(kDEBUG, "%d, %d, %d, %d, %d\n", vPattern1[i]->layer(), gtl::xl(*vPattern1[i]), gtl::yl(*vPattern1[i]), gtl::xh(*vPattern1[i]), gtl::yh(*vPattern1[i]));
 				}
 				if (vPattern2.size() > 1)
 				{
 					for (uint32_t i = 0; i != vPattern2.size(); ++i)
-						printf("%d, %d, %d, %d, %d\n", vPattern2[i]->layer(), gtl::xl(*vPattern2[i]), gtl::yl(*vPattern2[i]), gtl::xh(*vPattern2[i]), gtl::yh(*vPattern2[i]));
+						mplPrint(kDEBUG, "%d, %d, %d, %d, %d\n", vPattern2[i]->layer(), gtl::xl(*vPattern2[i]), gtl::yl(*vPattern2[i]), gtl::xh(*vPattern2[i]), gtl::yh(*vPattern2[i]));
 				}
 #endif
-				assert(vPattern1.size() == 1);
-				assert(vPattern2.size() == 1);
+				mplAssert(vPattern1.size() == 1);
+				mplAssert(vPattern2.size() == 1);
 				rectangle_pointer_type const& pPattern1 = vPattern1.front();
 				rectangle_pointer_type const& pPattern2 = vPattern2.front();
 
@@ -237,19 +230,19 @@ void SimpleMPL::construct_graph()
 			edge_num += vAdjVertex.size();
 		}
 		m_db.coloring_distance_nm = m_db.coloring_distance*(m_db.unit*1e+9);
-		printf("(I) Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db.coloring_distance, m_db.coloring_distance_nm);
+		mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db.coloring_distance, m_db.coloring_distance_nm);
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db.color_num, 0);
 	m_vConflict.clear();
 
 	// report statistics 
-	printf("(I) %u vertices, %u edges\n", vertex_num, edge_num);
+	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 }
 
 void SimpleMPL::connected_component()
 {
-	printf("(I) Computing connected components...\n");
+	mplPrint(kINFO, "Computing connected components...\n");
 	uint32_t comp_id = 0;
 	uint32_t order_id = 0; // position in an ordered pattern array with grouped components 
 
@@ -270,7 +263,7 @@ void SimpleMPL::connected_component()
 #ifdef DEBUG 
 	// check visited 
 	for (uint32_t v = 0; v != vertex_num; ++v)
-		assert(m_vCompId[v] != std::numeric_limits<uint32_t>::max()); 
+		mplAssert(m_vCompId[v] != std::numeric_limits<uint32_t>::max()); 
 #endif
 
 	// reorder with order_id 
@@ -283,7 +276,7 @@ void SimpleMPL::connected_component()
 #ifdef DEBUG
 	// check ordered 
 	for (uint32_t v = 1; v != vertex_num; ++v)
-		assert(m_vCompId[m_vVertexOrder[v-1]] <= m_vCompId[m_vVertexOrder[v]]);
+		mplAssert(m_vCompId[m_vVertexOrder[v-1]] <= m_vCompId[m_vVertexOrder[v]]);
 #endif
 }
 
@@ -304,7 +297,7 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 			for (vector<uint32_t>::const_iterator it = m_mAdjVertex[current].begin(); it != m_mAdjVertex[current].end(); ++it)
 			{
 				uint32_t const& child = *it;
-				assert(current != child);
+				mplAssert(current != child);
 				vStack.push(child);
 			}
 		}
@@ -325,7 +318,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	for (vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
 	{
 		uint32_t v1 = *(it-1), v2 = *it;
-		assert(m_vCompId[v1] == m_vCompId[v2]);
+		mplAssert(m_vCompId[v1] == m_vCompId[v2]);
 	}
 #endif
 
@@ -346,7 +339,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	uint32_t pattern_cnt = itEnd-itBgn;
 
 	if (m_db.verbose)
-		fprintf(stderr, "(D) Component %u has %u patterns...", comp_id, pattern_cnt);
+		mplPrint(kDEBUG, "Component %u has %u patterns...", comp_id, pattern_cnt);
 
 	// decomposition graph 
 	graph_type dg (pattern_cnt);
@@ -369,7 +362,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		{
 			uint32_t u = *it;
 #ifdef DEBUG
-			assert(mGlobal2Local.count(u));
+			mplAssert(mGlobal2Local.count(u));
 #endif
 			uint32_t j = mGlobal2Local[u];
 			if (i < j) // avoid duplicate 
@@ -378,7 +371,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 				if (!e.second) // make sure no duplicate 
 				{
 					e = add_edge(i, j, dg);
-					assert(e.second);
+					mplAssert(e.second);
 					put(edge_weight, dg, e.first, 1);
 				}
 			}
@@ -438,21 +431,20 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		// solve coloring 
 		typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
 		coloring_solver_type* pcs = NULL;
-		switch (m_db.algo)
+		switch (m_db.algo.get())
 		{
-			case layoutdb_type::ILP:
 #if GUROBI == 1
-				pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg);
-#elif LEMONCBC == 1
-				pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg);
-#else
-				pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg);
+			case AlgorithmTypeEnum::ILP_GURBOI:
+				pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg); break;
 #endif
-				break;
-			case layoutdb_type::BACKTRACK:
+#if LEMONCBC == 1
+            case AlgorithmTypeEnum::ILP_CBC:
+				pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg); break;
+#endif
+			case AlgorithmTypeEnum::BACKTRACK:
 				pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg);
 				break;
-			default: assert_msg(0, "unknown algorithm type");
+			default: mplAssertMsg(0, "unknown algorithm type");
 		}
 
 		pcs->stitch_weight(0.1);
@@ -475,7 +467,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 		{
 			vertex_descriptor v = *vi;
 			int8_t color = pcs->color(v);
-			assert(color >= 0 && color < m_db.color_num);
+			mplAssert(color >= 0 && color < m_db.color_num);
 			vSubColor[v] = color;
 		}
 		delete pcs;
@@ -500,7 +492,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 			vertex_descriptor u = *vi;
 			if (vColor[u] >= 0)
 			{
-				assert(vColor[u] < m_db.color_num);
+				mplAssert(vColor[u] < m_db.color_num);
 				vUnusedColor[vColor[u]] = false;
 			}
 		}
@@ -517,7 +509,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 			// we consider euclidean distance
 			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*vPattern[*(itBgn+v)], *vPattern[*(itBgn+u)]);
 #ifdef DEBUG
-			assert(vColor[u] < m_db.color_num && distance >= 0);
+			mplAssert(vColor[u] < m_db.color_num && distance >= 0);
 #endif
 			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
 		}
@@ -537,13 +529,13 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 				}
 			}
 		}
-		assert(best_color >= 0 && best_color < m_db.color_num);
+		mplAssert(best_color >= 0 && best_color < m_db.color_num);
 		vColor[v] = best_color;
 	}
 
 #ifdef DEBUG
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
-		assert(vColor[i] >= 0 && vColor[i] < m_db.color_num);
+		mplAssert(vColor[i] >= 0 && vColor[i] < m_db.color_num);
 #endif
 
 	// record pattern color 
@@ -551,7 +543,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	{
 		uint32_t const& v = *(itBgn+i);
 		if (vPattern[v]->color() >= 0 && vPattern[v]->color() < m_db.color_num) // check precolored pattern 
-			assert(vPattern[v]->color() == vColor[i]);
+			mplAssert(vPattern[v]->color() == vColor[i]);
 		else // assign color to uncolored pattern 
 			vPattern[v]->color(vColor[i]);
 	}
@@ -569,10 +561,10 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
-	assert(acc_obj_value == component_conflict_num);
+	mplAssert(acc_obj_value == component_conflict_num);
 
 	if (m_db.verbose)
-		fprintf(stderr, "%u conflicts\n", component_conflict_num);
+		mplPrint(kDEBUG, "%u conflicts\n", component_conflict_num);
 
 	return component_conflict_num;
 }
@@ -641,16 +633,16 @@ uint32_t SimpleMPL::conflict_num() const
 
 void SimpleMPL::print_welcome() const
 {
-  printf("\n\n");
-  printf("=======================================================================\n");
-  printf("                      SimpleMPL - Version 1.0                        \n");
-  printf("                                by                                   \n");  
-  printf("                   Yibo Lin, Bei Yu, and  David Z. Pan               \n");
-  printf("               ECE Department, University of Texas at Austin         \n");
-  printf("                         Copyright (c) 2015                          \n");
-  printf("            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     \n");
-  printf("=======================================================================\n");
+  mplPrint(kNONE, "\n\n");
+  mplPrint(kNONE, "=======================================================================\n");
+  mplPrint(kNONE, "                      SimpleMPL - Version 1.0                        \n");
+  mplPrint(kNONE, "                                by                                   \n");  
+  mplPrint(kNONE, "                   Yibo Lin, Bei Yu, and  David Z. Pan               \n");
+  mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");
+  mplPrint(kNONE, "                         Copyright (c) 2015                          \n");
+  mplPrint(kNONE, "            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     \n");
+  mplPrint(kNONE, "=======================================================================\n");
 }
 
-} // namespace SimpleMPL
+SIMPLEMPL_END_NAMESPACE
 

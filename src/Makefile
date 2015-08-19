@@ -27,6 +27,14 @@ endif
 
 CXXFLAGS += -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC)
 
+ifeq ($(UNAME_S), Linux)
+ifeq ($(GUROBI), 0)
+ifeq ($(LEMONCBC), 0)
+	CXXFLAGS += -static
+endif
+endif
+endif
+
 #==========================================================================
 #                         Special Library
 # ==========================================================================

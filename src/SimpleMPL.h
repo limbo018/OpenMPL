@@ -5,13 +5,13 @@
     > Created Time: Wed May 20 22:21:16 2015
  ************************************************************************/
 
-#ifndef SIMPLEMPL_H
-#define SIMPLEMPL_H
+#ifndef SIMPLEMPL_SIMPLEMPL_H
+#define SIMPLEMPL_SIMPLEMPL_H
 
 #include <iostream>
 #include "io.h"
 
-namespace SimpleMPL {
+SIMPLEMPL_BEGIN_NAMESPACE
 
 class SimpleMPL
 {
@@ -68,6 +68,6 @@ class SimpleMPL
 		mutable vector<pair<uint32_t, uint32_t> > m_vConflict; ///< conflict patterns  
 };
 
-} // namespace SimpleMPL
+SIMPLEMPL_END_NAMESPACE
 
 #endif
