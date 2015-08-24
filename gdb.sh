@@ -9,10 +9,10 @@
 color_num=3
 simplify_level=2
 thread_num=4
-algo=BACKTRACK # BACKTRACK or ILP
-benchmark="output_20x20-flat.gds"
+algo=ILP # BACKTRACK or ILP or LP
+#benchmark="output_20x20-flat.gds"
 #benchmark="Via2_local_precolor.gds"
-#benchmark="via2_local_precolor.gds"
+benchmark="via2_local_precolor.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm/dpt_array"

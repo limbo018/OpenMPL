@@ -15,6 +15,7 @@
 // only valid when gurobi is available 
 #if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
+#include <limbo/algorithms/coloring/LPColoring.h>
 #endif
 #if LEMONCBC == 1
 #include <limbo/algorithms/coloring/ILPColoringLemonCbc.h>
@@ -111,10 +112,7 @@ void SimpleMPL::solve()
 #endif
 			// solve component 
 			// pass iterators to save memory 
-			uint32_t component_conflict_num = this->solve_component(itBgn, itEnd, comp_id);
-
-			if (m_db.verbose)
-				mplPrint(kDEBUG, "Component %u: solved with %u conflicts\n", comp_id, component_conflict_num);
+			this->solve_component(itBgn, itEnd, comp_id);
 		}
 	}
 }
@@ -123,7 +121,7 @@ void SimpleMPL::report() const
 {
     mplPrint(kINFO, "Conflict number = %u\n", conflict_num());
 	for (int32_t i = 0; i != m_db.color_num; ++i)
-        mplPrint(kINFO, "Color %i density = %g\n", i, m_vColorDensity[i]);
+        mplPrint(kINFO, "Color %d density = %u\n", i, m_vColorDensity[i]);
 }
 
 void SimpleMPL::construct_graph()
@@ -310,7 +308,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 {
 #ifdef DEBUG
 	//const uint32_t dbg_comp_id = std::numeric_limits<uint32_t>::max();
-	const uint32_t dbg_comp_id = 1075;
+	const uint32_t dbg_comp_id = 208;
 #endif
 	if (itBgn == itEnd) return 0;
 	vector<rectangle_pointer_type>& vPattern = m_db.vPattern;
@@ -436,6 +434,8 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 #if GUROBI == 1
 			case AlgorithmTypeEnum::ILP_GURBOI:
 				pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg); break;
+            case AlgorithmTypeEnum::LP_GUROBI:
+                pcs = new limbo::algorithms::coloring::LPColoring<graph_type> (sg); break;
 #endif
 #if LEMONCBC == 1
             case AlgorithmTypeEnum::ILP_CBC:
@@ -458,7 +458,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 			if (color >= 0 && color < m_db.color_num)
 				pcs->precolor(v, color);
 		}
-		pcs->threads(1);
+		pcs->threads(1); // we use parallel at higher level 
 		double obj_value = (*pcs)(); // solve coloring 
 		acc_obj_value += obj_value;
 
@@ -564,7 +564,7 @@ SimpleMPL::solve_component(const vector<uint32_t>::const_iterator itBgn, const v
 	mplAssert(acc_obj_value == component_conflict_num);
 
 	if (m_db.verbose)
-		mplPrint(kDEBUG, "%u conflicts\n", component_conflict_num);
+		mplPrint(kNONE, "%u conflicts\n", component_conflict_num);
 
 	return component_conflict_num;
 }

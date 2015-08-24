@@ -26,9 +26,10 @@ std::string AlgorithmType::enum2Str(AlgorithmType::enum_type const& e) const
 
     if (init)
     {
+        ENUM2STR(mEnum2Str, BACKTRACK);
         ENUM2STR(mEnum2Str, ILP_GURBOI);
         ENUM2STR(mEnum2Str, ILP_CBC);
-        ENUM2STR(mEnum2Str, BACKTRACK);
+        ENUM2STR(mEnum2Str, LP_GUROBI);
         init = false;
     }
 
@@ -42,9 +43,10 @@ AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const
 
     if (init)
     {
+        STR2ENUM(mStr2Enum, BACKTRACK);
         STR2ENUM(mStr2Enum, ILP_GURBOI);
         STR2ENUM(mStr2Enum, ILP_CBC);
-        STR2ENUM(mStr2Enum, BACKTRACK);
+        STR2ENUM(mStr2Enum, LP_GUROBI);
 
         init = false;
     }

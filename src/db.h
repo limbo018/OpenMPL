@@ -253,7 +253,7 @@ struct LayoutDB : public rectangle_data<T>
 	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_nm and unit
 	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
 	int32_t color_num;                         ///< number of colors available, only support 3 or 4
-	int32_t simplify_level;                    ///< simplification level 0|1|2, default is 1
+	int32_t simplify_level;                    ///< simplification level 0|1|2, default is 2
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
 	bool verbose;                              ///< control screen message 
 

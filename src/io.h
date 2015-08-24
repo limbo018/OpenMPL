@@ -334,6 +334,14 @@ struct CmdParser
                 mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default\n");
 #endif
             }
+            else if (limbo::iequals(algo_str, "LP"))
+            {
+#if GUROBI == 1
+                db.algo = AlgorithmTypeEnum::LP_GUROBI;
+#else 
+                mplPrint(kWARN, "LP is not available without GUROBI, set to default\n");
+#endif
+            }
             else if (limbo::iequals(algo_str, "BACKTRACK"))
                 db.algo = AlgorithmTypeEnum::BACKTRACK;
             else mplPrint(kWARN, "Unknown algorithm type %s, set to default\n", algo_str.c_str());

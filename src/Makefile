@@ -20,7 +20,7 @@ ifeq ($(UNAME_S), Darwin)
 endif 
 
 ifeq ($(DBG), 1)
-	CXXFLAGS = $(CXXFLAGS_DEBUG)
+	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING
 else
 	CXXFLAGS = $(CXXFLAGS_RELEASE)
 endif
