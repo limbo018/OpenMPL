@@ -27,8 +27,6 @@ SIMPLEMPL_BEGIN_NAMESPACE
 
 using std::cout;
 using std::endl;
-using std::vector;
-using std::string;
 using std::ifstream;
 using std::ofstream;
 using std::numeric_limits;
@@ -52,11 +50,10 @@ using gtl::polygon_90_set_data;
 using namespace gtl::operators;
 
 /// read gds file 
-template <typename T>
 struct GdsReader : GdsParser::GdsDataBase
 {
-	typedef T coordinate_type;
-	typedef LayoutDB<coordinate_type> layoutdb_type;
+	typedef LayoutDB layoutdb_type;
+	typedef layoutdb_type::coordinate_type coordinate_type;
 	typedef typename layoutdb_type::point_type              point_type;
 	typedef typename layoutdb_type::rectangle_type          rectangle_type;
 	typedef typename layoutdb_type::polygon_type            polygon_type;
@@ -68,14 +65,14 @@ struct GdsReader : GdsParser::GdsDataBase
 	//double unit;
 	int32_t layer;
 	int32_t status; // 0: not in any block, 1 in BOUNDARY or BOX block, 2 in PATH   
-	vector<point_type> vPoint;
+    std::vector<point_type> vPoint;
 	int64_t file_size; // in bytes 
 
 	layoutdb_type& db;  
 
 	GdsReader(layoutdb_type& _db) : db(_db) {}
 
-	bool operator() (string const& filename)  
+	bool operator() (std::string const& filename)  
 	{
 		// calculate file size 
 		ifstream in (filename.c_str());
@@ -90,7 +87,7 @@ struct GdsReader : GdsParser::GdsDataBase
 	}
 
 	template <typename ContainerType>
-	void general_cbk(string const& ascii_record_type, string const& ascii_data_type, ContainerType const& vData)
+	void general_cbk(std::string const& ascii_record_type, std::string const& ascii_data_type, ContainerType const& vData)
 	{
 		if (ascii_record_type == "UNITS")
 		{
@@ -145,29 +142,28 @@ struct GdsReader : GdsParser::GdsDataBase
 	}
 
 	// required callbacks in parser 
-	virtual void bit_array_cbk(const char* ascii_record_type, const char* ascii_data_type, vector<int> const& vBitArray)
+	virtual void bit_array_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<int> const& vBitArray)
 	{this->general_cbk(ascii_record_type, ascii_data_type, vBitArray);}
-	virtual void integer_2_cbk(const char* ascii_record_type, const char* ascii_data_type, vector<int> const& vInteger)
+	virtual void integer_2_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<int> const& vInteger)
 	{this->general_cbk(ascii_record_type, ascii_data_type, vInteger);}
-	virtual void integer_4_cbk(const char* ascii_record_type, const char* ascii_data_type, vector<int> const& vInteger)
+	virtual void integer_4_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<int> const& vInteger)
 	{this->general_cbk(ascii_record_type, ascii_data_type, vInteger);}
-	virtual void real_4_cbk(const char* ascii_record_type, const char* ascii_data_type, vector<double> const& vFloat) 
+	virtual void real_4_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<double> const& vFloat) 
 	{this->general_cbk(ascii_record_type, ascii_data_type, vFloat);}
-	virtual void real_8_cbk(const char* ascii_record_type, const char* ascii_data_type, vector<double> const& vFloat) 
+	virtual void real_8_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<double> const& vFloat) 
 	{this->general_cbk(ascii_record_type, ascii_data_type, vFloat);}
-	virtual void string_cbk(const char* ascii_record_type, const char* ascii_data_type, string const& str) 
+	virtual void string_cbk(const char* ascii_record_type, const char* ascii_data_type, std::string const& str) 
 	{this->general_cbk(ascii_record_type, ascii_data_type, str);}
 	virtual void begin_end_cbk(const char* ascii_record_type)
-	{this->general_cbk(ascii_record_type, "", vector<int>());}
+	{this->general_cbk(ascii_record_type, "", std::vector<int>());}
 
 };
 
 /// write gds file 
-template <typename T>
 struct GdsWriter
 {
-	typedef T coordinate_type;
-	typedef LayoutDB<coordinate_type> layoutdb_type;
+	typedef LayoutDBRect layoutdb_type;
+    typedef layoutdb_type::coordinate_type coordinate_type;
 	typedef typename layoutdb_type::point_type point_type;
 	typedef typename layoutdb_type::rectangle_type rectangle_type;
 	typedef typename layoutdb_type::polygon_type polygon_type;
@@ -175,10 +171,10 @@ struct GdsWriter
 	typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
 	typedef typename layoutdb_type::path_type path_type;
 
-	void operator() (string const& filename, layoutdb_type const& db, 
-			vector<pair<uint32_t, uint32_t> > const& vConflict, 
-			vector<vector<uint32_t> > const& mAdjVertex, 
-			string const& strname = "TOPCELL", double unit = 0.001) const 
+	void operator() (std::string const& filename, layoutdb_type const& db, 
+			std::vector<pair<uint32_t, uint32_t> > const& vConflict, 
+			std::vector<std::vector<uint32_t> > const& mAdjVertex, 
+			std::string const& strname = "TOPCELL", double unit = 0.001) const 
 	{
 		GdsParser::GdsWriter gw (filename.c_str());
 		gw.gds_create_lib("POLYGONS", unit /* um per bit */ );
@@ -197,9 +193,9 @@ struct GdsWriter
 		gw.gds_write_endstr();
 		gw.gds_write_endlib(); 
 	}
-	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
+	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
 	{
-		for (typename vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
+		for (typename std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
 		{
 			rectangle_type const& rect = **it;
 			gw.write_box(layer_offset+rect.color(), 0, 
@@ -207,10 +203,10 @@ struct GdsWriter
 					gtl::xh(rect), gtl::yh(rect));
 		}
 	}
-	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect, 
-			vector<pair<uint32_t, uint32_t> > const& vConflict, const int32_t layer) const
+	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, 
+			std::vector<pair<uint32_t, uint32_t> > const& vConflict, const int32_t layer) const
 	{
-		for (vector<pair<uint32_t, uint32_t> >::const_iterator it = vConflict.begin(); it != vConflict.end(); ++it)
+		for (std::vector<pair<uint32_t, uint32_t> >::const_iterator it = vConflict.begin(); it != vConflict.end(); ++it)
 		{
 			rectangle_type const& rect1 = *(vRect[it->first]);
 			rectangle_type const& rect2 = *(vRect[it->second]);
@@ -222,13 +218,13 @@ struct GdsWriter
 					gtl::xh(rect2), gtl::yh(rect2));
 		}
 	}
-	void operator() (GdsParser::GdsWriter& gw, map<int32_t, vector<path_type> > const& hPath) const 
+	void operator() (GdsParser::GdsWriter& gw, map<int32_t, std::vector<path_type> > const& hPath) const 
 	{
-		for (typename map<int32_t, vector<path_type> >::const_iterator it1 = hPath.begin(); it1 != hPath.end(); ++it1)
+		for (typename map<int32_t, std::vector<path_type> >::const_iterator it1 = hPath.begin(); it1 != hPath.end(); ++it1)
 		{
 			const int32_t layer = it1->first;
-			vector<path_type> const& vPath = it1->second;
-			for (typename vector<path_type>::const_iterator it2 = vPath.begin(); it2 != vPath.end(); ++it2)
+            std::vector<path_type> const& vPath = it1->second;
+			for (typename std::vector<path_type>::const_iterator it2 = vPath.begin(); it2 != vPath.end(); ++it2)
 			{
 				path_type const& path = *it2;
 				// create a path
@@ -246,7 +242,7 @@ struct GdsWriter
 			}
 		}
 	}
-	void operator() (GdsParser::GdsWriter& gw, vector<rectangle_pointer_type> const& vRect, vector<vector<uint32_t> > const& mAdjVertex, const int32_t layer) const 
+	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const 
 	{
 		for (uint32_t i = 0; i != mAdjVertex.size(); ++i)
 		{
@@ -279,13 +275,11 @@ struct GdsWriter
 	}
 };
 
-
 /// parse command line arguments 
-template <typename T>
 struct CmdParser
 {
-	typedef T coordinate_type;
-	typedef LayoutDB<coordinate_type> layoutdb_type;
+	typedef LayoutDB layoutdb_type;
+	typedef layoutdb_type::coordinate_type coordinate_type;
 
 	layoutdb_type& db;
 
@@ -294,22 +288,22 @@ struct CmdParser
 	bool operator()(int argc, char** argv)
 	{
         bool help = false;
-        string algo_str;
+        std::string algo_str;
         // append options here 
         typedef limbo::programoptions::ProgramOptions po_type;
         using limbo::programoptions::Value;
         po_type desc (std::string("SimpleMPL 1.X Usage"));
         desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true).help(true))
-            .add_option(Value<string>("-in", &db.input_gds, "input gds file name").required(true))
-            .add_option(Value<string>("-out", &db.output_gds, "output gds file name").default_value("output.gds"))
+            .add_option(Value<std::string>("-in", &db.input_gds, "input gds file name").required(true))
+            .add_option(Value<std::string>("-out", &db.output_gds, "output gds file name").default_value("output.gds"))
             .add_option(Value<double>("-coloring_distance", &db.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(0))
             .add_option(Value<int32_t>("-color_num", &db.color_num, "an integer indicating number of masks (colors)").required(true))
             .add_option(Value<int32_t>("-simplify_level", &db.simplify_level, "an integer indicating graph simplification level < 0|1|2 >").default_value(2))
             .add_option(Value<int32_t>("-thread_num", &db.thread_num, "an integer indicating maximum thread number").default_value(1))
-            .add_option(Value<set<int32_t> >("-path_layer", &db.sPathLayer, "an integer indicating layer for conflict edges"))
-            .add_option(Value<set<int32_t> >("-precolor_layer", &db.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
-            .add_option(Value<set<int32_t> >("-uncolor_layer", &db.sUncolorLayer, "an integer indicating layer for coloring").required(true))
-            .add_option(Value<string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value("BACKTRACK"))
+            .add_option(Value<std::set<int32_t> >("-path_layer", &db.sPathLayer, "an integer indicating layer for conflict edges"))
+            .add_option(Value<std::set<int32_t> >("-precolor_layer", &db.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
+            .add_option(Value<std::set<int32_t> >("-uncolor_layer", &db.sUncolorLayer, "an integer indicating layer for coloring").required(true))
+            .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value("BACKTRACK"))
             .add_option(Value<bool>("-verbose", &db.verbose, "control screen messages").toggle(true).default_value(false).toggle_value(true))
             ;
         try

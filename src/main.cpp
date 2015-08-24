@@ -8,15 +8,15 @@
 #include <iostream>
 #include <boost/timer/timer.hpp>
 #include "SimpleMPL.h"
-using std::cout;
-using std::endl;
 
 int main(int argc, char** argv)
 {
 	SimpleMPL::SimpleMPL mpl;
     mpl.print_welcome();
 
-	boost::timer::auto_cpu_timer timer;
+    char buf[256];
+    SimpleMPL::mplSPrint(SimpleMPL::kINFO, buf, "program takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer (buf);
 
 	mpl.run(argc, argv);
 

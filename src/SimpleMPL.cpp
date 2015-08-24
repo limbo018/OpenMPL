@@ -40,41 +40,47 @@ void SimpleMPL::run(int argc, char** argv)
 void SimpleMPL::read_cmd(int argc, char** argv)
 {
 	// read command 
-	CmdParser<coordinate_type> cmd (m_db);
+	CmdParser cmd (m_db);
 	// check options 
     mplAssertMsg(cmd(argc, argv), "failed to parse command");
 }
 
 void SimpleMPL::read_gds()
 {
-	boost::timer::auto_cpu_timer timer;
+    char buf[256];
+    mplSPrint(kINFO, buf, "reading input files takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer (buf);
 	mplPrint(kINFO, "Reading input file %s\n", m_db.input_gds.c_str());
 	// read input gds file 
-	GdsReader<coordinate_type> reader (m_db);
+	GdsReader reader (m_db);
     mplAssertMsg(reader(m_db.input_gds), "failed to read %s", m_db.input_gds.c_str());
 	// must call initialize after reading 
 	m_db.initialize_data();
 	// report data 
-	m_db.rpt_data();
+	m_db.report_data();
 }
 
 void SimpleMPL::write_gds()
 {
-	boost::timer::auto_cpu_timer timer;
+    char buf[256];
+    mplSPrint(kINFO, buf, "writing output file takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer (buf);
 	if (m_db.output_gds.empty()) 
 	{
         mplPrint(kWARN, "Output file not specified, no file generated\n");
 		return;
 	}
 	// write output gds file 
-	GdsWriter<coordinate_type> writer;
+	GdsWriter writer;
 	mplPrint(kINFO, "Write output gds file: %s\n", m_db.output_gds.c_str());
 	writer(m_db.output_gds, m_db, m_vConflict, m_mAdjVertex, m_db.strname, m_db.unit*1e+6);
 }
 
 void SimpleMPL::solve()
 {
-	boost::timer::auto_cpu_timer timer;
+    char buf[256];
+    mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer (buf);
 	if (m_db.vPattern.empty())
 	{
         mplPrint(kWARN, "No patterns found in specified layers\n");

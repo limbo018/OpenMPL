@@ -16,8 +16,8 @@ SIMPLEMPL_BEGIN_NAMESPACE
 class SimpleMPL
 {
 	public:
-		typedef int32_t coordinate_type;
-		typedef LayoutDB<coordinate_type> layoutdb_type;
+		typedef LayoutDBRect layoutdb_type;
+        typedef layoutdb_type::coordinate_type coordinate_type;
 		typedef layoutdb_type::coordinate_difference   coordinate_difference;
 		typedef layoutdb_type::point_type              point_type;
 		typedef layoutdb_type::rectangle_type          rectangle_type;

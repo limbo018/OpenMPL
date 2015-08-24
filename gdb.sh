@@ -9,7 +9,7 @@
 color_num=3
 simplify_level=2
 thread_num=4
-algo=ILP # BACKTRACK or ILP or LP
+algo=LP # BACKTRACK or ILP or LP
 #benchmark="output_20x20-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 benchmark="via2_local_precolor.gds"
