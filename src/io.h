@@ -54,12 +54,12 @@ struct GdsReader : GdsParser::GdsDataBase
 {
 	typedef LayoutDB layoutdb_type;
 	typedef layoutdb_type::coordinate_type coordinate_type;
-	typedef typename layoutdb_type::point_type              point_type;
-	typedef typename layoutdb_type::rectangle_type          rectangle_type;
-	typedef typename layoutdb_type::polygon_type            polygon_type;
-	typedef typename layoutdb_type::polygon_pointer_type    polygon_pointer_type;
-	typedef typename layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;
-	typedef typename layoutdb_type::path_type               path_type;
+	typedef layoutdb_type::point_type              point_type;
+	typedef layoutdb_type::rectangle_type          rectangle_type;
+	typedef layoutdb_type::polygon_type            polygon_type;
+	typedef layoutdb_type::polygon_pointer_type    polygon_pointer_type;
+	typedef layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;
+	typedef layoutdb_type::path_type               path_type;
 
 	//string strname; // TOPCELL name, useful for dump out gds files 
 	//double unit;
@@ -162,14 +162,14 @@ struct GdsReader : GdsParser::GdsDataBase
 /// write gds file 
 struct GdsWriter
 {
-	typedef LayoutDBRect layoutdb_type;
+	typedef LayoutDB layoutdb_type;
     typedef layoutdb_type::coordinate_type coordinate_type;
-	typedef typename layoutdb_type::point_type point_type;
-	typedef typename layoutdb_type::rectangle_type rectangle_type;
-	typedef typename layoutdb_type::polygon_type polygon_type;
-	typedef typename layoutdb_type::polygon_pointer_type polygon_pointer_type;
-	typedef typename layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
-	typedef typename layoutdb_type::path_type path_type;
+	typedef layoutdb_type::point_type point_type;
+	typedef layoutdb_type::rectangle_type rectangle_type;
+	typedef layoutdb_type::polygon_type polygon_type;
+	typedef layoutdb_type::polygon_pointer_type polygon_pointer_type;
+	typedef layoutdb_type::rectangle_pointer_type rectangle_pointer_type;
+	typedef layoutdb_type::path_type path_type;
 
 	void operator() (std::string const& filename, layoutdb_type const& db, 
 			std::vector<pair<uint32_t, uint32_t> > const& vConflict, 
@@ -195,7 +195,7 @@ struct GdsWriter
 	}
 	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
 	{
-		for (typename std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
+		for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
 		{
 			rectangle_type const& rect = **it;
 			gw.write_box(layer_offset+rect.color(), 0, 
@@ -220,11 +220,11 @@ struct GdsWriter
 	}
 	void operator() (GdsParser::GdsWriter& gw, map<int32_t, std::vector<path_type> > const& hPath) const 
 	{
-		for (typename map<int32_t, std::vector<path_type> >::const_iterator it1 = hPath.begin(); it1 != hPath.end(); ++it1)
+		for (map<int32_t, std::vector<path_type> >::const_iterator it1 = hPath.begin(); it1 != hPath.end(); ++it1)
 		{
 			const int32_t layer = it1->first;
             std::vector<path_type> const& vPath = it1->second;
-			for (typename std::vector<path_type>::const_iterator it2 = vPath.begin(); it2 != vPath.end(); ++it2)
+			for (std::vector<path_type>::const_iterator it2 = vPath.begin(); it2 != vPath.end(); ++it2)
 			{
 				path_type const& path = *it2;
 				// create a path

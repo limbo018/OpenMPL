@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "db.h"
+#include <stack>
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
@@ -30,6 +31,9 @@ LayoutDB::LayoutDB(LayoutDB const& rhs)
 }
 LayoutDB::~LayoutDB()
 {
+    // recycle 
+    for (std::vector<rectangle_pointer_type>::iterator it = vPattern.begin(), ite = vPattern.end(); it != ite; ++it)
+        delete *it;
 }
 LayoutDB& LayoutDB::operator=(LayoutDB const& rhs)
 {
@@ -72,6 +76,9 @@ void LayoutDB::copy(LayoutDB const& rhs)
     input_gds         = rhs.input_gds;
     output_gds        = rhs.output_gds;
     algo              = rhs.algo;
+    // layout information
+    tPattern = rhs.tPattern;
+    vPattern = rhs.vPattern;
 }
 void LayoutDB::add(int32_t layer, std::vector<point_type> const& vPoint)
 {
@@ -87,7 +94,7 @@ void LayoutDB::add_path(int32_t layer, std::vector<point_type> const& vPoint)
     if (vPoint.size() < 2) return;
     else if (vPoint.size() == 4) // probably it is initialized from boundary 
     {
-        typename gtl::coordinate_traits<coordinate_type>::coordinate_distance dist[] = {
+        gtl::coordinate_traits<coordinate_type>::coordinate_distance dist[] = {
             gtl::euclidean_distance(vPoint[0], vPoint[1]),
             gtl::euclidean_distance(vPoint[1], vPoint[2])
         };
@@ -119,6 +126,7 @@ void LayoutDB::report_data() const
 }
 void LayoutDB::report_data_kernel() const
 {
+    mplPrint(kINFO, "Total patterns # = %lu\n", vPattern.size());
     mplPrint(kINFO, "Coloring distance = %lld db ( %g nm )\n", coloring_distance, coloring_distance_nm);
     mplPrint(kINFO, "Color num = %d\n", color_num);
     mplPrint(kINFO, "Simplification level = %u\n", simplify_level);
@@ -152,98 +160,33 @@ void LayoutDB::report_data_kernel() const
     mplPrint(kNONE, "\n");
     mplPrint(kINFO, "Algorithm = %s\n", std::string(algo).c_str());
 }
-
-
-LayoutDBRect::LayoutDBRect() : LayoutDBRect::base_type() 
+void LayoutDB::update_bbox(base_type const& bbox)
 {
+    if (vPattern.empty())
+        gtl::assign(*this, bbox);
+    else 
+        gtl::encompass(*this, bbox);
 }
-LayoutDBRect::LayoutDBRect(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh) : LayoutDBRect::base_type(xl, yl, xh, yh) 
+void LayoutDB::check_layer_and_color(int32_t layer, bool& pattern_layer_flag, int8_t& color) const
 {
-}
-LayoutDBRect::LayoutDBRect(LayoutDBRect const& rhs) : LayoutDBRect::base_type(rhs)
-{
-    copy(rhs);
-}
-LayoutDBRect::~LayoutDBRect()
-{
-    // recycle 
-    for (typename std::vector<rectangle_pointer_type>::iterator it = vPattern.begin(); it != vPattern.end(); ++it)
-        delete *it;
-}
-LayoutDBRect& LayoutDBRect::operator=(LayoutDBRect const& rhs)
-{
-    if (this != &rhs)
-    {
-        this->base_type::operator=(rhs);
-        copy(rhs);
-    }
-    return *this;
-}
-void LayoutDBRect::copy(LayoutDBRect const& rhs)
-{
-    tPattern = rhs.tPattern;
-    vPattern = rhs.vPattern;
-}
-void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
-{
-    mplAssert(vPoint.size() >= 4 && vPoint.size() < 6);
-
-    rectangle_pointer_type pPattern(new rectangle_type());
-    for (typename std::vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
-    {
-        if (it == vPoint.begin())
-            gtl::set_points(*pPattern, *it, *it);
-        else 
-            gtl::encompass(*pPattern, *it);
-    }
-    pPattern->layer(layer);
-    pPattern->pattern_id(vPattern.size());
-
-    // update layout boundary 
-    if (vPattern.empty()) // first call 
-        gtl::assign(*this, *pPattern);
-    else // bloat layout region to encompass current points 
-        gtl::encompass(*this, *pPattern);
-
-    // collect patterns 
-    bool pattern_layer_flag = true;
+    pattern_layer_flag = true;
+    color = -1;
     if (sPrecolorLayer.count(layer)) 
     {
         // for precolored patterns 
         // set colors 
-        pPattern->color(layer-*sPrecolorLayer.begin());
+        color = layer-*sPrecolorLayer.begin();
     }
     else if (sUncolorLayer.count(layer))
     {
         // for uncolored patterns
     }
     else pattern_layer_flag = false;
-
-    if (pattern_layer_flag)
-    {
-        // collect pattern 
-        // initialize rtree later will contribute to higher efficiency in runtime 
-        vPattern.push_back(pPattern);
-    }
-    else // recycle if it is not shared_ptr
-        delete pPattern;
-}
-/// call it to initialize rtree 
-/// it should be faster than gradually insertion 
-void LayoutDBRect::initialize_data()
-{
-    this->base_type::initialize_data();
-    // I assume there may be duplicate in the input gds, but no overlapping patterns 
-    // duplicates are removed with following function
-    remove_overlap();
-    // construction with packing algorithm 
-    rtree_type tTmp (vPattern.begin(), vPattern.end());
-    tPattern.swap(tTmp);
 }
 /// remove overlapping patterns 
 /// based on scanline approach, horizontal sort and then vertical sort 
 /// O(nlogn)
-void LayoutDBRect::remove_overlap()
+void LayoutDB::remove_overlap()
 {
     std::sort(vPattern.begin(), vPattern.end(), compare_rectangle_type());
     // only duplicate is removed so far
@@ -254,7 +197,7 @@ void LayoutDBRect::remove_overlap()
     mplAssert(vValid[0] && vValid[vPattern.size()-1]);
 #endif
     uint32_t duplicate_cnt = 0;
-    for (typename std::vector<rectangle_pointer_type>::iterator it1 = vPattern.begin(), it2 = vPattern.begin();
+    for (std::vector<rectangle_pointer_type>::iterator it1 = vPattern.begin(), it2 = vPattern.begin();
             it2 != vPattern.end(); ++it2)
     {
         if (it2 != vPattern.begin()) 
@@ -298,15 +241,224 @@ void LayoutDBRect::remove_overlap()
     for (uint32_t i = 0; i != vPattern.size(); ++i)
         vPattern[i]->pattern_id(i);
 }
+
+
+//////////////// LayoutDBRect ////////////////
+LayoutDBRect::LayoutDBRect() : LayoutDBRect::base_type() 
+{
+}
+LayoutDBRect::LayoutDBRect(LayoutDBRect::coordinate_type xl, LayoutDBRect::coordinate_type yl, LayoutDBRect::coordinate_type xh, LayoutDBRect::coordinate_type yh) 
+    : LayoutDBRect::base_type(xl, yl, xh, yh) 
+{
+}
+LayoutDBRect::LayoutDBRect(LayoutDBRect const& rhs) : LayoutDBRect::base_type(rhs)
+{
+    copy(rhs);
+}
+LayoutDBRect::~LayoutDBRect()
+{
+}
+LayoutDBRect& LayoutDBRect::operator=(LayoutDBRect const& rhs)
+{
+    if (this != &rhs)
+    {
+        this->base_type::operator=(rhs);
+        copy(rhs);
+    }
+    return *this;
+}
+void LayoutDBRect::copy(LayoutDBRect const& rhs)
+{
+}
+void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
+{
+    mplAssert(vPoint.size() >= 4 && vPoint.size() < 6);
+
+    rectangle_pointer_type pPattern(new rectangle_type());
+    for (std::vector<point_type>::const_iterator it = vPoint.begin(); it != vPoint.end(); ++it)
+    {
+        if (it == vPoint.begin())
+            gtl::set_points(*pPattern, *it, *it);
+        else 
+            gtl::encompass(*pPattern, *it);
+    }
+    pPattern->layer(layer);
+    pPattern->pattern_id(vPattern.size());
+
+    // update layout boundary 
+    update_bbox(*pPattern);
+
+    // collect patterns 
+    bool pattern_layer_flag = true;
+    int8_t color = -1;
+    check_layer_and_color(layer, pattern_layer_flag, color);
+
+    if (pattern_layer_flag)
+    {
+        pPattern->color(color);
+        // collect pattern 
+        // initialize rtree later will contribute to higher efficiency in runtime 
+        vPattern.push_back(pPattern);
+    }
+    else // recycle if it is not shared_ptr
+        delete pPattern;
+}
+/// call it to initialize rtree 
+/// it should be faster than gradually insertion 
+void LayoutDBRect::initialize_data()
+{
+    this->base_type::initialize_data();
+    // I assume there may be duplicate in the input gds, but no overlapping patterns 
+    // duplicates are removed with following function
+    remove_overlap();
+    // construction with packing algorithm 
+    rtree_type tTmp (vPattern.begin(), vPattern.end());
+    tPattern.swap(tTmp);
+}
 void LayoutDBRect::report_data() const 
 {
-    mplPrint(kINFO, "Input data...\n");
-    report_data_kernel();
+    mplPrint(kINFO, "Input data for rectangle based layout...\n");
     this->base_type::report_data_kernel();
 }
-void LayoutDBRect::report_data_kernel() const
+
+//////////////// LayoutDBPolygon ////////////////
+LayoutDBPolygon::LayoutDBPolygon() : LayoutDBPolygon::base_type() 
 {
-    mplPrint(kINFO, "Total patterns # = %lu\n", vPattern.size());
+}
+LayoutDBPolygon::LayoutDBPolygon(LayoutDBPolygon::coordinate_type xl, LayoutDBPolygon::coordinate_type yl, LayoutDBPolygon::coordinate_type xh, LayoutDBPolygon::coordinate_type yh) 
+    : LayoutDBPolygon::base_type(xl, yl, xh, yh) 
+{
+}
+LayoutDBPolygon::LayoutDBPolygon(LayoutDBPolygon const& rhs) : LayoutDBPolygon::base_type(rhs)
+{
+    copy(rhs);
+}
+LayoutDBPolygon::~LayoutDBPolygon()
+{
+}
+LayoutDBPolygon& LayoutDBPolygon::operator=(LayoutDBPolygon const& rhs)
+{
+    if (this != &rhs)
+    {
+        this->base_type::operator=(rhs);
+        copy(rhs);
+    }
+    return *this;
+}
+void LayoutDBPolygon::copy(LayoutDBPolygon const& rhs)
+{
+}
+void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
+{
+    mplAssert(vPoint.size() >= 4);
+
+    // collect patterns 
+    bool pattern_layer_flag = true;
+    int8_t color = -1;
+    check_layer_and_color(layer, pattern_layer_flag, color);
+
+    // skip other layers 
+    if (!pattern_layer_flag)
+        return;
+
+    polygon_set_type tmpPolygonSet (gtl::HORIZONTAL); 
+    polygon_90_data<coordinate_type> tmpPolygon; 
+    tmpPolygon.set(vPoint.begin(), vPoint.end());
+    tmpPolygonSet.insert(tmpPolygon);
+
+    std::vector<rectangle_data<coordinate_type> > vTmpRectangle;
+    tmpPolygonSet.get_rectangles(vTmpRectangle);
+
+    // update layout boundary in LayoutDBPolygon::initialize_data
+    rectangle_data<coordinate_type> bbox;
+    if (gtl::extents(bbox, tmpPolygonSet))
+        update_bbox(bbox);
+
+    // collect decomposed rectangles 
+    for (std::vector<rectangle_data<coordinate_type> >::const_iterator it = vTmpRectangle.begin(), ite = vTmpRectangle.end(); it != ite; ++it)
+    {
+        rectangle_data<coordinate_type> const& rect = *it;
+        rectangle_pointer_type pPattern = new rectangle_type(gtl::xl(rect), gtl::yl(rect), gtl::xh(rect), gtl::yh(rect));
+        pPattern->layer(layer);
+        pPattern->color(color);
+        pPattern->pattern_id(vPattern.size());
+
+        // collect pattern 
+        // initialize rtree later will contribute to higher efficiency in runtime 
+        vPattern.push_back(pPattern);
+    }
+}
+/// call it to initialize rtree 
+/// it should be faster than gradually insertion 
+void LayoutDBPolygon::initialize_data()
+{
+    this->base_type::initialize_data();
+    // I assume there may be duplicate in the input gds, but no overlapping patterns 
+    // duplicates are removed with following function
+    remove_overlap();
+    // construction with packing algorithm 
+    rtree_type tTmp (vPattern.begin(), vPattern.end());
+    tPattern.swap(tTmp);
+    // compute parent polygons for each rectangle by connected component algorithm 
+    compute_parent_polygons();
+}
+void LayoutDBPolygon::compute_parent_polygons()
+{
+    vParentPolygonId.assign(vPattern.size(), std::numeric_limits<uint32_t>::max());
+    uint32_t polygon_id = 0;
+    for (uint32_t v = 0, ve = vPattern.size(); v != ve; ++v)
+    {
+        if (vParentPolygonId[v] == std::numeric_limits<uint32_t>::max()) // not visited 
+            depth_first_search(v, polygon_id++);
+    }
+    num_polygons = polygon_id;
+}
+void LayoutDBPolygon::depth_first_search(uint32_t source, uint32_t polygon_id)
+{
+    std::stack<uint32_t> vStack; 
+	vStack.push(source);
+
+	while (!vStack.empty())
+	{
+		uint32_t current = vStack.top();
+		vStack.pop();
+		if (vParentPolygonId[current] == std::numeric_limits<uint32_t>::max()) // not visited 
+		{
+			vParentPolygonId[current] = polygon_id; // set visited 
+            const rectangle_pointer_type pPattern = vPattern[current];
+
+			// find patterns connected with pPattern 
+			// query tPattern 
+            std::vector<rectangle_pointer_type> vAdjPattern;
+			rectangle_type rect (*pPattern);
+			// slightly bloat pPattern 
+			gtl::bloat(rect, gtl::HORIZONTAL, 1);
+			gtl::bloat(rect, gtl::VERTICAL, 1);
+			for (rtree_type::const_query_iterator itq = tPattern.qbegin(bgi::intersects(rect));
+					itq != tPattern.qend(); ++itq)
+			{
+				rectangle_pointer_type const& pAdjPattern = *itq;
+				if (pAdjPattern != pPattern) // skip pPattern itself 
+				{
+					mplAssert(pAdjPattern->pattern_id() != pPattern->pattern_id());
+					// we consider euclidean distance
+					gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*pAdjPattern, *pPattern);
+					if (distance <= 0) // consider as neighbor
+                        vStack.push(pAdjPattern->pattern_id());
+				}
+			}
+		}
+	}
+}
+void LayoutDBPolygon::report_data() const 
+{
+    mplPrint(kINFO, "Input data for polygon based layout...\n");
+    this->report_data_kernel();
+    this->base_type::report_data_kernel();
+}
+void LayoutDBPolygon::report_data_kernel() const 
+{
+    mplPrint(kINFO, "# polygons = %u\n", num_polygons);
 }
 
 SIMPLEMPL_END_NAMESPACE

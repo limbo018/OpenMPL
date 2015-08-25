@@ -17,8 +17,9 @@ SIMPLEMPL_BEGIN_NAMESPACE
 
 template <typename T> class Rectangle;
 template <typename T> class Polygon;
-class LayoutDB;
-class LayoutDBRect;
+struct LayoutDB;
+struct LayoutDBRect;
+struct LayoutDBPolygon;
 
 SIMPLEMPL_END_NAMESPACE
 
@@ -116,6 +117,11 @@ struct geometry_concept<SimpleMPL::LayoutDBRect>
 {
 	typedef rectangle_concept type;
 };
+template <>
+struct geometry_concept<SimpleMPL::LayoutDBPolygon> 
+{
+	typedef rectangle_concept type;
+};
 
 /// bug in boost library in the following function
 /// function intersects and intersect do not always return the same results (when consider_touch = false)
@@ -143,35 +149,6 @@ struct geometry_concept<SimpleMPL::LayoutDBRect>
     typename rectangle_distance_type<SimpleMPL::Rectangle<T> >::type val = square_euclidean_distance(lvalue, rvalue); // originally the result is cast to int, which causes overflow 
     return std::sqrt(val);
   }
-
-#if 0
-/// bug in boost library in the following function
-/// function intersects and intersect do not always return the same results (when consider_touch = false)
-/// create a specialization to resolve it 
-  template <typename T>
-  typename enable_if< typename gtl_and_3<y_r_b_intersect3, typename is_mutable_rectangle_concept<typename geometry_concept<SimpleMPL::LayoutDB >::type>::type,
-                                         typename is_rectangle_concept<typename geometry_concept<SimpleMPL::LayoutDB >::type>::type>::type,
-                       bool>::type
-  intersect(SimpleMPL::LayoutDB& rectangle, const SimpleMPL::LayoutDB& b, bool consider_touch = true) {
-	  // the original version is "intersects(rectangle, b)" without consider_touch 
-    if(intersects(rectangle, b, consider_touch)) {
-      intersect(rectangle, horizontal(b), HORIZONTAL, consider_touch);
-      intersect(rectangle, vertical(b), VERTICAL, consider_touch);
-      return true;
-    }
-    return false;
-  }
-
-/// bug in boost library
-  template <typename T>
-  typename enable_if< typename gtl_and_3<y_r_edist2, typename is_rectangle_concept<typename geometry_concept<SimpleMPL::LayoutDB >::type>::type,
-                                                          typename is_rectangle_concept<typename geometry_concept<SimpleMPL::LayoutDB >::type>::type>::type,
-                       typename rectangle_distance_type<SimpleMPL::LayoutDB >::type>::type
-  euclidean_distance(const SimpleMPL::LayoutDB & lvalue, const SimpleMPL::LayoutDB& rvalue) {
-    typename rectangle_distance_type<SimpleMPL::LayoutDB >::type val = square_euclidean_distance(lvalue, rvalue); // originally the result is cast to int, which causes overflow 
-    return std::sqrt(val);
-  }
-#endif
 
 }} // namespace boost // namespace polygon
 

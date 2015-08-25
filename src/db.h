@@ -12,6 +12,16 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <boost/version.hpp>
+
+#if (BOOST_VERSION/100)%1000 > 55
+// this is to fix the problem in boost 1.57.0 (1.55.0 works fine)
+// it reports problem to find abs 
+namespace boost { namespace polygon {
+	using std::abs;
+}} // namespace boost // namespace polygon
+#endif
+
 #include <boost/cstdint.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -49,45 +59,21 @@ using gtl::polygon_90_set_data;
 
 using namespace gtl::operators;
 
-template <typename T>
-class Rectangle : public rectangle_data<T>
+class Shape 
 {
-	public:
-		typedef T coordinate_type;
-		typedef rectangle_data<coordinate_type> base_type;
-		typedef rectangle_concept geometry_type; // important 
-		typedef point_data<coordinate_type> point_type;
-		using typename base_type::interval_type;
-
+    public:
 		/// default constructor 
-		Rectangle() : base_type()
-		{
-			this->initialize();
-		}
-		Rectangle(interval_type const& hor, interval_type const& ver) : base_type(hor, ver) 
-		{
-			this->initialize();
-		}
-		Rectangle(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh) : base_type(xl, yl, xh, yh)
-		{
-			this->initialize();
-		}
+		Shape() {this->initialize();}
 		/// copy constructor
-		Rectangle(Rectangle const& rhs) : base_type(rhs)
-		{
-			this->copy(rhs);
-		}
+		Shape(Shape const& rhs) {this->copy(rhs);}
 		/// assignment 
-		Rectangle& operator=(Rectangle const& rhs)
+		Shape& operator=(Shape const& rhs)
 		{
 			if (this != &rhs)
-			{
-				this->base_type::operator=(rhs);
 				this->copy(rhs);
-			}
 			return *this;
 		}
-		virtual ~Rectangle() {}
+		virtual ~Shape() {}
 
 #ifdef DEBUG
 		long internal_id() {return m_internal_id;}
@@ -105,13 +91,7 @@ class Rectangle : public rectangle_data<T>
 		uint32_t pattern_id() const {return m_pattern_id;}
 		void pattern_id(uint32_t p) {m_pattern_id = p;}
 
-		friend std::ostream& operator<<(std::ostream& os, Rectangle const& rhs)
-		{
-			os << "(" << gtl::xl(rhs) << ", " << gtl::yl(rhs) << ", " << gtl::xh(rhs) << ", " << gtl::yh(rhs) << ")";
-			return os;
-		}
-
-	private:
+    private:
 		void initialize()
 		{
 			m_color = m_layer = -1;
@@ -124,7 +104,7 @@ class Rectangle : public rectangle_data<T>
 			m_internal_id = generate_id();
 #endif
 		}
-		void copy(Rectangle const& rhs)
+		void copy(Shape const& rhs)
 		{
 			this->m_color = rhs.m_color;
 			this->m_layer = rhs.m_layer;
@@ -157,11 +137,48 @@ class Rectangle : public rectangle_data<T>
 };
 
 template <typename T>
-class Polygon : public polygon_90_data<T>
+class Rectangle : public rectangle_data<T>, public Shape
+{
+	public:
+		typedef T coordinate_type;
+		typedef rectangle_data<coordinate_type> base_type;
+        typedef Shape shape_base_type;
+		typedef rectangle_concept geometry_type; // important 
+		typedef point_data<coordinate_type> point_type;
+		using typename base_type::interval_type;
+
+		/// default constructor 
+		Rectangle() : base_type(), shape_base_type() {}
+		Rectangle(interval_type const& hor, interval_type const& ver) : base_type(hor, ver), shape_base_type() {}
+		Rectangle(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh) : base_type(xl, yl, xh, yh), shape_base_type() {}
+		/// copy constructor
+		Rectangle(Rectangle const& rhs) : base_type(rhs), shape_base_type(rhs) {}
+		/// assignment 
+		Rectangle& operator=(Rectangle const& rhs)
+		{
+			if (this != &rhs)
+			{
+				this->base_type::operator=(rhs);
+                this->shape_base_type::operator=(rhs);
+			}
+			return *this;
+		}
+		virtual ~Rectangle() {}
+
+		friend std::ostream& operator<<(std::ostream& os, Rectangle const& rhs)
+		{
+			os << "(" << gtl::xl(rhs) << ", " << gtl::yl(rhs) << ", " << gtl::xh(rhs) << ", " << gtl::yh(rhs) << ")";
+			return os;
+		}
+};
+
+template <typename T>
+class Polygon : public polygon_90_data<T>, public Shape
 {
 	public:
 		typedef T coordinate_type;
 		typedef polygon_90_data<coordinate_type> base_type;
+        typedef Shape shape_base_type;
 		typedef Rectangle<coordinate_type> rectangle_type;
 		typedef point_data<coordinate_type> point_type;
 		using typename base_type::geometry_type;
@@ -169,42 +186,30 @@ class Polygon : public polygon_90_data<T>
 		using typename base_type::iterator_type;
 		using typename base_type::area_type;
 
-		Polygon() : base_type() 
+		/// default constructor 
+		Polygon() : base_type(), shape_base_type() {}
+		/// copy constructor
+		Polygon(Polygon const& rhs) : base_type(rhs), shape_base_type(rhs) {}
+		/// assignment 
+		Polygon& operator=(Polygon const& rhs)
 		{
-			m_color = -1;
-			this->initialize();
+			if (this != &rhs)
+			{
+				this->base_type::operator=(rhs);
+                this->shape_base_type::operator=(rhs);
+			}
+			return *this;
 		}
-		Polygon(Polygon const& rhs) : base_type(rhs)
-		{
-			m_color = rhs.m_color;
-			this->initialize();
-			//this->m_vPolyRect = rhs.m_vPolyRect;
-			//this->m_bbox = rhs.m_bbox;
-		}
+		virtual ~Polygon() {}
 
-	protected:
-		void initialize()
+		friend std::ostream& operator<<(std::ostream& os, Polygon const& rhs)
 		{
-#ifdef _OPENMP
-#pragma omp critical 
-#endif
-			m_id = generate_id();
+            os << "(";
+            for (iterator_type it = rhs.begin(), ite = rhs.end(); it != ite; ++it)
+                os << "(" << it->x() << ", " << it->y() << ")";
+            os << ")";
+			return os;
 		}
-		static long generate_id()
-		{
-			static long cnt = -1;
-			mplAssert(cnt < std::numeric_limits<long>::max());
-#ifdef _OPENMP
-#pragma omp atomic 
-#endif
-			cnt += 1;
-			return cnt;
-		}
-
-		long m_id; ///< internal id 
-		//std::vector<rectangle_pointer_type> m_vPolyRect; ///< save decomposed rectangles 
-
-		int32_t m_color; ///< color 
 };
 
 /// base layout database class 
@@ -220,6 +225,10 @@ struct LayoutDB : public rectangle_data<int32_t>
 	typedef Polygon<coordinate_type> polygon_type;
 	typedef polygon_type* polygon_pointer_type;
 	typedef rectangle_type* rectangle_pointer_type;
+    // TO DO: experiment which hint is faster for rtree 
+	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
+	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
+	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
     /// necessary for gtl::rectangle_traits
     using base_type::interval_type; 
 
@@ -244,6 +253,22 @@ struct LayoutDB : public rectangle_data<int32_t>
 	/// algorithm options 
 	AlgorithmType algo;                        ///< control algorithms used to solve coloring problem 
 
+	/// layout information 
+    /// for rectangle-only layout, they denote patterns; otherwise, they denote decomposed rectangles from polygon patterns 
+	rtree_type tPattern;                       ///< rtree for components that intersects the LayoutDB
+	std::vector<rectangle_pointer_type> vPattern;   ///< uncolored and precolored patterns 
+
+	struct compare_rectangle_type 
+	{
+		// by x and then by y
+		bool operator() (rectangle_type const& r1, rectangle_type const& r2) const 
+		{
+			return gtl::xl(r1) < gtl::xl(r2) || (gtl::xl(r1) == gtl::xl(r2) && gtl::yl(r1) < gtl::yl(r2));
+		}
+		bool operator() (rectangle_pointer_type const& r1, rectangle_pointer_type const& r2) const 
+		{return (*this)(*r1, *r2);}
+	};
+
     LayoutDB();
 	LayoutDB(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh);
 	LayoutDB(LayoutDB const& rhs);
@@ -258,6 +283,18 @@ struct LayoutDB : public rectangle_data<int32_t>
 	virtual void initialize_data();
     virtual void report_data() const;
 	void report_data_kernel() const;
+
+    /// \return true if two patterns belong to the same parent polygon
+    virtual bool same_parent(uint32_t id1, uint32_t id2) const = 0;
+
+    /// helper functions 
+    /// update bounding box of layout 
+    void update_bbox(base_type const& bbox);
+    void check_layer_and_color(int32_t layer, bool& pattern_layer_flag, int8_t& color) const;
+	/// remove overlapping patterns 
+	/// based on scanline approach, horizontal sort and then vertical sort 
+	/// O(nlogn)
+	void remove_overlap();
 };
 
 /// current implementation assume all the input patterns are rectangles 
@@ -265,29 +302,11 @@ struct LayoutDBRect : public LayoutDB
 {
     typedef LayoutDB base_type;
 	typedef base_type::coordinate_type coordinate_type;
-	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
-	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
-	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
-
-	/// layout information 
-	rtree_type tPattern;                       ///< rtree for components that intersects the LayoutDBRect
-	std::vector<rectangle_pointer_type> vPattern;   ///< uncolored and precolored patterns 
-
-	struct compare_rectangle_type 
-	{
-		// by x and then by y
-		bool operator() (rectangle_type const& r1, rectangle_type const& r2) const 
-		{
-			return gtl::xl(r1) < gtl::xl(r2) || (gtl::xl(r1) == gtl::xl(r2) && gtl::yl(r1) < gtl::yl(r2));
-		}
-		bool operator() (rectangle_pointer_type const& r1, rectangle_pointer_type const& r2) const 
-		{return (*this)(*r1, *r2);}
-	};
 
 	LayoutDBRect();
 	LayoutDBRect(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh);
 	LayoutDBRect(LayoutDBRect const& rhs);
-	~LayoutDBRect();
+	virtual ~LayoutDBRect();
 	LayoutDBRect& operator=(LayoutDBRect const& rhs);
 
 	void copy(LayoutDBRect const& rhs);
@@ -295,12 +314,42 @@ struct LayoutDBRect : public LayoutDB
 	/// call it to initialize rtree 
 	/// it should be faster than gradually insertion 
 	virtual void initialize_data();
-	/// remove overlapping patterns 
-	/// based on scanline approach, horizontal sort and then vertical sort 
-	/// O(nlogn)
-	void remove_overlap();
+	virtual void report_data() const;
+
+    /// always return false as each rectangle is its own parent 
+    virtual bool same_parent(uint32_t, uint32_t) const {return false;}
+};
+
+/// polygon based layout 
+struct LayoutDBPolygon : public LayoutDB
+{
+    typedef LayoutDB base_type;
+	typedef base_type::coordinate_type coordinate_type;
+
+    /// layout information
+    std::vector<uint32_t> vParentPolygonId; ///< no need to actually store polygon patterns as we stored decomposed rectangles 
+                                             ///< but we need to know which polygon a rectangle belongs to 
+    uint32_t num_polygons; ///< number of polygons 
+
+	LayoutDBPolygon();
+	LayoutDBPolygon(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh);
+	LayoutDBPolygon(LayoutDBPolygon const& rhs);
+	virtual ~LayoutDBPolygon();
+	LayoutDBPolygon& operator=(LayoutDBPolygon const& rhs);
+
+	void copy(LayoutDBPolygon const& rhs);
+	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint);
+	/// call it to initialize rtree 
+	/// it should be faster than gradually insertion 
+	virtual void initialize_data();
 	virtual void report_data() const;
     void report_data_kernel() const;
+
+    void compute_parent_polygons();
+    void depth_first_search(uint32_t source, uint32_t polygon_id);
+
+    /// check vParentPolygonId for parent id 
+    virtual bool same_parent(uint32_t id1, uint32_t id2) const {return vParentPolygonId[id1] == vParentPolygonId[id2];}
 };
 
 SIMPLEMPL_END_NAMESPACE

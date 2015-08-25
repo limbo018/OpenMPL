@@ -148,11 +148,6 @@ void SimpleMPL::construct_graph()
 			rectangle_pointer_type const& pPattern = m_db.vPattern[v];
 			vector<uint32_t>& vAdjVertex = m_mAdjVertex[v];
 
-#ifdef DEBUG
-//			if (gtl::xl(*pPattern) == 20210 && gtl::yl(*pPattern) == 636960)
-//				cout << "hehe\n";
-#endif
-
 			// find patterns connected with pPattern 
 			// query tPattern in m_db
 			vector<rectangle_pointer_type> vAdjPattern;
@@ -169,7 +164,8 @@ void SimpleMPL::construct_graph()
 					mplAssert(pAdjPattern->pattern_id() != pPattern->pattern_id());
 					// we consider euclidean distance
 					gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = gtl::euclidean_distance(*pAdjPattern, *pPattern);
-					if (distance < m_db.coloring_distance)
+                    // remember to check same_parent() here for compatibility to polygons 
+					if (distance < m_db.coloring_distance && !m_db.same_parent(pAdjPattern->pattern_id(), pPattern->pattern_id()))
 						vAdjVertex.push_back(pAdjPattern->pattern_id());
 				}
 			}
