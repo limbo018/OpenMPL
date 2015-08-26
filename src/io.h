@@ -25,15 +25,6 @@
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
-using std::cout;
-using std::endl;
-using std::ifstream;
-using std::ofstream;
-using std::numeric_limits;
-using std::map;
-using std::pair;
-using std::make_pair;
-
 namespace gtl = boost::polygon;
 using boost::int32_t;
 using boost::int64_t;
@@ -75,7 +66,7 @@ struct GdsReader : GdsParser::GdsDataBase
 	bool operator() (std::string const& filename)  
 	{
 		// calculate file size 
-		ifstream in (filename.c_str());
+		std::ifstream in (filename.c_str());
 		if (!in.good()) return false;
 		std::streampos begin = in.tellg();
 		in.seekg(0, std::ios::end);
@@ -172,107 +163,19 @@ struct GdsWriter
 	typedef layoutdb_type::path_type path_type;
 
 	void operator() (std::string const& filename, layoutdb_type const& db, 
-			std::vector<pair<uint32_t, uint32_t> > const& vConflict, 
+			std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, 
 			std::vector<std::vector<uint32_t> > const& mAdjVertex, 
-			std::string const& strname = "TOPCELL", double unit = 0.001) const 
-	{
-		GdsParser::GdsWriter gw (filename.c_str());
-		gw.gds_create_lib("POLYGONS", unit /* um per bit */ );
-		gw.gds_write_bgnstr();
-		gw.gds_write_strname(strname.c_str());
+			std::string const& strname = "TOPCELL", double unit = 0.001) const;
+    /// write rectangles 
+	void write_rectangles(GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const;
+    /// write conflicts 
+	void write_conflicts(GdsParser::GdsWriter& gw, layoutdb_type const& db, 
+			std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, const int32_t layer) const;
+    /// write paths before constructing conflict edges 
+	void write_paths(GdsParser::GdsWriter& gw, std::map<int32_t, std::vector<path_type> > const& hPath) const;
+    /// write conflict edges 
+	void write_edges(GdsParser::GdsWriter& gw, layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const; 
 
-		// if there are precolored patterns, keep the same layer convention 
-		int32_t layer_offset = (db.sPrecolorLayer.empty())? 100 : *db.sPrecolorLayer.begin();
-		// basic operation
-		// will add more 
-		(*this)(gw, db.vPattern, layer_offset);
-		(*this)(gw, db.vPattern, vConflict,  layer_offset+db.color_num);   // conflict layer 
-		(*this)(gw, db.vPattern, mAdjVertex, layer_offset+db.color_num+1); // draw edges 
-		//(*this)(gw, db.hPath); // draw edges if there exits 
-
-		gw.gds_write_endstr();
-		gw.gds_write_endlib(); 
-	}
-	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
-	{
-		for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
-		{
-			rectangle_type const& rect = **it;
-			gw.write_box(layer_offset+rect.color(), 0, 
-					gtl::xl(rect), gtl::yl(rect), 
-					gtl::xh(rect), gtl::yh(rect));
-		}
-	}
-	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, 
-			std::vector<pair<uint32_t, uint32_t> > const& vConflict, const int32_t layer) const
-	{
-		for (std::vector<pair<uint32_t, uint32_t> >::const_iterator it = vConflict.begin(); it != vConflict.end(); ++it)
-		{
-			rectangle_type const& rect1 = *(vRect[it->first]);
-			rectangle_type const& rect2 = *(vRect[it->second]);
-			gw.write_box(layer, 0, 
-					gtl::xl(rect1), gtl::yl(rect1), 
-					gtl::xh(rect1), gtl::yh(rect1));
-			gw.write_box(layer, 0, 
-					gtl::xl(rect2), gtl::yl(rect2), 
-					gtl::xh(rect2), gtl::yh(rect2));
-		}
-	}
-	void operator() (GdsParser::GdsWriter& gw, map<int32_t, std::vector<path_type> > const& hPath) const 
-	{
-		for (map<int32_t, std::vector<path_type> >::const_iterator it1 = hPath.begin(); it1 != hPath.end(); ++it1)
-		{
-			const int32_t layer = it1->first;
-            std::vector<path_type> const& vPath = it1->second;
-			for (std::vector<path_type>::const_iterator it2 = vPath.begin(); it2 != vPath.end(); ++it2)
-			{
-				path_type const& path = *it2;
-				// create a path
-				gw.gds_write_path();
-				gw.gds_write_layer(layer);
-				gw.gds_write_datatype(0);
-				gw.gds_write_pathtype(2); // extended square ends
-				gw.gds_write_width(5); // 5 nm wide
-
-				int32_t x[2] = {gtl::x(gtl::low(path)), gtl::x(gtl::high(path))};
-				int32_t y[2] = {gtl::y(gtl::low(path)), gtl::y(gtl::high(path))};
-
-				gw.gds_write_xy(x, y, 2);
-				gw.gds_write_endel();
-			}
-		}
-	}
-	void operator() (GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const 
-	{
-		for (uint32_t i = 0; i != mAdjVertex.size(); ++i)
-		{
-			for (uint32_t j = 0; j != mAdjVertex[i].size(); ++j)
-			{
-				uint32_t v = i;
-				uint32_t u = mAdjVertex[i][j];
-				// create a path from v to u 
-				if (v < u) // avoid duplicate 
-				{
-					// create a path
-					gw.gds_write_path();
-					gw.gds_write_layer(layer);
-					gw.gds_write_datatype(0);
-					gw.gds_write_pathtype(2); // extended square ends
-					gw.gds_write_width(5); // 5 nm wide
-
-					point_type vc;
-					point_type uc;
-					gtl::center(vc, *vRect[v]);
-					gtl::center(uc, *vRect[u]);
-					int32_t x[2] = {gtl::x(vc), gtl::x(uc)};
-					int32_t y[2] = {gtl::y(vc), gtl::y(uc)};
-
-					gw.gds_write_xy(x, y, 2);
-					gw.gds_write_endel();
-				}
-			}
-		}
-	}
 };
 
 /// parse command line arguments 
@@ -285,73 +188,7 @@ struct CmdParser
 
 	CmdParser(layoutdb_type& _db) : db(_db) {}
 
-	bool operator()(int argc, char** argv)
-	{
-        bool help = false;
-        std::string algo_str;
-        // append options here 
-        typedef limbo::programoptions::ProgramOptions po_type;
-        using limbo::programoptions::Value;
-        po_type desc (std::string("SimpleMPL 1.X Usage"));
-        desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true).help(true))
-            .add_option(Value<std::string>("-in", &db.input_gds, "input gds file name").required(true))
-            .add_option(Value<std::string>("-out", &db.output_gds, "output gds file name").default_value("output.gds"))
-            .add_option(Value<double>("-coloring_distance", &db.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(0))
-            .add_option(Value<int32_t>("-color_num", &db.color_num, "an integer indicating number of masks (colors)").required(true))
-            .add_option(Value<int32_t>("-simplify_level", &db.simplify_level, "an integer indicating graph simplification level < 0|1|2 >").default_value(2))
-            .add_option(Value<int32_t>("-thread_num", &db.thread_num, "an integer indicating maximum thread number").default_value(1))
-            .add_option(Value<std::set<int32_t> >("-path_layer", &db.sPathLayer, "an integer indicating layer for conflict edges"))
-            .add_option(Value<std::set<int32_t> >("-precolor_layer", &db.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
-            .add_option(Value<std::set<int32_t> >("-uncolor_layer", &db.sUncolorLayer, "an integer indicating layer for coloring").required(true))
-            .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value("BACKTRACK"))
-            .add_option(Value<bool>("-verbose", &db.verbose, "control screen messages").toggle(true).default_value(false).toggle_value(true))
-            ;
-        try
-        {
-            desc.parse(argc, argv);
-
-            // print help message 
-            if (help)
-            {
-                std::cout << desc << "\n";
-                exit(1);
-            }
-
-            // post processing algo_str 
-            if (limbo::iequals(algo_str, "ILP")) 
-            {
-#if GUROBI == 1
-                db.algo = AlgorithmTypeEnum::ILP_GURBOI;
-#elif LEMONCBC == 1
-                db.algo = AlgorithmTypeEnum::ILP_CBC;
-#else 
-                mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default\n");
-#endif
-            }
-            else if (limbo::iequals(algo_str, "LP"))
-            {
-#if GUROBI == 1
-                db.algo = AlgorithmTypeEnum::LP_GUROBI;
-#else 
-                mplPrint(kWARN, "LP is not available without GUROBI, set to default\n");
-#endif
-            }
-            else if (limbo::iequals(algo_str, "BACKTRACK"))
-                db.algo = AlgorithmTypeEnum::BACKTRACK;
-            else mplPrint(kWARN, "Unknown algorithm type %s, set to default\n", algo_str.c_str());
-
-            // check condition 
-            mplAssertMsg(db.coloring_distance_nm > 0 || !db.sPathLayer.empty(), "should set positive coloring_distance_nm or specify path_layer for conflict edges");
-        }
-        catch (std::exception& e)
-        {
-            // print help message and error message 
-            std::cout << desc << "\n";
-            mplPrint(kERROR, "%s\n", e.what());
-            return false;
-        }
-		return true;
-	}
+	bool operator()(int argc, char** argv);
 };
 
 SIMPLEMPL_END_NAMESPACE

@@ -240,23 +240,26 @@ struct LayoutDB : public rectangle_data<int32_t>
 	std::set<int32_t> sUncolorLayer;                ///< layers that represent uncolored patterns 
 	std::set<int32_t> sPrecolorLayer;               ///< layers that represent precolored features, they should have the same number of colors 
 	std::set<int32_t> sPathLayer;                   ///< path layers that represent conflict edges 
-	coordinate_difference coloring_distance;   ///< minimum coloring distance, std::set from coloring_distance_nm and unit
-	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, std::set from command line 
+	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_nm and unit
+	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
 	int32_t color_num;                         ///< number of colors available, only support 3 or 4
-	int32_t simplify_level;                    ///< simplification level 0|1|2, default is 2
+	int32_t simplify_level;                    ///< simplification level 0|1|2|3, default is 2, level 3 will invoke MERGE_SUBK4 which cannot guarantee optimality
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
 	bool verbose;                              ///< control screen message 
+    uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
 
 	std::string   input_gds;                        ///< input gdsii filename 
 	std::string   output_gds;                       ///< output gdsii filename 
 
 	/// algorithm options 
 	AlgorithmType algo;                        ///< control algorithms used to solve coloring problem 
+    /// database options 
+    ShapeMode shape_mode;                      ///< it determins the actual derived layout database type 
 
 	/// layout information 
     /// for rectangle-only layout, they denote patterns; otherwise, they denote decomposed rectangles from polygon patterns 
-	rtree_type tPattern;                       ///< rtree for components that intersects the LayoutDB
-	std::vector<rectangle_pointer_type> vPattern;   ///< uncolored and precolored patterns 
+	rtree_type tPatternBbox;                       ///< rtree for components that intersects the LayoutDB
+	std::vector<rectangle_pointer_type> vPatternBbox;   ///< uncolored and precolored patterns 
 
 	struct compare_rectangle_type 
 	{
@@ -277,24 +280,41 @@ struct LayoutDB : public rectangle_data<int32_t>
 
 	void initialize();
 	void copy(LayoutDB const& rhs);
+    virtual void swap(LayoutDB& rhs);
 	virtual void add(int32_t layer, std::vector<point_type> const& vPoint);
-	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint) = 0;
+    /// runtime disable this function instead of pure virtual function because we need to create LayoutDB object during initialization of SimpleMPL
+	virtual void add_pattern(int32_t /*layer*/, std::vector<point_type> const& /*vPoint*/) {mplAssertMsg(0, "LayoutDB::%s is not allowed", __func__);}
+    /// add paths that indicating conflict edges to the layout 
 	virtual void add_path(int32_t layer, std::vector<point_type> const& vPoint);
+	/// call it to initialize rtree 
+	/// it should be faster than gradually insertion 
 	virtual void initialize_data();
+    /// \return poly rect patterns 
+    virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPatternBbox;}
+    /// \return patterns 
+    virtual std::vector<rectangle_pointer_type> const& pattern_bboxes() const {return vPatternBbox;}
+    /// set color for patterns 
+    /// \param pattern_id is the index of vPatternBbox
+    virtual void set_color(uint32_t pattern_id, int8_t color);
+    /// mainly used for outputing edges 
+    /// \return a point that is on the pattern and close to its center with given pattern id (polygon id for LayoutDBPolygon)
+    /// default is to return the center of rectangle in vPatternBbox
+    virtual point_type get_point_closest_to_center(uint32_t pattern_id) const; 
     virtual void report_data() const;
 	void report_data_kernel() const;
 
     /// \return true if two patterns belong to the same parent polygon
-    virtual bool same_parent(uint32_t id1, uint32_t id2) const = 0;
+    //virtual bool same_parent(uint32_t /*id1*/, uint32_t /*id2*/) const {mplAssertMsg(0, "LayoutDB::%s is not allowed", __func__); return false;}
+    virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const {return gtl::euclidean_distance(r1, r2);}
 
     /// helper functions 
     /// update bounding box of layout 
     void update_bbox(base_type const& bbox);
     void check_layer_and_color(int32_t layer, bool& pattern_layer_flag, int8_t& color) const;
-	/// remove overlapping patterns 
+	/// remove overlapping patterns from vTargetPattern
 	/// based on scanline approach, horizontal sort and then vertical sort 
 	/// O(nlogn)
-	void remove_overlap();
+	void remove_overlap(std::vector<rectangle_pointer_type>& vTargetPattern);
 };
 
 /// current implementation assume all the input patterns are rectangles 
@@ -310,6 +330,7 @@ struct LayoutDBRect : public LayoutDB
 	LayoutDBRect& operator=(LayoutDBRect const& rhs);
 
 	void copy(LayoutDBRect const& rhs);
+    void swap(LayoutDBRect const& rhs);
 	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint);
 	/// call it to initialize rtree 
 	/// it should be faster than gradually insertion 
@@ -317,7 +338,7 @@ struct LayoutDBRect : public LayoutDB
 	virtual void report_data() const;
 
     /// always return false as each rectangle is its own parent 
-    virtual bool same_parent(uint32_t, uint32_t) const {return false;}
+    //virtual bool same_parent(uint32_t, uint32_t) const {return false;}
 };
 
 /// polygon based layout 
@@ -327,9 +348,12 @@ struct LayoutDBPolygon : public LayoutDB
 	typedef base_type::coordinate_type coordinate_type;
 
     /// layout information
+    /// base_type::vPatternBbox is used to store bounding boxes of polygons here 
+    /// base_type::tPatternBbox is used to store poly rects during initialization, but for bounding boxes in vPatternBbox after that 
     std::vector<uint32_t> vParentPolygonId; ///< no need to actually store polygon patterns as we stored decomposed rectangles 
                                              ///< but we need to know which polygon a rectangle belongs to 
-    uint32_t num_polygons; ///< number of polygons 
+    std::vector<rectangle_pointer_type> vPolyRectPattern; ///< initial patterns decomposed from input polygons 
+    std::vector<uint32_t> vPolyRectBeginId; ///< begin index in vPolyRectPattern when querying from parent polygon id 
 
 	LayoutDBPolygon();
 	LayoutDBPolygon(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh);
@@ -338,18 +362,30 @@ struct LayoutDBPolygon : public LayoutDB
 	LayoutDBPolygon& operator=(LayoutDBPolygon const& rhs);
 
 	void copy(LayoutDBPolygon const& rhs);
+    void swap(LayoutDBPolygon& rhs);
 	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint);
 	/// call it to initialize rtree 
 	/// it should be faster than gradually insertion 
 	virtual void initialize_data();
+    /// return poly rect patterns 
+    virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPolyRectPattern;}
+    /// set color for patterns 
+    /// \param pattern_id is the index of vPatternBbox
+    virtual void set_color(uint32_t pattern_id, int8_t color);
+    /// mainly used for outputing edges 
+    /// \return a point that is on the pattern and close to its center with given pattern id (polygon id for LayoutDBPolygon)
+    /// default is to return the center of rectangle in vPatternBbox
+    virtual point_type get_point_closest_to_center(uint32_t pattern_id) const; 
 	virtual void report_data() const;
     void report_data_kernel() const;
 
     void compute_parent_polygons();
-    void depth_first_search(uint32_t source, uint32_t polygon_id);
+    void depth_first_search(uint32_t source, uint32_t polygon_id, uint32_t& order_id, std::vector<uint32_t>& vOrderId);
+    void compute_parent_polygon_bboxes(uint32_t num_polygon);
 
     /// check vParentPolygonId for parent id 
-    virtual bool same_parent(uint32_t id1, uint32_t id2) const {return vParentPolygonId[id1] == vParentPolygonId[id2];}
+    //virtual bool same_parent(uint32_t id1, uint32_t id2) const {return vParentPolygonId[id1] == vParentPolygonId[id2];}
+    virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const; 
 };
 
 SIMPLEMPL_END_NAMESPACE

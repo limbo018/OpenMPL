@@ -2,7 +2,11 @@ obj
 *.gv
 *.dot
 *.pdf
+*.lp
+*.ilp
+*.gds
 src/tags
+src/*.bk
 lib/*
 
 bin/.out

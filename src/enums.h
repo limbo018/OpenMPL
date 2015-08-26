@@ -107,6 +107,46 @@ class AlgorithmType : public EnumExt<AlgorithmTypeEnum::EnumType>
         virtual enum_type str2Enum(std::string const& s) const;
 };
 
+/// Shape mode for database 
+struct ShapeModeEnum
+{
+    enum EnumType {
+        RECTANGLE = 0, // only non-overlapping rectangles 
+        POLYGON = 1 // contain polygons or overlapping rectangles 
+    };
+};
+class ShapeMode : public EnumExt<ShapeModeEnum::EnumType>
+{
+	public:
+        typedef ShapeModeEnum enum_wrap_type;
+        typedef enum_wrap_type::EnumType enum_type;
+        typedef EnumExt<enum_type> base_type;
+
+		ShapeMode() : base_type() {m_value = enum_wrap_type::RECTANGLE;}
+		ShapeMode(ShapeMode const& rhs) : base_type() {m_value = rhs.m_value;}
+		ShapeMode(enum_type const& rhs) : base_type() {m_value = rhs;}
+		ShapeMode(std::string const& rhs) : base_type() {m_value = str2Enum(rhs);}
+		ShapeMode& operator=(ShapeMode const& rhs)
+		{
+            this->base_type::operator=(rhs);
+			return *this;
+		}
+		ShapeMode& operator=(enum_type const& rhs)
+		{
+            this->base_type::operator=(rhs);
+			return *this;
+		}
+		ShapeMode& operator=(std::string const& rhs)
+		{
+            this->base_type::operator=(rhs);
+			return *this;
+		}
+
+	protected:
+        virtual std::string enum2Str(enum_type const& e) const;
+        virtual enum_type str2Enum(std::string const& s) const;
+};
+
 SIMPLEMPL_END_NAMESPACE
 
 #endif

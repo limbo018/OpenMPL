@@ -16,7 +16,7 @@ SIMPLEMPL_BEGIN_NAMESPACE
 class SimpleMPL
 {
 	public:
-		typedef LayoutDBRect layoutdb_type;
+		typedef LayoutDB layoutdb_type;
         typedef layoutdb_type::coordinate_type coordinate_type;
 		typedef layoutdb_type::coordinate_difference   coordinate_difference;
 		typedef layoutdb_type::point_type              point_type;
@@ -26,6 +26,11 @@ class SimpleMPL
 		typedef layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;
 		typedef layoutdb_type::path_type               path_type;
 		typedef layoutdb_type::rtree_type              rtree_type;
+
+        /// default constructor 
+        SimpleMPL();
+        /// destructor 
+        ~SimpleMPL();
 
 		/// top api to solve decomposition
 		void run(int32_t argc, char** argv);
@@ -46,26 +51,29 @@ class SimpleMPL
 		/// DFS for connected component computation
 		void depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& pattern_id);
 		/// solve a single component 
-		uint32_t solve_component(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
+		uint32_t solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
 
 		/// report conflict number for a component 
-		uint32_t conflict_num(const vector<uint32_t>::const_iterator itBgn, const vector<uint32_t>::const_iterator itEnd) const;
+		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
 		/// report conflict number for the whole layout 
 		/// collect conflict patterns to m_vConflict
 		uint32_t conflict_num() const;
+        /// reset data members 
+        /// \param init denote whether run in initialize mode 
+        void reset(bool init);
 
-		layoutdb_type m_db; ///< layout database and user-defined options 
+        layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
-		vector<uint32_t>          m_vVertexOrder; ///< vertex id
-		vector<vector<uint32_t> > m_mAdjVertex;   ///< adjcency list
-		vector<uint32_t>          m_vCompId;      ///< independent component id
+		std::vector<uint32_t>          m_vVertexOrder; ///< vertex id
+		std::vector<std::vector<uint32_t> > m_mAdjVertex;   ///< adjcency list
+		std::vector<uint32_t>          m_vCompId;      ///< independent component id
 		uint32_t                  m_comp_cnt;     ///< max# of connected components
 
 		/// density balancing 
-		vector<uint32_t> m_vColorDensity; ///< number of colors used so far 
+		std::vector<uint32_t> m_vColorDensity; ///< number of colors used so far 
 
 		/// conflict report 
-		mutable vector<pair<uint32_t, uint32_t> > m_vConflict; ///< conflict patterns  
+		mutable std::vector<std::pair<uint32_t, uint32_t> > m_vConflict; ///< conflict patterns  
 };
 
 SIMPLEMPL_END_NAMESPACE

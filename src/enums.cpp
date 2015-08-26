@@ -47,11 +47,39 @@ AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const
         STR2ENUM(mStr2Enum, ILP_GURBOI);
         STR2ENUM(mStr2Enum, ILP_CBC);
         STR2ENUM(mStr2Enum, LP_GUROBI);
-
         init = false;
     }
 
     return mStr2Enum.at(s);
 }
 
+std::string ShapeMode::enum2Str(ShapeMode::enum_type const& e) const
+{
+    static std::map<enum_type, std::string> mEnum2Str;
+    static bool init = true;
+
+    if (init)
+    {
+        ENUM2STR(mEnum2Str, RECTANGLE);
+        ENUM2STR(mEnum2Str, POLYGON);
+        init = false;
+    }
+
+    return mEnum2Str.at(e);
+}
+
+ShapeMode::enum_type ShapeMode::str2Enum(std::string const& s) const
+{
+    static std::map<std::string, enum_type> mStr2Enum;
+    static bool init = true;
+
+    if (init)
+    {
+        STR2ENUM(mStr2Enum, RECTANGLE);
+        STR2ENUM(mStr2Enum, POLYGON);
+        init = false;
+    }
+
+    return mStr2Enum.at(s);
+}
 SIMPLEMPL_END_NAMESPACE
