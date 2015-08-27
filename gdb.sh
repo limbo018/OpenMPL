@@ -9,11 +9,11 @@
 color_num=3
 simplify_level=2
 thread_num=1
-algo=LP # BACKTRACK or ILP or LP
+algo=ILP # BACKTRACK or ILP or LP
 #benchmark="output_20x20-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
-benchmark="sim_s2.gds"
+benchmark="sim_s5.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm/dpt_array"
@@ -108,8 +108,9 @@ gdb \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
 	-algo ${algo} \
-    -dbg_comp_id 1686 \
-	-verbose 
+    -dbg_comp_id 1686000 \
+
+    #-verbose
 
 fi
 

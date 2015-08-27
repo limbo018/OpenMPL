@@ -335,6 +335,207 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 	}
 }
 
+// do not use setS, it does not compile for subgraph
+// do not use custom property tags, it does not compile for most utilities
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
+        boost::property<boost::vertex_index_t, uint32_t, boost::property<boost::vertex_color_t, int> >, 
+        boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, int> >,
+        boost::property<boost::graph_name_t, std::string> > graph_type;
+//typedef property<vertex_index_t, uint32_t> VertexId;
+//typedef property<edge_index_t, uint32_t> EdgeID;
+typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
+typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;
+
+///// helper functions for SimpleMPL::solve_component
+///// since we may want to call solve_graph_coloring() multiple times 
+///// it is better to wrap it as an independent function 
+/////
+///// TO DO: current way to wrap functions are not clean enough, too many parameters 
+///// find a cleaner way to wrap functions
+
+/// create coloring solver pointer according to algorithm type
+limbo::algorithms::coloring::Coloring<graph_type>* create_coloring_solver(graph_type const& sg, AlgorithmType const& algo, int32_t color_num)
+{
+    typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
+    coloring_solver_type* pcs = NULL;
+    switch (algo.get())
+    {
+#if GUROBI == 1
+        case AlgorithmTypeEnum::ILP_GURBOI:
+            pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg); break;
+        case AlgorithmTypeEnum::LP_GUROBI:
+            pcs = new limbo::algorithms::coloring::LPColoring<graph_type> (sg); break;
+#endif
+#if LEMONCBC == 1
+        case AlgorithmTypeEnum::ILP_CBC:
+            pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg); break;
+#endif
+        case AlgorithmTypeEnum::BACKTRACK:
+            pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg);
+            break;
+        default: mplAssertMsg(0, "unknown algorithm type");
+    }
+    pcs->stitch_weight(0.1);
+    pcs->color_num(color_num);
+    pcs->threads(1); // we use parallel at higher level 
+
+    return pcs;
+}
+/// recover color of vertices simplified by HIDE_SMALL_DEGREE
+/// consider density balance 
+void recover_hide_vertex_colors(graph_type const& dg, SimpleMPL::layoutdb_type const* db, 
+        const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, 
+        std::vector<int8_t>& vColor, std::vector<uint32_t>& vColorDensity, std::stack<vertex_descriptor>& vHiddenVertices)
+{
+    typedef SimpleMPL::coordinate_type coordinate_type;
+    typedef SimpleMPL::coordinate_difference coordinate_difference;
+
+	uint32_t pattern_cnt = itEnd-itBgn;
+
+	// recover colors for simplified vertices with balanced assignment 
+	// recover hidden vertices with local balanced density control 
+	while (!vHiddenVertices.empty())
+	{
+		vertex_descriptor v = vHiddenVertices.top();
+		vHiddenVertices.pop();
+
+		// find available colors 
+        std::vector<char> vUnusedColor (db->color_num, true);
+        boost::graph_traits<graph_type>::adjacency_iterator vi, vie;
+		for (tie(vi, vie) = adjacent_vertices(v, dg); vi != vie; ++vi)
+		{
+			vertex_descriptor u = *vi;
+			if (vColor[u] >= 0)
+			{
+				mplAssert(vColor[u] < db->color_num);
+				vUnusedColor[vColor[u]] = false;
+			}
+		}
+
+		// find the nearest distance of each color 
+		// search all patterns in the component 
+		// TO DO: further speedup is possible to search a local window 
+		std::vector<coordinate_difference> vDist (db->color_num, std::numeric_limits<coordinate_difference>::max());
+		for (uint32_t u = 0; u != pattern_cnt; ++u)
+		{
+			if (v == u) continue;
+			// skip uncolored vertices 
+			if (vColor[u] < 0) continue; 
+			// we consider euclidean distance
+            // use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
+			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = db->euclidean_distance(*db->vPatternBbox[*(itBgn+v)], *db->vPatternBbox[*(itBgn+u)]);
+#ifdef DEBUG
+			mplAssert(vColor[u] < db->color_num && distance >= 0);
+#endif
+			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
+		}
+
+		// choose the color with largest distance 
+		int8_t best_color = -1;
+		double best_score = -std::numeric_limits<double>::max(); // negative max 
+		for (int8_t i = 0; i != db->color_num; ++i)
+		{
+			if (vUnusedColor[i])
+			{
+				double cur_score = (double)vDist[i]/(1.0+vColorDensity[i]);
+				if (best_score < cur_score)
+				{
+					best_color = i;
+					best_score = cur_score;
+				}
+			}
+		}
+		mplAssert(best_color >= 0 && best_color < db->color_num);
+		vColor[v] = best_color;
+	}
+}
+/// given a graph, solve coloring 
+/// contain nested call for itself 
+uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL::layoutdb_type const* db, 
+        const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, 
+        uint32_t simplify_strategy, std::vector<int8_t>& vColor, std::vector<uint32_t>& vColorDensity)
+{
+	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
+	graph_simplification_type gs (dg, db->color_num);
+	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
+    gs.simplify(simplify_strategy);
+	// collect simplified information 
+    std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
+
+    // for debug, it does not affect normal run 
+	if (comp_id == db->dbg_comp_id && simplify_strategy != graph_simplification_type::MERGE_SUBK4)
+		gs.write_simplified_graph_dot("graph_simpl");
+
+	// in order to recover color from articulation points 
+	// we have to record all components and mappings 
+	// but graph is not necessary 
+	std::vector<std::vector<int8_t> > mSubColor (gs.num_component());
+	std::vector<std::vector<vertex_descriptor> > mSimpl2Orig (gs.num_component());
+	double acc_obj_value = 0;
+	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
+	{
+		graph_type sg;
+		std::vector<int8_t>& vSubColor = mSubColor[sub_comp_id];
+		std::vector<vertex_descriptor>& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
+
+		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
+
+		vSubColor.assign(num_vertices(sg), -1);
+
+		// solve coloring 
+		typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
+		coloring_solver_type* pcs = create_coloring_solver(sg, db->algo, db->color_num);
+
+		// set precolored vertices 
+        boost::graph_traits<graph_type>::vertex_iterator vi, vie;
+		for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+		{
+			vertex_descriptor v = *vi;
+			int8_t color = vColor[vSimpl2Orig[v]];
+			if (color >= 0 && color < db->color_num)
+            {
+				pcs->precolor(v, color);
+                vSubColor[v] = color; // necessary for 2nd trial
+            }
+		}
+        // 1st trial 
+		double obj_value1 = (*pcs)(); // solve coloring 
+        // 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
+        double obj_value2 = std::numeric_limits<double>::max();
+        // very restric condition to determin whether perform MERGE_SUBK4 or not 
+        if (obj_value1 >= 1 && db->color_num == 3 && boost::num_vertices(sg) > 4 && db->algo == AlgorithmTypeEnum::LP_GUROBI 
+                && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
+            obj_value2 = solve_graph_coloring(comp_id, sg, db, itBgn, itEnd, graph_simplification_type::MERGE_SUBK4, vSubColor, vColorDensity); // call again 
+
+        if (obj_value1 < obj_value2)
+        {
+            acc_obj_value += obj_value1;
+
+            // collect coloring results from simplified graph 
+            for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+            {
+                vertex_descriptor v = *vi;
+                int8_t color = pcs->color(v);
+                mplAssert(color >= 0 && color < db->color_num);
+                vSubColor[v] = color;
+            }
+        }
+        else // no need to update vSubColor, as it is already updated by sub call 
+            acc_obj_value += obj_value2;
+		delete pcs;
+	}
+
+	// recover color assignment according to the simplification level set previously 
+	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
+	gs.recover(vColor, mSubColor, mSimpl2Orig);
+
+	// recover colors for simplified vertices with balanced assignment 
+	// recover hidden vertices with local balanced density control 
+    recover_hide_vertex_colors(dg, db, itBgn, itEnd, vColor, vColorDensity, vHiddenVertices);
+
+    return acc_obj_value;
+}
+
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 //{{{
 {
@@ -349,19 +550,6 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 #endif
 
 	// construct a graph for current component 
-	using namespace boost;
-	// do not use setS, it does not compile for subgraph
-	// do not use custom property tags, it does not compile for most utilities
-	typedef adjacency_list<vecS, vecS, undirectedS, 
-			property<vertex_index_t, uint32_t, property<vertex_color_t, int> >, 
-			property<edge_index_t, uint32_t, property<edge_weight_t, int> >,
-			property<graph_name_t, string> > graph_type;
-	//typedef property<vertex_index_t, uint32_t> VertexId;
-	//typedef property<edge_index_t, uint32_t> EdgeID;
-	typedef graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
-	typedef graph_traits<graph_type>::edge_descriptor edge_descriptor;
-	//typedef property_map<graph_type, edge_weight_t>::type edge_weight_map_type;
-
 	uint32_t pattern_cnt = itEnd-itBgn;
 
 	if (m_db->verbose)
@@ -398,7 +586,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 				{
 					e = add_edge(i, j, dg);
 					mplAssert(e.second);
-					put(edge_weight, dg, e.first, 1);
+                    boost::put(boost::edge_weight, dg, e.first, 1);
 				}
 			}
 		}
@@ -421,146 +609,14 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	// graph simplification 
 	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
     uint32_t simplify_strategy = graph_simplification_type::NONE;
-	graph_simplification_type gs (dg, m_db->color_num);
-	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
 	// keep the order of simplification 
 	if (m_db->simplify_level > 0)
         simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
 	if (m_db->simplify_level > 1)
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
-	if (m_db->simplify_level > 2)
-        simplify_strategy |= graph_simplification_type::MERGE_SUBK4;
-    gs.simplify(simplify_strategy);
-	// collect simplified information 
-    std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 
-    // for debug, it does not affect normal run 
-	if (comp_id == m_db->dbg_comp_id)
-		gs.write_simplified_graph_dot("graph_simpl");
-
-	// in order to recover color from articulation points 
-	// we have to record all components and mappings 
-	// but graph is not necessary 
-	std::vector<std::vector<int8_t> > mSubColor (gs.num_component());
-	std::vector<std::vector<vertex_descriptor> > mSimpl2Orig (gs.num_component());
-	double acc_obj_value = 0;
-	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
-	{
-		graph_type sg;
-		std::vector<int8_t>& vSubColor = mSubColor[sub_comp_id];
-		std::vector<vertex_descriptor>& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
-
-		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
-
-		vSubColor.assign(num_vertices(sg), -1);
-
-		// solve coloring 
-		typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
-		coloring_solver_type* pcs = NULL;
-		switch (m_db->algo.get())
-		{
-#if GUROBI == 1
-			case AlgorithmTypeEnum::ILP_GURBOI:
-				pcs = new limbo::algorithms::coloring::ILPColoring<graph_type> (sg); break;
-            case AlgorithmTypeEnum::LP_GUROBI:
-                pcs = new limbo::algorithms::coloring::LPColoring<graph_type> (sg); break;
-#endif
-#if LEMONCBC == 1
-            case AlgorithmTypeEnum::ILP_CBC:
-				pcs = new limbo::algorithms::coloring::ILPColoringLemonCbc<graph_type> (sg); break;
-#endif
-			case AlgorithmTypeEnum::BACKTRACK:
-				pcs = new limbo::algorithms::coloring::BacktrackColoring<graph_type> (sg);
-				break;
-			default: mplAssertMsg(0, "unknown algorithm type");
-		}
-
-		pcs->stitch_weight(0.1);
-		pcs->color_num(m_db->color_num);
-		// set precolored vertices 
-		graph_traits<graph_type>::vertex_iterator vi, vie;
-		for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
-		{
-			vertex_descriptor v = *vi;
-			int8_t color = vColor[vSimpl2Orig[v]];
-			if (color >= 0 && color < m_db->color_num)
-				pcs->precolor(v, color);
-		}
-		pcs->threads(1); // we use parallel at higher level 
-		double obj_value = (*pcs)(); // solve coloring 
-		acc_obj_value += obj_value;
-
-		// collect coloring results from simplified graph 
-		for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
-		{
-			vertex_descriptor v = *vi;
-			int8_t color = pcs->color(v);
-			mplAssert(color >= 0 && color < m_db->color_num);
-			vSubColor[v] = color;
-		}
-		delete pcs;
-	}
-
-	// recover color assignment according to the simplification level set previously 
-	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
-	gs.recover(vColor, mSubColor, mSimpl2Orig);
-
-	// recover colors for simplified vertices with balanced assignment 
-	// recover hidden vertices with local balanced density control 
-	while (!vHiddenVertices.empty())
-	{
-		vertex_descriptor v = vHiddenVertices.top();
-		vHiddenVertices.pop();
-
-		// find available colors 
-        std::vector<char> vUnusedColor (m_db->color_num, true);
-		graph_traits<graph_type>::adjacency_iterator vi, vie;
-		for (tie(vi, vie) = adjacent_vertices(v, dg); vi != vie; ++vi)
-		{
-			vertex_descriptor u = *vi;
-			if (vColor[u] >= 0)
-			{
-				mplAssert(vColor[u] < m_db->color_num);
-				vUnusedColor[vColor[u]] = false;
-			}
-		}
-
-		// find the nearest distance of each color 
-		// search all patterns in the component 
-		// TO DO: further speedup is possible to search a local window 
-		std::vector<coordinate_difference> vDist (m_db->color_num, std::numeric_limits<coordinate_difference>::max());
-		for (uint32_t u = 0; u != pattern_cnt; ++u)
-		{
-			if (v == u) continue;
-			// skip uncolored vertices 
-			if (vColor[u] < 0) continue; 
-			// we consider euclidean distance
-            // use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
-			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = m_db->euclidean_distance(*vPatternBbox[*(itBgn+v)], *vPatternBbox[*(itBgn+u)]);
-#ifdef DEBUG
-			mplAssert(vColor[u] < m_db->color_num && distance >= 0);
-#endif
-			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
-		}
-
-		// choose the color with largest distance 
-		int8_t best_color = -1;
-		double best_score = -std::numeric_limits<double>::max(); // negative max 
-		for (int8_t i = 0; i != m_db->color_num; ++i)
-		{
-			if (vUnusedColor[i])
-			{
-				double cur_score = (double)vDist[i]/(1.0+m_vColorDensity[i]);
-				if (best_score < cur_score)
-				{
-					best_color = i;
-					best_score = cur_score;
-				}
-			}
-		}
-		mplAssert(best_color >= 0 && best_color < m_db->color_num);
-		vColor[v] = best_color;
-	}
+    // solve graph coloring 
+    uint32_t acc_obj_value = solve_graph_coloring(comp_id, dg, m_db, itBgn, itEnd, simplify_strategy, vColor, m_vColorDensity);
 
 #ifdef DEBUG
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
@@ -587,6 +643,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
+    // only valid under no stitch 
 	mplAssert(acc_obj_value == component_conflict_num);
 
 	if (m_db->verbose)

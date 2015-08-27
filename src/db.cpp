@@ -600,11 +600,6 @@ LayoutDBPolygon::coordinate_difference LayoutDBPolygon::euclidean_distance(recta
     uint32_t polygon_id2 = r2.pattern_id();
     uint32_t num_polyrects = vPolyRectPattern.size();
 
-#ifdef DEBUG
-    if (polygon_id1 == 18 && polygon_id2 == 3)
-        printf("Stop\n");
-#endif
-
     coordinate_difference distance = std::numeric_limits<LayoutDBPolygon::coordinate_difference>::max();
     uint32_t polyRectId1e = (polygon_id1+1 == vPolyRectBeginId.size())? num_polyrects : vPolyRectBeginId[polygon_id1+1];
     uint32_t polyRectId2e = (polygon_id2+1 == vPolyRectBeginId.size())? num_polyrects : vPolyRectBeginId[polygon_id2+1];
