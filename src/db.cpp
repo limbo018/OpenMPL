@@ -56,7 +56,7 @@ void LayoutDB::initialize()
     verbose                  = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";
-    output_gds               = "out.gds";
+    output_gds               = "";
     algo                     = AlgorithmTypeEnum::BACKTRACK;
     shape_mode               = ShapeModeEnum::RECTANGLE;
 }
@@ -318,6 +318,13 @@ void LayoutDBRect::swap(LayoutDBRect const&)
 }
 void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
 {
+    // collect patterns 
+    bool pattern_layer_flag = true;
+    int8_t color = -1;
+    check_layer_and_color(layer, pattern_layer_flag, color);
+    // skip layers not interseted 
+    if (!pattern_layer_flag) return;
+
     mplAssert(vPoint.size() >= 4 && vPoint.size() < 6);
 
     rectangle_pointer_type pPattern(new rectangle_type());
@@ -334,20 +341,10 @@ void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPo
     // update layout boundary 
     update_bbox(*pPattern);
 
-    // collect patterns 
-    bool pattern_layer_flag = true;
-    int8_t color = -1;
-    check_layer_and_color(layer, pattern_layer_flag, color);
-
-    if (pattern_layer_flag)
-    {
-        pPattern->color(color);
-        // collect pattern 
-        // initialize rtree later will contribute to higher efficiency in runtime 
-        vPatternBbox.push_back(pPattern);
-    }
-    else // recycle if it is not shared_ptr
-        delete pPattern;
+    pPattern->color(color);
+    // collect pattern 
+    // initialize rtree later will contribute to higher efficiency in runtime 
+    vPatternBbox.push_back(pPattern);
 }
 /// call it to initialize rtree 
 /// it should be faster than gradually insertion 
@@ -408,16 +405,14 @@ void LayoutDBPolygon::swap(LayoutDBPolygon& rhs)
 }
 void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
 {
-    mplAssert(vPoint.size() >= 4);
-
     // collect patterns 
     bool pattern_layer_flag = true;
     int8_t color = -1;
     check_layer_and_color(layer, pattern_layer_flag, color);
-
     // skip other layers 
-    if (!pattern_layer_flag)
-        return;
+    if (!pattern_layer_flag) return;
+
+    mplAssert(vPoint.size() >= 4);
 
     polygon_set_type tmpPolygonSet (gtl::HORIZONTAL); 
     polygon_90_data<coordinate_type> tmpPolygon; 

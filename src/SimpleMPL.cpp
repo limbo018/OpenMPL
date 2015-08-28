@@ -109,6 +109,10 @@ void SimpleMPL::write_gds()
 
 void SimpleMPL::solve()
 {
+    // skip if no uncolored layer 
+    if (m_db->sUncolorLayer.empty())
+        return;
+
     char buf[256];
     mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
 	boost::timer::auto_cpu_timer timer (buf);
@@ -266,6 +270,7 @@ void SimpleMPL::construct_graph()
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db->color_num, 0);
 	m_vConflict.clear();
+    edge_num = edge_num>>1;
 
 	// report statistics 
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
@@ -458,6 +463,10 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
 	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs (dg, db->color_num);
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
+    if (db->color_num == 3)
+        gs.max_merge_level(3);
+    else if (db->color_num == 4) // for 4-coloring, low level MERGE_SUBK4 works
+        gs.max_merge_level(2);
     gs.simplify(simplify_strategy);
 	// collect simplified information 
     std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
@@ -503,7 +512,7 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
         // 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
         double obj_value2 = std::numeric_limits<double>::max();
         // very restric condition to determin whether perform MERGE_SUBK4 or not 
-        if (obj_value1 >= 1 && db->color_num == 3 && boost::num_vertices(sg) > 4 && db->algo == AlgorithmTypeEnum::LP_GUROBI 
+        if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && db->algo == AlgorithmTypeEnum::LP_GUROBI 
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
             obj_value2 = solve_graph_coloring(comp_id, sg, db, itBgn, itEnd, graph_simplification_type::MERGE_SUBK4, vSubColor, vColorDensity); // call again 
 
@@ -553,7 +562,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	uint32_t pattern_cnt = itEnd-itBgn;
 
 	if (m_db->verbose)
-		mplPrint(kDEBUG, "Component %u has %u patterns...", comp_id, pattern_cnt);
+		mplPrint(kDEBUG, "Component %u has %u patterns...\n", comp_id, pattern_cnt);
 
 	// decomposition graph 
 	graph_type dg (pattern_cnt);
@@ -647,7 +656,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	mplAssert(acc_obj_value == component_conflict_num);
 
 	if (m_db->verbose)
-		mplPrint(kNONE, "%u conflicts\n", component_conflict_num);
+		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, pattern_cnt, component_conflict_num);
 
 	return component_conflict_num;
 }
@@ -686,7 +695,6 @@ uint32_t SimpleMPL::conflict_num() const
 {
 	m_vConflict.clear();
 	std::vector<rectangle_pointer_type> const& vPatternBbox = m_db->vPatternBbox;
-	uint32_t cnt = 0;
 	for (uint32_t v = 0; v != vPatternBbox.size(); ++v)
 	{
 		int8_t color1 = vPatternBbox[v]->color();
@@ -695,23 +703,23 @@ uint32_t SimpleMPL::conflict_num() const
 			for (std::vector<uint32_t>::const_iterator itAdj = m_mAdjVertex[v].begin(); itAdj != m_mAdjVertex[v].end(); ++itAdj)
 			{
 				uint32_t u = *itAdj;
-				int8_t color2 = vPatternBbox[u]->color();
-				if (color2 >= 0 && color2 < m_db->color_num)
-				{
-					if (color1 == color2) 
-					{
-						++cnt; 
-						if (v < u) // avoid duplicate 
-							m_vConflict.push_back(std::make_pair(v, u));
-					}
-				}
-				else ++cnt; // uncolored vertex is counted as conflict 
+                if (v < u) // avoid duplicate 
+                {
+                    int8_t color2 = vPatternBbox[u]->color();
+                    if (color2 >= 0 && color2 < m_db->color_num)
+                    {
+                        if (color1 == color2) 
+                            m_vConflict.push_back(std::make_pair(v, u));
+                    }
+                    else // uncolored vertex is counted as conflict 
+                        mplAssertMsg(0, "uncolored vertex %u = %d", u, color2);
+                }
 			}
 		}
-		else ++cnt; // uncolored vertex is counted as conflict 
+        else // uncolored vertex is counted as conflict 
+            mplAssertMsg(0, "uncolored vertex %u = %d", v, color1);
 	}
-	// conflicts will be counted twice 
-	return (cnt>>1);
+	return m_vConflict.size();
 }
 
 void SimpleMPL::print_welcome() const

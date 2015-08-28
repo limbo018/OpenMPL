@@ -14,3 +14,5 @@ bin/SimpleMPL
 bin/.log
 bin/*.gds
 bin/bench/*.ascii
+log*
+rpt_*
