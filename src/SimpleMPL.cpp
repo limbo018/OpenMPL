@@ -6,6 +6,8 @@
  ************************************************************************/
 
 #include "SimpleMPL.h"
+#include "LayoutDBRect.h"
+#include "LayoutDBPolygon.h"
 
 #include <stack>
 #include <boost/graph/graphviz.hpp>
@@ -57,23 +59,23 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 {
     // a little bit tricky here 
     // in order to support run-time switch of layoutdb_type
-    // we need to construct a dummy LayoutDB for CmdParser
+    // we need to construct a dummy ControlParameter for CmdParser
     // then construct actual layoutdb_type according to the option of CmdParser
 
-    // construct a dummy layout database 
-    LayoutDB tmpDB; 
+    // construct a dummy ControlParameter
+    ControlParameter tmpParms;
 	// read command 
-	CmdParser cmd (tmpDB);
+	CmdParser cmd (tmpParms);
 	// check options 
     mplAssertMsg(cmd(argc, argv), "failed to parse command");
 
     // construct actual layout database according to the options 
-    if (tmpDB.shape_mode == ShapeModeEnum::RECTANGLE)
+    if (tmpParms.shape_mode == ShapeModeEnum::RECTANGLE)
         m_db = new LayoutDBRect;
     else 
         m_db = new LayoutDBPolygon;
-    // get options from dummy base layout database 
-    tmpDB.swap(*m_db);
+    // get options from dummy ControlParameter
+    tmpParms.swap(m_db->parms);
 }
 
 void SimpleMPL::read_gds()
@@ -81,10 +83,10 @@ void SimpleMPL::read_gds()
     char buf[256];
     mplSPrint(kINFO, buf, "reading input files takes %%t seconds CPU, %%w seconds real\n");
 	boost::timer::auto_cpu_timer timer (buf);
-	mplPrint(kINFO, "Reading input file %s\n", m_db->input_gds.c_str());
+	mplPrint(kINFO, "Reading input file %s\n", m_db->input_gds().c_str());
 	// read input gds file 
 	GdsReader reader (*m_db);
-    mplAssertMsg(reader(m_db->input_gds), "failed to read %s", m_db->input_gds.c_str());
+    mplAssertMsg(reader(m_db->input_gds()), "failed to read %s", m_db->input_gds().c_str());
 	// must call initialize after reading 
 	m_db->initialize_data();
 	// report data 
@@ -96,21 +98,21 @@ void SimpleMPL::write_gds()
     char buf[256];
     mplSPrint(kINFO, buf, "writing output file takes %%t seconds CPU, %%w seconds real\n");
 	boost::timer::auto_cpu_timer timer (buf);
-	if (m_db->output_gds.empty()) 
+	if (m_db->output_gds().empty()) 
 	{
         mplPrint(kWARN, "Output file not specified, no file generated\n");
 		return;
 	}
 	// write output gds file 
 	GdsWriter writer;
-	mplPrint(kINFO, "Write output gds file: %s\n", m_db->output_gds.c_str());
-	writer(m_db->output_gds, *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+	mplPrint(kINFO, "Write output gds file: %s\n", m_db->output_gds().c_str());
+	writer(m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 }
 
 void SimpleMPL::solve()
 {
     // skip if no uncolored layer 
-    if (m_db->sUncolorLayer.empty())
+    if (m_db->parms.sUncolorLayer.empty())
         return;
 
     char buf[256];
@@ -136,7 +138,7 @@ void SimpleMPL::solve()
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
 	// thread number controled by user option 
 #ifdef _OPENMP
-#pragma omp parallel num_threads (m_db->thread_num)
+#pragma omp parallel num_threads (m_db->thread_num())
 #endif
 	{
 #ifdef _OPENMP
@@ -161,7 +163,7 @@ void SimpleMPL::solve()
 void SimpleMPL::report() const 
 {
     mplPrint(kINFO, "Conflict number = %u\n", conflict_num());
-	for (int32_t i = 0; i != m_db->color_num; ++i)
+	for (int32_t i = 0, ie = m_db->color_num(); i != ie; ++i)
         mplPrint(kINFO, "Color %d density = %u\n", i, m_vColorDensity[i]);
 }
 
@@ -212,7 +214,7 @@ void SimpleMPL::construct_graph()
 	{
 		// at the same time, estimate a coloring distance from conflict edges 
 		m_db->coloring_distance = 0;
-		for (set<int32_t>::const_iterator itLayer = m_db->sPathLayer.begin(); itLayer != m_db->sPathLayer.end(); ++itLayer)
+		for (set<int32_t>::const_iterator itLayer = m_db->parms.sPathLayer.begin(), itLayerE = m_db->parms.sPathLayer.end(); itLayer != itLayerE; ++itLayer)
 		{
 			if (!m_db->hPath.count(*itLayer)) continue;
 
@@ -264,11 +266,11 @@ void SimpleMPL::construct_graph()
 			vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
 			edge_num += vAdjVertex.size();
 		}
-		m_db->coloring_distance_nm = m_db->coloring_distance*(m_db->unit*1e+9);
-		mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db->coloring_distance, m_db->coloring_distance_nm);
+		m_db->parms.coloring_distance_nm = m_db->coloring_distance*(m_db->unit*1e+9);
+		mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db->coloring_distance, m_db->coloring_distance_nm());
 	}
 	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
-	m_vColorDensity.assign(m_db->color_num, 0);
+	m_vColorDensity.assign(m_db->color_num(), 0);
 	m_vConflict.clear();
     edge_num = edge_num>>1;
 
@@ -405,14 +407,14 @@ void recover_hide_vertex_colors(graph_type const& dg, SimpleMPL::layoutdb_type c
 		vHiddenVertices.pop();
 
 		// find available colors 
-        std::vector<char> vUnusedColor (db->color_num, true);
+        std::vector<char> vUnusedColor (db->color_num(), true);
         boost::graph_traits<graph_type>::adjacency_iterator vi, vie;
 		for (tie(vi, vie) = adjacent_vertices(v, dg); vi != vie; ++vi)
 		{
 			vertex_descriptor u = *vi;
 			if (vColor[u] >= 0)
 			{
-				mplAssert(vColor[u] < db->color_num);
+				mplAssert(vColor[u] < db->color_num());
 				vUnusedColor[vColor[u]] = false;
 			}
 		}
@@ -420,7 +422,7 @@ void recover_hide_vertex_colors(graph_type const& dg, SimpleMPL::layoutdb_type c
 		// find the nearest distance of each color 
 		// search all patterns in the component 
 		// TO DO: further speedup is possible to search a local window 
-		std::vector<coordinate_difference> vDist (db->color_num, std::numeric_limits<coordinate_difference>::max());
+		std::vector<coordinate_difference> vDist (db->color_num(), std::numeric_limits<coordinate_difference>::max());
 		for (uint32_t u = 0; u != pattern_cnt; ++u)
 		{
 			if (v == u) continue;
@@ -430,7 +432,7 @@ void recover_hide_vertex_colors(graph_type const& dg, SimpleMPL::layoutdb_type c
             // use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
 			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = db->euclidean_distance(*db->vPatternBbox[*(itBgn+v)], *db->vPatternBbox[*(itBgn+u)]);
 #ifdef DEBUG
-			mplAssert(vColor[u] < db->color_num && distance >= 0);
+			mplAssert(vColor[u] < db->color_num() && distance >= 0);
 #endif
 			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
 		}
@@ -438,7 +440,7 @@ void recover_hide_vertex_colors(graph_type const& dg, SimpleMPL::layoutdb_type c
 		// choose the color with largest distance 
 		int8_t best_color = -1;
 		double best_score = -std::numeric_limits<double>::max(); // negative max 
-		for (int8_t i = 0; i != db->color_num; ++i)
+		for (int8_t i = 0; i != db->color_num(); ++i)
 		{
 			if (vUnusedColor[i])
 			{
@@ -450,7 +452,7 @@ void recover_hide_vertex_colors(graph_type const& dg, SimpleMPL::layoutdb_type c
 				}
 			}
 		}
-		mplAssert(best_color >= 0 && best_color < db->color_num);
+		mplAssert(best_color >= 0 && best_color < db->color_num());
 		vColor[v] = best_color;
 	}
 }
@@ -461,18 +463,18 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
         uint32_t simplify_strategy, std::vector<int8_t>& vColor, std::vector<uint32_t>& vColorDensity)
 {
 	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
-	graph_simplification_type gs (dg, db->color_num);
+	graph_simplification_type gs (dg, db->color_num());
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
-    if (db->color_num == 3)
+    if (db->color_num() == 3)
         gs.max_merge_level(3);
-    else if (db->color_num == 4) // for 4-coloring, low level MERGE_SUBK4 works
+    else if (db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works
         gs.max_merge_level(2);
     gs.simplify(simplify_strategy);
 	// collect simplified information 
     std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 
     // for debug, it does not affect normal run 
-	if (comp_id == db->dbg_comp_id && simplify_strategy != graph_simplification_type::MERGE_SUBK4)
+	if (comp_id == db->dbg_comp_id() && simplify_strategy != graph_simplification_type::MERGE_SUBK4)
 		gs.write_simplified_graph_dot("graph_simpl");
 
 	// in order to recover color from articulation points 
@@ -493,7 +495,7 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
 
 		// solve coloring 
 		typedef limbo::algorithms::coloring::Coloring<graph_type> coloring_solver_type;
-		coloring_solver_type* pcs = create_coloring_solver(sg, db->algo, db->color_num);
+		coloring_solver_type* pcs = create_coloring_solver(sg, db->algo(), db->color_num());
 
 		// set precolored vertices 
         boost::graph_traits<graph_type>::vertex_iterator vi, vie;
@@ -501,7 +503,7 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
 		{
 			vertex_descriptor v = *vi;
 			int8_t color = vColor[vSimpl2Orig[v]];
-			if (color >= 0 && color < db->color_num)
+			if (color >= 0 && color < db->color_num())
             {
 				pcs->precolor(v, color);
                 vSubColor[v] = color; // necessary for 2nd trial
@@ -512,7 +514,7 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
         // 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
         double obj_value2 = std::numeric_limits<double>::max();
         // very restric condition to determin whether perform MERGE_SUBK4 or not 
-        if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && db->algo == AlgorithmTypeEnum::LP_GUROBI 
+        if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && db->algo() == AlgorithmTypeEnum::LP_GUROBI 
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
             obj_value2 = solve_graph_coloring(comp_id, sg, db, itBgn, itEnd, graph_simplification_type::MERGE_SUBK4, vSubColor, vColorDensity); // call again 
 
@@ -525,7 +527,7 @@ uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, SimpleMPL:
             {
                 vertex_descriptor v = *vi;
                 int8_t color = pcs->color(v);
-                mplAssert(color >= 0 && color < db->color_num);
+                mplAssert(color >= 0 && color < db->color_num());
                 vSubColor[v] = color;
             }
         }
@@ -561,7 +563,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	// construct a graph for current component 
 	uint32_t pattern_cnt = itEnd-itBgn;
 
-	if (m_db->verbose)
+	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...\n", comp_id, pattern_cnt);
 
 	// decomposition graph 
@@ -602,7 +604,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 
     // for debug, it does not affect normal run 
-	if (comp_id == m_db->dbg_comp_id)
+	if (comp_id == m_db->dbg_comp_id())
 	{
 		boost::dynamic_properties dp;
 		dp.property("id", boost::get(boost::vertex_index, dg));
@@ -619,9 +621,9 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	typedef limbo::algorithms::coloring::GraphSimplification<graph_type> graph_simplification_type;
     uint32_t simplify_strategy = graph_simplification_type::NONE;
 	// keep the order of simplification 
-	if (m_db->simplify_level > 0)
+	if (m_db->simplify_level() > 0)
         simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
-	if (m_db->simplify_level > 1)
+	if (m_db->simplify_level() > 1)
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
     // solve graph coloring 
@@ -629,7 +631,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 
 #ifdef DEBUG
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
-		mplAssert(vColor[i] >= 0 && vColor[i] < m_db->color_num);
+		mplAssert(vColor[i] >= 0 && vColor[i] < m_db->color_num());
 #endif
 
 	// record pattern color 
@@ -655,7 +657,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     // only valid under no stitch 
 	mplAssert(acc_obj_value == component_conflict_num);
 
-	if (m_db->verbose)
+	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, pattern_cnt, component_conflict_num);
 
 	return component_conflict_num;
@@ -672,13 +674,13 @@ uint32_t SimpleMPL::conflict_num(const std::vector<uint32_t>::const_iterator itB
 	{
 		uint32_t v = *(itBgn+i);
 		int8_t color1 = vPatternBbox[v]->color();
-		if (color1 >= 0 && color1 < m_db->color_num)
+		if (color1 >= 0 && color1 < m_db->color_num())
 		{
 			for (std::vector<uint32_t>::const_iterator itAdj = m_mAdjVertex[v].begin(); itAdj != m_mAdjVertex[v].end(); ++itAdj)
 			{
 				uint32_t u = *itAdj;
 				int8_t color2 = vPatternBbox[u]->color();
-				if (color2 >= 0 && color2 < m_db->color_num)
+				if (color2 >= 0 && color2 < m_db->color_num())
 				{
 					if (color1 == color2) ++cnt;
 				}
@@ -698,7 +700,7 @@ uint32_t SimpleMPL::conflict_num() const
 	for (uint32_t v = 0; v != vPatternBbox.size(); ++v)
 	{
 		int8_t color1 = vPatternBbox[v]->color();
-		if (color1 >= 0 && color1 < m_db->color_num)
+		if (color1 >= 0 && color1 < m_db->color_num())
 		{
 			for (std::vector<uint32_t>::const_iterator itAdj = m_mAdjVertex[v].begin(); itAdj != m_mAdjVertex[v].end(); ++itAdj)
 			{
@@ -706,7 +708,7 @@ uint32_t SimpleMPL::conflict_num() const
                 if (v < u) // avoid duplicate 
                 {
                     int8_t color2 = vPatternBbox[u]->color();
-                    if (color2 >= 0 && color2 < m_db->color_num)
+                    if (color2 >= 0 && color2 < m_db->color_num())
                     {
                         if (color1 == color2) 
                             m_vConflict.push_back(std::make_pair(v, u));

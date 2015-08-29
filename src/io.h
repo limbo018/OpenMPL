@@ -21,7 +21,7 @@
 #include <limbo/parsers/gdsii/stream/GdsWriter.h>
 #include <limbo/programoptions/ProgramOptions.h>
 
-#include "db.h"
+#include "LayoutDB.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
@@ -181,12 +181,9 @@ struct GdsWriter
 /// parse command line arguments 
 struct CmdParser
 {
-	typedef LayoutDB layoutdb_type;
-	typedef layoutdb_type::coordinate_type coordinate_type;
+	ControlParameter& parms;
 
-	layoutdb_type& db;
-
-	CmdParser(layoutdb_type& _db) : db(_db) {}
+	CmdParser(ControlParameter& p) : parms(p) {}
 
 	bool operator()(int argc, char** argv);
 };

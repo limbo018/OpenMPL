@@ -37,10 +37,13 @@ int mplVPrintStream(MessageType m, FILE* stream, const char* format, va_list arg
 	// print prefix 
     char prefix[8];
     mplSPrintPrefix(m, prefix);
-	fprintf(stream, "%s", prefix);
+    // merge prefix and format 
+    char formatBuf[256];
+    sprintf(formatBuf, "%s%s", prefix, format);
 
 	// print message 
-	int ret = vfprintf(stream, format, args);
+    // only print once to ensure multi-thread safe 
+    int ret = vfprintf(stream, formatBuf, args);
 	
 	return ret;
 }

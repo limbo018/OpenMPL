@@ -22,12 +22,12 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     gw.gds_write_strname(strname.c_str());
 
     // if there are precolored patterns, keep the same layer convention 
-    int32_t layer_offset = (db.sPrecolorLayer.empty())? 100 : *db.sPrecolorLayer.begin();
+    int32_t layer_offset = (db.parms.sPrecolorLayer.empty())? 100 : *db.parms.sPrecolorLayer.begin();
     // basic operation
     // will add more 
     write_rectangles(gw, db.polyrect_patterns(), layer_offset);
-    write_conflicts(gw, db, vConflict,  layer_offset+db.color_num);   // conflict layer 
-    write_edges(gw, db, mAdjVertex, layer_offset+db.color_num+1); // draw edges 
+    write_conflicts(gw, db, vConflict,  layer_offset+db.color_num());   // conflict layer 
+    write_edges(gw, db, mAdjVertex, layer_offset+db.color_num()+1); // draw edges 
     //(*this)(gw, db.hPath); // draw edges if there exits 
 
     gw.gds_write_endstr();
@@ -123,6 +123,7 @@ void GdsWriter::write_edges(GdsParser::GdsWriter& gw, GdsWriter::layoutdb_type c
 
 bool CmdParser::operator()(int argc, char** argv)
 {
+    ControlParameter defaultParms; // get default value from default constructor 
     bool help = false;
     std::string algo_str;
     std::string shape_str;
@@ -131,19 +132,19 @@ bool CmdParser::operator()(int argc, char** argv)
     using limbo::programoptions::Value;
     po_type desc (std::string("SimpleMPL 1.X Usage"));
     desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true).help(true))
-        .add_option(Value<std::string>("-in", &db.input_gds, "input gds file name").required(true))
-        .add_option(Value<std::string>("-out", &db.output_gds, "output gds file name").default_value(""))
-        .add_option(Value<double>("-coloring_distance", &db.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(0))
-        .add_option(Value<int32_t>("-color_num", &db.color_num, "an integer indicating number of masks (colors)").required(true))
-        .add_option(Value<int32_t>("-simplify_level", &db.simplify_level, "an integer indicating graph simplification level < 0|1|2 >").default_value(2))
-        .add_option(Value<int32_t>("-thread_num", &db.thread_num, "an integer indicating maximum thread number").default_value(1))
-        .add_option(Value<std::set<int32_t> >("-path_layer", &db.sPathLayer, "an integer indicating layer for conflict edges"))
-        .add_option(Value<std::set<int32_t> >("-precolor_layer", &db.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
-        .add_option(Value<std::set<int32_t> >("-uncolor_layer", &db.sUncolorLayer, "an integer indicating layer for coloring"))
-        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value("BACKTRACK"))
-        .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value("RECTANGLE"))
-        .add_option(Value<bool>("-verbose", &db.verbose, "control screen messages").toggle(true).default_value(false).toggle_value(true))
-        .add_option(Value<uint32_t>("-dbg_comp_id", &db.dbg_comp_id, "debug component id").default_value(std::numeric_limits<uint32_t>::max(), "UINT_MAX"))
+        .add_option(Value<std::string>("-in", &parms.input_gds, "input gds file name").required(true))
+        .add_option(Value<std::string>("-out", &parms.output_gds, "output gds file name").default_value(defaultParms.output_gds))
+        .add_option(Value<double>("-coloring_distance", &parms.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(defaultParms.coloring_distance_nm))
+        .add_option(Value<int32_t>("-color_num", &parms.color_num, "an integer indicating number of masks (colors)").required(true))
+        .add_option(Value<int32_t>("-simplify_level", &parms.simplify_level, "an integer indicating graph simplification level < 0|1|2 >").default_value(defaultParms.simplify_level))
+        .add_option(Value<int32_t>("-thread_num", &parms.thread_num, "an integer indicating maximum thread number").default_value(defaultParms.thread_num))
+        .add_option(Value<std::set<int32_t> >("-path_layer", &parms.sPathLayer, "an integer indicating layer for conflict edges"))
+        .add_option(Value<std::set<int32_t> >("-precolor_layer", &parms.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
+        .add_option(Value<std::set<int32_t> >("-uncolor_layer", &parms.sUncolorLayer, "an integer indicating layer for coloring"))
+        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value(std::string(defaultParms.algo)))
+        .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
+        .add_option(Value<bool>("-verbose", &parms.verbose, "control screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
+        .add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
         ;
     try
     {
@@ -160,9 +161,9 @@ bool CmdParser::operator()(int argc, char** argv)
         if (limbo::iequals(algo_str, "ILP")) 
         {
 #if GUROBI == 1
-            db.algo = AlgorithmTypeEnum::ILP_GURBOI;
+            parms.algo = AlgorithmTypeEnum::ILP_GURBOI;
 #elif LEMONCBC == 1
-            db.algo = AlgorithmTypeEnum::ILP_CBC;
+            parms.algo = AlgorithmTypeEnum::ILP_CBC;
 #else 
             mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default\n");
 #endif
@@ -170,24 +171,24 @@ bool CmdParser::operator()(int argc, char** argv)
         else if (limbo::iequals(algo_str, "LP"))
         {
 #if GUROBI == 1
-            db.algo = AlgorithmTypeEnum::LP_GUROBI;
+            parms.algo = AlgorithmTypeEnum::LP_GUROBI;
 #else 
             mplPrint(kWARN, "LP is not available without GUROBI, set to default\n");
 #endif
         }
         else if (limbo::iequals(algo_str, "BACKTRACK"))
-            db.algo = AlgorithmTypeEnum::BACKTRACK;
+            parms.algo = AlgorithmTypeEnum::BACKTRACK;
         else mplPrint(kWARN, "Unknown algorithm type %s, set to default\n", algo_str.c_str());
 
         // post processing shape_str
         if (limbo::iequals(shape_str, "RECTANGLE"))
-            db.shape_mode = ShapeModeEnum::RECTANGLE;
+            parms.shape_mode = ShapeModeEnum::RECTANGLE;
         else if (limbo::iequals(shape_str, "POLYGON"))
-            db.shape_mode = ShapeModeEnum::POLYGON;
+            parms.shape_mode = ShapeModeEnum::POLYGON;
         else mplPrint(kWARN, "Unknown shape mode %s, set to default\n", shape_str.c_str());
 
         // check condition 
-        mplAssertMsg(db.coloring_distance_nm > 0 || !db.sPathLayer.empty(), "should set positive coloring_distance_nm or specify path_layer for conflict edges");
+        mplAssertMsg(parms.coloring_distance_nm > 0 || !parms.sPathLayer.empty(), "should set positive coloring_distance_nm or specify path_layer for conflict edges");
     }
     catch (std::exception& e)
     {
