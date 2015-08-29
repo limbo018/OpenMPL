@@ -8,6 +8,7 @@
 #ifndef SIMPLEMPL_PARMS_H
 #define SIMPLEMPL_PARMS_H
 
+#include <set>
 #include "msg.h"
 #include "enums.h"
 

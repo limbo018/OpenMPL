@@ -19,6 +19,7 @@
 #include <limbo/algorithms/coloring/ILPColoring.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
 #endif
+// only valid when lemon cbc api is available 
 #if LEMONCBC == 1
 #include <limbo/algorithms/coloring/ILPColoringLemonCbc.h>
 #endif

@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "LayoutDB.h"
+#include <boost/dynamic_bitset.hpp>
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

@@ -8,6 +8,8 @@
 #ifndef SIMPLEMPL_LAYOUTDB_H
 #define SIMPLEMPL_LAYOUTDB_H
 
+#include <vector>
+#include <map>
 #include "shapes.h"
 #include "parms.h"
 

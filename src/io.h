@@ -8,15 +8,8 @@
 #ifndef SIMPLEMPL_IO_H
 #define SIMPLEMPL_IO_H
 
-#include <iostream>
-#include <string>
-#include <vector>
 #include <fstream>
 #include <limits>
-#include <map>
-#include <algorithm>
-#include <numeric>
-#include <boost/lexical_cast.hpp>
 #include <limbo/parsers/gdsii/stream/GdsReader.h>
 #include <limbo/parsers/gdsii/stream/GdsWriter.h>
 #include <limbo/programoptions/ProgramOptions.h>

@@ -9,9 +9,7 @@
 #define SIMPLEMPL_SHAPES_H
 
 #include <iostream>
-#include <vector>
-#include <map>
-#include <set>
+#include <string>
 #include <boost/version.hpp>
 
 #if (BOOST_VERSION/100)%1000 > 55
@@ -23,19 +21,11 @@ namespace boost { namespace polygon {
 #endif
 
 #include <boost/cstdint.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
-#include <boost/typeof/typeof.hpp>
 //#include <boost/polygon/polygon.hpp>
 #include <boost/geometry.hpp>
 // use adapted boost.polygon in boost.geometry, which is compatible to rtree
 #include <boost/geometry/geometries/adapted/boost_polygon.hpp>
 #include <boost/geometry/index/rtree.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/dynamic_bitset.hpp>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 
 #include "GeometryApi.h"
 #include "msg.h"
