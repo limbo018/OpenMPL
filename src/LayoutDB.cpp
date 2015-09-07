@@ -84,6 +84,10 @@ void LayoutDB::add(int32_t layer, std::vector<point_type> const& vPoint)
 void LayoutDB::add_path(int32_t layer, std::vector<point_type> const& vPoint)
 {
     if (vPoint.size() < 2) return;
+
+    path_type p;
+    if (vPoint.size() == 2) // initialized by path 
+        p = gtl::construct<path_type>(vPoint.front(), vPoint.back());
     else if (vPoint.size() == 4) // probably it is initialized from boundary 
     {
         gtl::coordinate_traits<coordinate_type>::coordinate_distance dist[] = {
@@ -97,14 +101,12 @@ void LayoutDB::add_path(int32_t layer, std::vector<point_type> const& vPoint)
         else if (10*dist[0] < dist[1])
             offset = 1;
         if (offset >= 0)
-        {
-            path_type p (vPoint[offset], vPoint[offset+1]);
-            if (hPath.count(layer))
-                hPath[layer].push_back(p);
-            else mplAssert(hPath.insert(make_pair(layer, std::vector<path_type>(1, p))).second);
-            return;
-        }
+            p = gtl::construct<path_type>(vPoint[offset], vPoint[offset+1]);
+        else return;
     }
+    if (hPath.count(layer))
+        hPath[layer].push_back(p);
+    else mplAssert(hPath.insert(make_pair(layer, std::vector<path_type>(1, p))).second);
 }
 void LayoutDB::initialize_data()
 {
@@ -147,6 +149,10 @@ void LayoutDB::report_data_kernel() const
     }
     mplPrint(kNONE, "\n");
     mplPrint(kINFO, "Algorithm = %s\n", std::string(algo()).c_str());
+
+    // if defined sPathLayer, then hPath must not be empty
+    mplAssertMsg(parms.sPathLayer.empty() == hPath.empty(), "defined %lu path layers, but no path read from input\n", parms.sPathLayer.size());
+
 }
 void LayoutDB::update_bbox(base_type const& bbox)
 {

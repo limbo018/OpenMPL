@@ -9,11 +9,11 @@
 color_num=4
 simplify_level=2
 thread_num=8
-algo=LP # BACKTRACK or ILP or LP
-#benchmark="output_20x20-flat.gds"
+algo=BACKTRACK # BACKTRACK or ILP or LP
+benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
-benchmark="sim_s3.gds"
+#benchmark="sim_s3.gds"
 #benchmark="mpl_sim_s5_c3_algo0.gds" # output from mpl 
 
 if [[ $benchmark == output_* ]]; then 
