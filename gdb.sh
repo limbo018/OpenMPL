@@ -13,8 +13,8 @@ algo=SDP # BACKTRACK or ILP or LP or SDP
 #benchmark="output_1x1-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
-benchmark="sim_s2.gds"
-#benchmark="mpl_sim_s5_c3_algo0.gds" # output from mpl 
+benchmark="sim_s3.gds"
+#benchmark="mpl_sim_s3_c${color_num}_algo1.gds" # output from mpl 
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm/dpt_array"
@@ -116,12 +116,18 @@ gdb \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
 	-algo ${algo} \
-    -dbg_comp_id 583 \
-    -verbose
+    -dbg_comp_id 548 \
+    -verbose 
 
 elif [[ $benchmark == mpl_* ]]; then 
 
 # this parameter works for mpl_sim_c9
+if [[ $color_num == 3 ]]; then 
+    coloring_distance=120
+elif [[ $color_num == 4 ]]; then 
+    coloring_distance=160
+fi
+
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
 	--args \
@@ -132,14 +138,15 @@ gdb \
     -precolor_layer 3 \
     -precolor_layer 4 \
     -precolor_layer 5 \
+    -precolor_layer 6 \
     -uncolor_layer 0 \
-	-coloring_distance 120 \
+	-coloring_distance ${coloring_distance} \
 	-color_num ${color_num} \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
 	-algo ${algo} \
     -dbg_comp_id 1686000 \
-    -verbose
+    -verbose 
 
 fi
 

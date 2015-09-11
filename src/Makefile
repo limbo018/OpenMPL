@@ -6,6 +6,8 @@
 
 # default DBG is off
 DBG = 0
+# default GPROF is off, used to enable runtime profiling
+GPROF = 0
 # default GUROBI is off 
 GUROBI = 0
 # default LEMONCBC is off 
@@ -25,6 +27,10 @@ ifeq ($(DBG), 1)
 	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING
 else
 	CXXFLAGS = $(CXXFLAGS_RELEASE)
+endif
+
+ifeq ($(GPROF), 1)
+	CXXFLAGS += -pg
 endif
 
 CXXFLAGS += -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC) -DCSDP=$(CSDP)
@@ -79,10 +85,14 @@ ifeq ($(CSDP), 1)
 INCLUDE += -I $(CSDP_DIR)/include
 LIBS += -L $(CSDP_DIR)/lib $(STATIC_LINK_FLAG) -lsdp \
 	   -L $(OPENBLAS_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lgfortran -lm 
-ifeq ($(GUROBI), 1)
+ifeq ($(GUROBI), 1) 
 LIBS += $(DYNAMIC_LINK_FLAG) -lpthread 
-else 
+else
+ifeq ($(LEMONCBC), 1)
+LIBS += $(DYNAMIC_LINK_FLAG) -lpthread 
+else
 LIBS += $(STATIC_LINK_FLAG) -lpthread
+endif
 endif
 endif
 

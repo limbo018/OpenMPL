@@ -515,7 +515,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
         // 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
         double obj_value2 = std::numeric_limits<double>::max();
         // very restric condition to determin whether perform MERGE_SUBK4 or not 
-        if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && m_db->algo() == AlgorithmTypeEnum::LP_GUROBI 
+        if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
             obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
 
@@ -596,6 +596,24 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 #endif
 
+    uint32_t acc_obj_value = std::numeric_limits<uint32_t>::max();
+    // if current pattern does not contain uncolored patterns, directly calculate conflicts 
+    if (check_uncolored(itBgn, itEnd)) 
+        acc_obj_value = coloring_component(itBgn, itEnd, comp_id);
+
+	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
+    // only valid under no stitch 
+    if (acc_obj_value != std::numeric_limits<uint32_t>::max())
+        mplAssert(acc_obj_value == component_conflict_num);
+
+	if (m_db->verbose())
+		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
+
+	return component_conflict_num;
+}
+
+uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+{
 	// construct a graph for current component 
 	uint32_t pattern_cnt = itEnd-itBgn;
 
@@ -651,16 +669,8 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 		++color_density;
 	}
 
-	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
-    // only valid under no stitch 
-	mplAssert(acc_obj_value == component_conflict_num);
-
-	if (m_db->verbose())
-		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, pattern_cnt, component_conflict_num);
-
-	return component_conflict_num;
+    return acc_obj_value;
 }
-
 
 uint32_t SimpleMPL::conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const
 {
@@ -718,6 +728,14 @@ uint32_t SimpleMPL::conflict_num() const
             mplAssertMsg(0, "uncolored vertex %u = %d", v, color1);
 	}
 	return m_vConflict.size();
+}
+
+bool SimpleMPL::check_uncolored(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd) const
+{
+    for (; itBgn != itEnd; ++itBgn)
+        if (m_db->vPatternBbox[*itBgn]->color() < 0)
+            return true;
+    return false;
 }
 
 void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filename) const

@@ -72,6 +72,8 @@ class SimpleMPL
 		/// solve a single component 
         /// it wraps up solve_graph_coloring()
 		uint32_t solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
+        /// kernel for coloring a component 
+        uint32_t coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
         /// create solver and initialize 
         /// \parm sg is the simplified graph 
         /// \return a point of solver base type
@@ -98,6 +100,9 @@ class SimpleMPL
         /// reset data members 
         /// \param init denote whether run in initialize mode 
         void reset(bool init);
+        /// check whether a component contains non-colored patterns 
+        /// \return false if all precolored 
+        bool check_uncolored(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd) const;
 
         /// for debug 
         /// \param g is mutable because edge properties for boost::dynamic_properties need mutable graph 
