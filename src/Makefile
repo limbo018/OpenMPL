@@ -10,6 +10,8 @@ DBG = 0
 GUROBI = 0
 # default LEMONCBC is off 
 LEMONCBC = 0
+# default CSDP is off 
+CSDP = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -20,12 +22,12 @@ ifeq ($(UNAME_S), Darwin)
 endif 
 
 ifeq ($(DBG), 1)
-	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING
+	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING
 else
 	CXXFLAGS = $(CXXFLAGS_RELEASE)
 endif
 
-CXXFLAGS += -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC)
+CXXFLAGS += -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC) -DCSDP=$(CSDP)
 
 ifeq ($(UNAME_S), Linux)
 ifeq ($(GUROBI), 0)
@@ -70,6 +72,18 @@ LIBS += -L $(CBC_DIR)/lib $(DYNAMIC_LINK_FLAG) -lCbc -lCbcSolver -lCgl -lClp -lC
 		-L $(LEMON_DIR)/lib $(STATIC_LINK_FLAG) -lemon \
 		$(DYNAMIC_LINK_FLAG) -lz -lbz2 \
 		-Wl,-rpath,$(CBC_DIR)/lib:$(LEMON_DIR)/lib
+endif
+# Csdp api (OpenBLAS and Fortran library are necessary)
+# it looks like pthead must be linked dynamically when GUROBI is also on 
+ifeq ($(CSDP), 1)
+INCLUDE += -I $(CSDP_DIR)/include
+LIBS += -L $(CSDP_DIR)/lib $(STATIC_LINK_FLAG) -lsdp \
+	   -L $(OPENBLAS_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lgfortran -lm 
+ifeq ($(GUROBI), 1)
+LIBS += $(DYNAMIC_LINK_FLAG) -lpthread 
+else 
+LIBS += $(STATIC_LINK_FLAG) -lpthread
+endif
 endif
 
 # ==========================================================================

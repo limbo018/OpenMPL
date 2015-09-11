@@ -35,7 +35,7 @@ class SimpleMPL
         // do not use custom property tags, it does not compile for most utilities
         typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
                 boost::property<boost::vertex_index_t, uint32_t>, 
-                boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, int32_t> > 
+                boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, float> > 
                     > graph_type;
         typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
         typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;

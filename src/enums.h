@@ -72,7 +72,8 @@ struct AlgorithmTypeEnum
 		BACKTRACK = 0,    // no dependency 
 		ILP_GURBOI = 1,   // only valid when gurobi is available
         ILP_CBC = 2,      // only valid when cbc is available
-        LP_GUROBI = 3     // only valid when gurobi is available
+        LP_GUROBI = 3,    // only valid when gurobi is available
+        SDP_CSDP = 4      // only valid when Csdp is available
     };
 };
 class AlgorithmType : public EnumExt<AlgorithmTypeEnum::EnumType>

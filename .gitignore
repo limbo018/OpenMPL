@@ -16,3 +16,5 @@ bin/*.gds
 bin/bench/*.ascii
 log*
 rpt_*
+*.sdpa
+*.sol

@@ -23,6 +23,9 @@
 #if LEMONCBC == 1
 #include <limbo/algorithms/coloring/ILPColoringLemonCbc.h>
 #endif
+#if CSDP == 1
+#include <limbo/algorithms/coloring/SDPColoringCsdp.h>
+#endif
 #include <limbo/algorithms/coloring/BacktrackColoring.h>
 
 SIMPLEMPL_BEGIN_NAMESPACE
@@ -374,6 +377,10 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 #if LEMONCBC == 1
         case AlgorithmTypeEnum::ILP_CBC:
             pcs = new lac::ILPColoringLemonCbc<graph_type> (sg); break;
+#endif
+#if CSDP == 1
+        case AlgorithmTypeEnum::SDP_CSDP:
+            pcs = new lac::SDPColoringCsdp<graph_type> (sg); break;
 #endif
         case AlgorithmTypeEnum::BACKTRACK:
             pcs = new lac::BacktrackColoring<graph_type> (sg);

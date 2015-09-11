@@ -165,7 +165,7 @@ bool CmdParser::operator()(int argc, char** argv)
 #elif LEMONCBC == 1
             parms.algo = AlgorithmTypeEnum::ILP_CBC;
 #else 
-            mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default\n");
+            mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default algorithm\n");
 #endif
         }
         else if (limbo::iequals(algo_str, "LP"))
@@ -173,12 +173,20 @@ bool CmdParser::operator()(int argc, char** argv)
 #if GUROBI == 1
             parms.algo = AlgorithmTypeEnum::LP_GUROBI;
 #else 
-            mplPrint(kWARN, "LP is not available without GUROBI, set to default\n");
+            mplPrint(kWARN, "LP is not available without GUROBI, set to default algorithm\n");
+#endif
+        }
+        else if (limbo::iequals(algo_str, "SDP"))
+        {
+#if CSDP == 1
+            parms.algo = AlgorithmTypeEnum::SDP_CSDP;
+#else 
+            mplPrint(kWARN, "SDP is not available without CSDP, set to default algorithm\n");
 #endif
         }
         else if (limbo::iequals(algo_str, "BACKTRACK"))
             parms.algo = AlgorithmTypeEnum::BACKTRACK;
-        else mplPrint(kWARN, "Unknown algorithm type %s, set to default\n", algo_str.c_str());
+        else mplPrint(kWARN, "Unknown algorithm type %s, set to default algorithm\n", algo_str.c_str());
 
         // post processing shape_str
         if (limbo::iequals(shape_str, "RECTANGLE"))
