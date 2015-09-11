@@ -5,7 +5,8 @@
 
 ---------
 ## Features
- * Contact layer decomposition 
+ * Contact or metal layer decomposition 
+ * No stitching
  * Support 3 or 4 coloring 
  * Density control
  * Multi-threading
