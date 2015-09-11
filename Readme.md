@@ -10,7 +10,12 @@
  * Density control
  * Multi-threading
  * Small memory usage
+ * Multiple algorithms
+     ILP (Gurobi or Lemon CBC API)
+     SDP (Csdp API)
+     LP  (Gurobi API)
 
+The Csdp API used in SimpleMPL has been modified and built for threading safety at high level. 
 
 ---------
 ## Authors
