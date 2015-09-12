@@ -142,25 +142,20 @@ void SimpleMPL::solve()
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
 	// thread number controled by user option 
 #ifdef _OPENMP
-#pragma omp parallel num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads (m_db->thread_num())
 #endif
-	{
-#ifdef _OPENMP
-#pragma omp for
-#endif
-		for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
-		{
-			// construct a component 
-			std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
-			std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
+    for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+    {
+        // construct a component 
+        std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
+        std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
 #ifdef DEBUG
 //					if (comp_id != 9941)
 //						continue;
 #endif
-			// solve component 
-			// pass iterators to save memory 
-			this->solve_component(itBgn, itEnd, comp_id);
-		}
+        // solve component 
+        // pass iterators to save memory 
+        this->solve_component(itBgn, itEnd, comp_id);
 	}
 }
 
@@ -183,10 +178,10 @@ void SimpleMPL::construct_graph()
 	// construct edges 
 	m_mAdjVertex.resize(vertex_num);
 	if (m_db->hPath.empty()) // construct from distance 
-        construct_graph_from_distance(edge_num);
+        construct_graph_from_distance(vertex_num, edge_num);
 	else // construct from conflict edges in hPath
-        construct_graph_from_paths(edge_num);
-	m_vCompId.resize(m_vVertexOrder.size(), std::numeric_limits<uint32_t>::max());
+        construct_graph_from_paths(vertex_num, edge_num);
+	m_vCompId.resize(vertex_num, std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db->color_num(), 0);
 	m_vConflict.clear();
     edge_num = edge_num>>1;
@@ -195,9 +190,12 @@ void SimpleMPL::construct_graph()
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 }
 
-void SimpleMPL::construct_graph_from_distance(uint32_t& edge_num)
+void SimpleMPL::construct_graph_from_distance(uint32_t vertex_num, uint32_t& edge_num)
 {
-    for (uint32_t v = 0, ve = m_db->vPatternBbox.size(); v != ve; ++v)
+#ifdef _OPENMP
+#pragma omp parallel for num_threads (m_db->thread_num())
+#endif
+    for (uint32_t v = 0; v < vertex_num; ++v)
     {
         rectangle_pointer_type const& pPattern = m_db->vPatternBbox[v];
         std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[v];
@@ -223,16 +221,15 @@ void SimpleMPL::construct_graph_from_distance(uint32_t& edge_num)
             }
         }
         vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
-        edge_num += vAdjVertex.size();
+#ifdef _OPENMP
+#pragma omp critical(dataupdate)
+#endif
+        {edge_num += vAdjVertex.size();}
     }
 }
 
-void SimpleMPL::construct_graph_from_paths(uint32_t& edge_num)
+void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_num)
 {
-    // temporary store patterns found from query 
-    // move up to avoid frequent memory allocation and deallocation
-    std::vector<rectangle_pointer_type> vPattern1;
-    std::vector<rectangle_pointer_type> vPattern2;
     // at the same time, estimate a coloring distance from conflict edges 
     m_db->coloring_distance = 0;
     for (set<int32_t>::const_iterator itLayer = m_db->parms.sPathLayer.begin(), itLayerE = m_db->parms.sPathLayer.end(); itLayer != itLayerE; ++itLayer)
@@ -241,53 +238,66 @@ void SimpleMPL::construct_graph_from_paths(uint32_t& edge_num)
 
         std::vector<path_type> const& vPath = m_db->hPath[*itLayer];
 
-        for (std::vector<path_type>::const_iterator itPath = vPath.begin(); itPath != vPath.end(); ++itPath)
+#ifdef _OPENMP
+#pragma omp parallel for num_threads (m_db->thread_num())
+#endif 
+        for (uint32_t i = 0; i < vPath.size(); ++i)
         {
-            path_type const& path = *itPath;
+            path_type const& path = vPath[i];
 
             point_type const& p1 = path.low();
             point_type const& p2 = path.high();
-            vPattern1.clear();
-            vPattern2.clear();
+            std::list<rectangle_pointer_type> vPattern1;
+            std::list<rectangle_pointer_type> vPattern2;
             m_db->tPatternBbox.query(bgi::contains(p1), std::back_inserter(vPattern1));
             m_db->tPatternBbox.query(bgi::contains(p2), std::back_inserter(vPattern2));
 #ifdef DEBUG
             if (vPattern1.size() > 1)
             {
-                for (uint32_t i = 0; i != vPattern1.size(); ++i)
+                for (std::list<rectangle_pointer_type>::const_iterator it = vPattern1.begin(), ite = vPattern1.end(); it != ite; ++it)
                     mplPrint(kDEBUG, "multiple patterns found for layer %d, (%d, %d, %d, %d)\n", 
-                            vPattern1[i]->layer(), gtl::xl(*vPattern1[i]), gtl::yl(*vPattern1[i]), gtl::xh(*vPattern1[i]), gtl::yh(*vPattern1[i]));
+                            (*it)->layer(), gtl::xl(**it), gtl::yl(**it), gtl::xh(**it), gtl::yh(**it));
             }
             if (vPattern2.size() > 1)
             {
-                for (uint32_t i = 0; i != vPattern2.size(); ++i)
+                for (std::list<rectangle_pointer_type>::const_iterator it = vPattern2.begin(), ite = vPattern2.end(); it != ite; ++it)
                     mplPrint(kDEBUG, "multiple patterns found for layer %d, (%d, %d, %d, %d)\n", 
-                            vPattern2[i]->layer(), gtl::xl(*vPattern2[i]), gtl::yl(*vPattern2[i]), gtl::xh(*vPattern2[i]), gtl::yh(*vPattern2[i]));
+                            (*it)->layer(), gtl::xl(**it), gtl::yl(**it), gtl::xh(**it), gtl::yh(**it));
             }
 #endif
             mplAssert(vPattern1.size() == 1);
             mplAssert(vPattern2.size() == 1);
             rectangle_pointer_type const& pPattern1 = vPattern1.front();
             rectangle_pointer_type const& pPattern2 = vPattern2.front();
-
-            // if the input gds file contains duplicate edges 
-            // we will have duplicate edges here 
-            m_mAdjVertex[pPattern1->pattern_id()].push_back(pPattern2->pattern_id());
-            m_mAdjVertex[pPattern2->pattern_id()].push_back(pPattern1->pattern_id());
-
-            // estimate coloring distance 
             coordinate_difference distance = gtl::length(path);
-            m_db->coloring_distance = std::max(distance, m_db->coloring_distance);
+
+#ifdef _OPENMP
+#pragma omp critical (dataupdate)
+#endif
+            {
+                // if the input gds file contains duplicate edges 
+                // we will have duplicate edges here 
+                m_mAdjVertex[pPattern1->pattern_id()].push_back(pPattern2->pattern_id());
+                m_mAdjVertex[pPattern2->pattern_id()].push_back(pPattern1->pattern_id());
+                // estimate coloring distance 
+                m_db->coloring_distance = std::max(distance, m_db->coloring_distance);
+            }
         }
     }
     // eliminate all duplicates in adjacency list 
-    for (uint32_t v = 0, ve = m_db->vPatternBbox.size(); v != ve; ++v)
+#ifdef _OPENMP
+#pragma omp parallel for num_threads (m_db->thread_num())
+#endif 
+    for (uint32_t v = 0; v < vertex_num; ++v)
     {
         std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[v];
         set<uint32_t> sAdjVertex (vAdjVertex.begin(), vAdjVertex.end());
         vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
         vAdjVertex.swap(vAdjVertex); // shrink to fit 
-        edge_num += vAdjVertex.size();
+#ifdef _OPENMP
+#pragma omp critical (dataupdate)
+#endif
+        {edge_num += vAdjVertex.size();}
     }
     m_db->parms.coloring_distance_nm = m_db->coloring_distance*(m_db->unit*1e+9);
     mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db->coloring_distance, m_db->coloring_distance_nm());
@@ -740,6 +750,8 @@ bool SimpleMPL::check_uncolored(std::vector<uint32_t>::const_iterator itBgn, std
 
 void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filename) const
 {
+    // in order to make the .gv file readable by boost graphviz reader 
+    // I dump it with boost graphviz writer 
     boost::dynamic_properties dp;
     dp.property("id", boost::get(boost::vertex_index, g));
     dp.property("node_id", boost::get(boost::vertex_index, g));
@@ -750,9 +762,7 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
     std::ofstream out ((filename+".gv").c_str());
     boost::write_graphviz_dp(out, g, dp, string("id"));
     out.close();
-    char cmd[128];
-    sprintf(cmd, "dot -Tpdf %s.gv -o %s.pdf", filename.c_str(), filename.c_str());
-    ::system(cmd);
+    la::graphviz2pdf(filename);
 }
 
 void SimpleMPL::print_welcome() const

@@ -10,10 +10,10 @@ color_num=4
 simplify_level=2
 thread_num=8
 algo=SDP # BACKTRACK or ILP or LP or SDP
-#benchmark="output_1x1-flat.gds"
+benchmark="output_4x4-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
-benchmark="sim_s3.gds"
+#benchmark="sim_s3.gds"
 #benchmark="mpl_sim_s3_c${color_num}_algo1.gds" # output from mpl 
 
 if [[ $benchmark == output_* ]]; then 
@@ -116,8 +116,8 @@ gdb \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
 	-algo ${algo} \
-    -dbg_comp_id 548 \
-    -verbose 
+    -dbg_comp_id 548000 
+    #-verbose 
 
 elif [[ $benchmark == mpl_* ]]; then 
 

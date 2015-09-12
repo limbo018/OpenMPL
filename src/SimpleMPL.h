@@ -15,7 +15,8 @@
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
-namespace lac = limbo::algorithms::coloring;
+namespace la = limbo::algorithms;
+namespace lac = la::coloring;
 
 class SimpleMPL
 {
@@ -60,11 +61,13 @@ class SimpleMPL
 		/// initialize graph from layoutdb_type
 		void construct_graph();
         /// construct graph from coloring distance, set adjacency list m_mAdjVertex 
+        /// pass \param vertex_num
         /// compute total \param edge_num
-        void construct_graph_from_distance(uint32_t& edge_num);
+        void construct_graph_from_distance(uint32_t vertex_num, uint32_t& edge_num);
         /// construct graph from paths in gdsii file, set adjacency list m_mAdjVertex 
+        /// pass \param vertex_num
         /// compute total \param edge_num
-        void construct_graph_from_paths(uint32_t& edge_num);
+        void construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_num);
 		/// compute connected component 
 		void connected_component();
 		/// DFS for connected component computation
