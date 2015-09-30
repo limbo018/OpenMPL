@@ -510,7 +510,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 		// set precolored vertices 
         boost::graph_traits<graph_type>::vertex_iterator vi, vie;
-		for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+		for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
 		{
 			vertex_descriptor v = *vi;
 			int8_t color = vColor[vSimpl2Orig[v]];
