@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <string>
+#include <complex>
 #include <boost/version.hpp>
 
 #if (BOOST_VERSION/100)%1000 > 55
