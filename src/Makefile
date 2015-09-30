@@ -83,8 +83,8 @@ endif
 # it looks like pthead must be linked dynamically when GUROBI is also on 
 ifeq ($(CSDP), 1)
 INCLUDE += -I $(CSDP_DIR)/include
-LIBS += -L $(CSDP_DIR)/lib $(STATIC_LINK_FLAG) -lsdp \
-	   -L $(OPENBLAS_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lgfortran -lm 
+LIBS += -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lsdp \
+	   -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lgfortran -lm 
 ifeq ($(GUROBI), 1) 
 LIBS += $(DYNAMIC_LINK_FLAG) -lpthread 
 else
