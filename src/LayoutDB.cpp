@@ -156,10 +156,14 @@ void LayoutDB::report_data_kernel() const
 }
 void LayoutDB::update_bbox(base_type const& bbox)
 {
+    // LayoutDB is an abstract class 
+    // under g++ 4.8, it complains construction of abstract class in gtl::construct<T>()
+    // actually we only want to call gtl::assign<base_type, base_type>() and gtl::encompass<base_type, base_type>()
+    // so simply specialize it 
     if (vPatternBbox.empty())
-        gtl::assign(*this, bbox);
+        gtl::assign<base_type>(*this, bbox);
     else 
-        gtl::encompass(*this, bbox);
+        gtl::encompass<base_type>(*this, bbox);
 }
 void LayoutDB::check_layer_and_color(int32_t layer, bool& pattern_layer_flag, int8_t& color) const
 {
