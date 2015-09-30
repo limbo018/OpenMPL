@@ -611,6 +611,19 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     if (check_uncolored(itBgn, itEnd)) 
         acc_obj_value = coloring_component(itBgn, itEnd, comp_id);
 
+	// update global color density map 
+	// if parallelization is enabled, there will be uncertainty in the density map 
+	// because the density is being updated while being read 
+	for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; ++it)
+	{
+        int8_t color = m_db->vPatternBbox[*it]->color();
+		uint32_t& color_density = m_vColorDensity[color];
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+		++color_density;
+	}
+
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
     // only valid under no stitch 
     if (acc_obj_value != std::numeric_limits<uint32_t>::max())
@@ -665,18 +678,6 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
 	{
 		uint32_t const& v = *(itBgn+i);
         m_db->set_color(v, vColor[i]);
-	}
-
-	// update global color density map 
-	// if parallelization is enabled, there will be uncertainty in the density map 
-	// because the density is being updated while being read 
-	for (uint32_t i = 0; i != pattern_cnt; ++i)
-	{
-		uint32_t& color_density = m_vColorDensity[vColor[i]];
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-		++color_density;
 	}
 
     return acc_obj_value;
