@@ -14,6 +14,6 @@
 
 
 ./SimpleMPL  -in bench/via2_local_precolor.gds  -out out.gds  -coloring_distance 0.13 \
-             -uncolor_layer  100 \
+             -uncolor_layer  100  -color_num 3 \
              -precolor_layer 201  -precolor_layer 202  -precolor_layer 203
 
