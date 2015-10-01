@@ -43,12 +43,6 @@ void LayoutDBPolygon::copy(LayoutDBPolygon const& rhs)
     vPolyRectPattern = rhs.vPolyRectPattern;
     vPolyRectBeginId = rhs.vPolyRectBeginId;
 }
-void LayoutDBPolygon::swap(LayoutDBPolygon& rhs)
-{
-    std::swap(vParentPolygonId, rhs.vParentPolygonId);
-    std::swap(vPolyRectPattern, rhs.vPolyRectPattern);
-    std::swap(vPolyRectBeginId, rhs.vPolyRectBeginId);
-}
 void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
 {
     // collect patterns 

@@ -33,7 +33,6 @@ struct LayoutDBPolygon : public LayoutDB
 	LayoutDBPolygon& operator=(LayoutDBPolygon const& rhs);
 
 	void copy(LayoutDBPolygon const& rhs);
-    void swap(LayoutDBPolygon& rhs);
 	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint);
 	/// call it to initialize rtree 
 	/// it should be faster than gradually insertion 
