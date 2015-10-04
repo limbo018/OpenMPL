@@ -6,13 +6,14 @@
 #########################################################################
 #!/bin/bash
 
-color_num=4
+color_num=3
 simplify_level=2
 thread_num=8
 algo=SDP # BACKTRACK or ILP or LP or SDP
-benchmark="output_4x4-flat.gds"
+#benchmark="output_4x4-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
+benchmark="via2.gds"
 #benchmark="sim_s3.gds"
 #benchmark="mpl_sim_s3_c${color_num}_algo1.gds" # output from mpl 
 
@@ -22,6 +23,8 @@ elif [[ $benchmark == Via2_local_precolor* ]]; then
 	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm"
 elif [[ $benchmark == via2_local_precolor* ]]; then
 	benchmark_dir="./bin/bench"
+elif [[ $benchmark == via2.gds ]]; then
+    benchmark_dir="/home/local/eda03/shared_benchmarks"
 elif [[ $benchmark == sim_* ]]; then
     benchmark_dir="${BENCHMARKS_DIR}/ISCAS_sim"
 elif [[ $benchmark == total_* ]]; then
@@ -30,12 +33,32 @@ elif [[ $benchmark == mpl_* ]]; then
     benchmark_dir="${BENCHMARKS_DIR}/mpl_output/ISCAS_sim"
 fi
 
-#output="${benchmark%.*}-out.gds"
-output=""
+output="${benchmark%.*}-c${color_num}-out.gds"
+#output=""
 
 if [[ $benchmark == output_* ]]; then 
 
 # this parameter works for output_1x1.gds 
+gdb \
+	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
+	--args ./bin/SimpleMPL \
+    -shape "RECTANGLE" \
+	-in "${benchmark_dir}/${benchmark}" \
+	-out "${output}" \
+	-uncolor_layer 208 \
+	-uncolor_layer 209 \
+	-uncolor_layer 210 \
+	-uncolor_layer 211 \
+	-uncolor_layer 216 \
+	-path_layer 207 \
+	-color_num ${color_num} \
+	-simplify_level ${simplify_level} \
+	-thread_num ${thread_num} \
+	-algo ${algo} #\
+#	-verbose
+
+elif [[ $benchmark == "via2.gds" ]]; then 
+
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
 	--args ./bin/SimpleMPL \
