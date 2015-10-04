@@ -60,7 +60,7 @@ LIBS = $(STATIC_LINK_FLAG) \
 
 # boost chrono links to to librt.a under Linux
 ifeq ($(UNAME_S), Linux)
-LIBS += $(STATIC_LINK_FLAG) -lrt
+LIBS += $(STATIC_LINK_FLAG) -lrt 
 endif 
 
 # GUROBI 
@@ -83,7 +83,11 @@ endif
 # it looks like pthead must be linked dynamically when GUROBI is also on 
 ifeq ($(CSDP), 1)
 LIBS += -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lsdp \
-	   -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lgfortran -lm 
+	   -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lm 
+# CSDP links to Fortran under Linux 
+ifeq ($(UNAME_S), Linux)
+LIBS += -lgfortran 
+endif
 ifeq ($(GUROBI), 1) 
 LIBS += $(DYNAMIC_LINK_FLAG) -lpthread 
 else

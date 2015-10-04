@@ -25,7 +25,6 @@ struct LayoutDBRect : public LayoutDB
 	LayoutDBRect& operator=(LayoutDBRect const& rhs);
 
 	void copy(LayoutDBRect const& rhs);
-    void swap(LayoutDBRect const& rhs);
 	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint);
 	/// call it to initialize rtree 
 	/// it should be faster than gradually insertion 

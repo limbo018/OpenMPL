@@ -535,7 +535,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
             acc_obj_value += obj_value1;
 
             // collect coloring results from simplified graph 
-            for (tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+            for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
             {
                 vertex_descriptor v = *vi;
                 int8_t color = pcs->color(v);

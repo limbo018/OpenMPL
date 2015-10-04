@@ -67,7 +67,6 @@ struct LayoutDB : public rectangle_data<int32_t>
 
 	void initialize();
 	void copy(LayoutDB const& rhs);
-    virtual void swap(LayoutDB& rhs);
 	virtual void add(int32_t layer, std::vector<point_type> const& vPoint);
     /// runtime disable this function instead of pure virtual function because we need to create LayoutDB object during initialization of SimpleMPL
 	virtual void add_pattern(int32_t layer, std::vector<point_type> const& vPoint) = 0;

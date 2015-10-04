@@ -40,9 +40,6 @@ LayoutDBRect& LayoutDBRect::operator=(LayoutDBRect const& rhs)
 void LayoutDBRect::copy(LayoutDBRect const&)
 {
 }
-void LayoutDBRect::swap(LayoutDBRect const&)
-{
-}
 void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)
 {
     // collect patterns 

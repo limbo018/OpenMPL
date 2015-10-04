@@ -62,16 +62,6 @@ void LayoutDB::copy(LayoutDB const& rhs)
     tPatternBbox = rhs.tPatternBbox;
     vPatternBbox = rhs.vPatternBbox;
 }
-void LayoutDB::swap(LayoutDB& rhs)
-{
-    std::swap(hPath, rhs.hPath);
-    std::swap(strname, rhs.strname);
-    std::swap(unit, rhs.unit);
-    std::swap(coloring_distance, rhs.coloring_distance);
-    parms.swap(rhs.parms);
-    std::swap(tPatternBbox, rhs.tPatternBbox);
-    std::swap(vPatternBbox, rhs.vPatternBbox);
-}
 void LayoutDB::add(int32_t layer, std::vector<point_type> const& vPoint)
 {
     // classify features 

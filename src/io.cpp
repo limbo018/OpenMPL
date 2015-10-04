@@ -131,19 +131,19 @@ bool CmdParser::operator()(int argc, char** argv)
     typedef limbo::programoptions::ProgramOptions po_type;
     using limbo::programoptions::Value;
     po_type desc (std::string("SimpleMPL 1.X Usage"));
-    desc.add_option(Value<bool>("-help", &help, "print help message").toggle(true).default_value(false).toggle_value(true).help(true))
+    desc.add_option(Value<bool>("-help", &help, "toggle printing help message").toggle(true).default_value(false).toggle_value(true).help(true))
         .add_option(Value<std::string>("-in", &parms.input_gds, "input gds file name").required(true))
         .add_option(Value<std::string>("-out", &parms.output_gds, "output gds file name").default_value(defaultParms.output_gds))
         .add_option(Value<double>("-coloring_distance", &parms.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(defaultParms.coloring_distance_nm))
-        .add_option(Value<int32_t>("-color_num", &parms.color_num, "an integer indicating number of masks (colors)").required(true))
+        .add_option(Value<int32_t>("-color_num", &parms.color_num, "an integer indicating number of masks (colors) < 3|4 >").required(true))
         .add_option(Value<int32_t>("-simplify_level", &parms.simplify_level, "an integer indicating graph simplification level < 0|1|2 >").default_value(defaultParms.simplify_level))
         .add_option(Value<int32_t>("-thread_num", &parms.thread_num, "an integer indicating maximum thread number").default_value(defaultParms.thread_num))
         .add_option(Value<std::set<int32_t> >("-path_layer", &parms.sPathLayer, "an integer indicating layer for conflict edges"))
         .add_option(Value<std::set<int32_t> >("-precolor_layer", &parms.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
         .add_option(Value<std::set<int32_t> >("-uncolor_layer", &parms.sUncolorLayer, "an integer indicating layer for coloring"))
-        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK >").default_value(std::string(defaultParms.algo)))
+        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK|LP|SDP >").default_value(std::string(defaultParms.algo)))
         .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
-        .add_option(Value<bool>("-verbose", &parms.verbose, "control screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
+        .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
         .add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
         ;
     try
