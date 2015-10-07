@@ -6,11 +6,11 @@
 #########################################################################
 #!/bin/bash
 
-color_num=4
+color_num=3
 simplify_level=2
 thread_num=8
 algo=SDP # BACKTRACK or ILP or LP or SDP
-#benchmark="output_20x20-flat.gds"
+#benchmark="output_4x4-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
 benchmark="via2.gds"
@@ -33,8 +33,8 @@ elif [[ $benchmark == mpl_* ]]; then
     benchmark_dir="${BENCHMARKS_DIR}/mpl_output/ISCAS_sim"
 fi
 
-#output="${benchmark%.*}-out.gds"
-output=""
+output="${benchmark%.*}-c${color_num}-out.gds"
+#output=""
 
 if [[ $benchmark == output_* ]]; then 
 

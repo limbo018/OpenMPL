@@ -18,4 +18,4 @@ log*
 rpt_*
 *.sdpa
 *.sol
-*-out.txt
+*.txt
