@@ -5,8 +5,8 @@
     > Created Time: Thu 06 Nov 2014 08:53:46 AM CST
  ************************************************************************/
 
-#ifndef SIMPLEMPL_IO_H
-#define SIMPLEMPL_IO_H
+#ifndef SIMPLEMPL_GDSIIIO_H
+#define SIMPLEMPL_GDSIIIO_H
 
 #include <fstream>
 #include <limits>
@@ -34,7 +34,7 @@ using gtl::polygon_90_set_data;
 using namespace gtl::operators;
 
 /// read gds file 
-struct GdsReader : GdsParser::GdsDataBase
+struct GdsReader : GdsParser::GdsDataBaseKernel
 {
 	typedef LayoutDB layoutdb_type;
 	typedef layoutdb_type::coordinate_type coordinate_type;
@@ -48,7 +48,7 @@ struct GdsReader : GdsParser::GdsDataBase
 	//string strname; // TOPCELL name, useful for dump out gds files 
 	//double unit;
 	int32_t layer;
-	int32_t status; // 0: not in any block, 1 in BOUNDARY or BOX block, 2 in PATH   
+    GdsParser::GdsRecords::EnumType status; 
     std::vector<point_type> vPoint;
 	int64_t file_size; // in bytes 
 
@@ -56,91 +56,21 @@ struct GdsReader : GdsParser::GdsDataBase
 
 	GdsReader(layoutdb_type& _db) : db(_db) {}
 
-	bool operator() (std::string const& filename)  
-	{
-		// calculate file size 
-		std::ifstream in (filename.c_str());
-		if (!in.good()) return false;
-		std::streampos begin = in.tellg();
-		in.seekg(0, std::ios::end);
-		std::streampos end = in.tellg();
-		file_size = (end-begin);
-		in.close();
-		// read gds 
-		return GdsParser::read(*this, filename);
-	}
-
-	template <typename ContainerType>
-	void general_cbk(std::string const& ascii_record_type, std::string const& ascii_data_type, ContainerType const& vData)
-	{
-		if (ascii_record_type == "UNITS")
-		{
-			db.unit = vData[1]; 
-		}
-		else if (ascii_record_type == "BOUNDARY" || ascii_record_type == "BOX")
-		{
-			vPoint.clear();
-			layer = 0;
-			status = 1;
-		}
-		else if (ascii_record_type == "PATH")
-		{
-			vPoint.clear();
-			layer = 0;
-			status = 2;
-		}
-		else if (ascii_record_type == "LAYER")
-		{
-			layer = vData[0];
-		}
-		else if (ascii_record_type == "XY")
-		{
-			if (status == 1 || status == 2)
-			{
-				mplAssert((vData.size() & 1) == 0 && vData.size() >= 4);
-				vPoint.clear();
-				uint32_t end = vData.size();
-				// skip last point for BOX and BOUNDARY
-				if (status == 1) end -= 2;
-				for (uint32_t i = 0; i < end; i += 2)
-					vPoint.push_back(gtl::construct<point_type>(vData[i], vData[i+1]));
-			}
-		}
-		else if (ascii_record_type == "ENDEL")
-		{
-			if (status == 1 || status == 2)
-			{
-				mplAssert(layer != -1);
-
-				db.add(layer, vPoint);
-
-				status = 0;
-			}
-		}
-		else if (ascii_record_type == "STRNAME")
-		{
-			mplAssert(ascii_data_type == "STRING");
-			mplAssert(!vData.empty());
-			db.strname.assign(vData.begin(), vData.end());
-		}
-	}
+    /// top api 
+	bool operator() (std::string const& filename); 
 
 	// required callbacks in parser 
-	virtual void bit_array_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<int> const& vBitArray)
-	{this->general_cbk(ascii_record_type, ascii_data_type, vBitArray);}
-	virtual void integer_2_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<int> const& vInteger)
-	{this->general_cbk(ascii_record_type, ascii_data_type, vInteger);}
-	virtual void integer_4_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<int> const& vInteger)
-	{this->general_cbk(ascii_record_type, ascii_data_type, vInteger);}
-	virtual void real_4_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<double> const& vFloat) 
-	{this->general_cbk(ascii_record_type, ascii_data_type, vFloat);}
-	virtual void real_8_cbk(const char* ascii_record_type, const char* ascii_data_type, std::vector<double> const& vFloat) 
-	{this->general_cbk(ascii_record_type, ascii_data_type, vFloat);}
-	virtual void string_cbk(const char* ascii_record_type, const char* ascii_data_type, std::string const& str) 
-	{this->general_cbk(ascii_record_type, ascii_data_type, str);}
-	virtual void begin_end_cbk(const char* ascii_record_type)
-	{this->general_cbk(ascii_record_type, "", std::vector<int>());}
+	virtual void bit_array_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vBitArray);
+	virtual void integer_2_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vInteger);
+	virtual void integer_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vInteger);
+	virtual void real_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat);
+	virtual void real_8_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat);
+	virtual void string_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::string const& str);
+	virtual void begin_end_cbk(GdsParser::GdsRecords::EnumType record_type);
 
+    /// helper functions 
+    void integer_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vData);
+    void float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vData);
 };
 
 /// write gds file 

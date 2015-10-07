@@ -11,7 +11,7 @@
 #include <iostream>
 #include <stack>
 #include <limbo/algorithms/coloring/Coloring.h>
-#include "io.h"
+#include "GdsiiIO.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

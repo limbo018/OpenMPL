@@ -1,15 +1,143 @@
 /*************************************************************************
-    > File Name: io.cpp
+    > File Name: GdsiiIO.cpp
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Wed 26 Aug 2015 10:59:58 AM CDT
  ************************************************************************/
 
-#include "io.h"
+#include "GdsiiIO.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
 namespace gtl = boost::polygon;
+
+bool GdsReader::operator() (std::string const& filename)  
+{
+    // calculate file size 
+    std::ifstream in (filename.c_str());
+    if (!in.good()) return false;
+    std::streampos begin = in.tellg();
+    in.seekg(0, std::ios::end);
+    std::streampos end = in.tellg();
+    file_size = (end-begin);
+    in.close();
+    // read gds 
+    return GdsParser::read(*this, filename);
+}
+
+void GdsReader::bit_array_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vBitArray)
+{
+    this->integer_cbk(record_type, data_type, vBitArray);
+}
+void GdsReader::integer_2_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vInteger)
+{
+    this->integer_cbk(record_type, data_type, vInteger);
+}
+void GdsReader::integer_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vInteger)
+{
+    this->integer_cbk(record_type, data_type, vInteger);
+}
+void GdsReader::real_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) 
+{
+    this->float_cbk(record_type, data_type, vFloat);
+}
+void GdsReader::real_8_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) 
+{
+    this->float_cbk(record_type, data_type, vFloat);
+}
+void GdsReader::string_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::string const& str) 
+{
+    mplAssert(data_type == GdsParser::GdsData::STRING);
+    switch (record_type)
+    {
+        case GdsParser::GdsRecords::STRNAME:
+			db.strname.assign(str);
+            break;
+        case GdsParser::GdsRecords::LIBNAME:
+        case GdsParser::GdsRecords::STRING:
+        default: break;
+    }
+}
+void GdsReader::begin_end_cbk(GdsParser::GdsRecords::EnumType record_type)
+{
+    switch (record_type)
+    {
+        case GdsParser::GdsRecords::BOX:
+        case GdsParser::GdsRecords::BOUNDARY:
+        case GdsParser::GdsRecords::PATH:
+            vPoint.clear();
+            layer = 0;
+            status = record_type;
+            break;
+        case GdsParser::GdsRecords::ENDEL:
+            {
+                switch (status)
+                {
+                    case GdsParser::GdsRecords::BOX:
+                    case GdsParser::GdsRecords::BOUNDARY:
+                    case GdsParser::GdsRecords::PATH:
+                        mplAssert(layer != -1);
+                        db.add(layer, vPoint);
+                        break;
+                    default: break;
+                }
+                status = GdsParser::GdsRecords::UNKNOWN;
+            }
+            break;
+        case GdsParser::GdsRecords::ENDLIB: // notify database on the end of lib 
+            db.end_lib();
+            break;
+        case GdsParser::GdsRecords::ENDSTR: // currently not interested, add stuff here if needed 
+            db.end_str();
+            break;
+        default: // be careful here, you may dump a lot of unnecessary error message for unknown record_type 
+            mplPrint(kERROR, "%s() unsupported record_type = %s", __func__, GdsParser::gds_record_ascii(record_type));
+            break;
+    }
+}
+/// helper functions 
+void GdsReader::integer_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType /*data_type*/, std::vector<int> const& vData)
+{
+    switch (record_type)
+    {
+        case GdsParser::GdsRecords::LAYER:
+            layer = vData[0];
+            break;
+        case GdsParser::GdsRecords::XY:
+            if (status == GdsParser::GdsRecords::BOX || status == GdsParser::GdsRecords::BOUNDARY || status == GdsParser::GdsRecords::PATH)
+            {
+				mplAssert((vData.size() & 1) == 0 && vData.size() >= 4);
+				vPoint.clear();
+				uint32_t end = vData.size();
+				// skip last point for BOX and BOUNDARY
+				if (status == GdsParser::GdsRecords::BOX || status == GdsParser::GdsRecords::BOUNDARY) end -= 2;
+				for (uint32_t i = 0; i < end; i += 2)
+					vPoint.push_back(gtl::construct<point_type>(vData[i], vData[i+1]));
+            }
+            break;
+        case GdsParser::GdsRecords::BGNLIB: // notify database on the begin of lib 
+            db.begin_lib(); 
+            break;
+        case GdsParser::GdsRecords::BGNSTR: // just date of creation, not interesting
+            db.begin_str();
+            break;
+        default: // other not interested record_type
+            //mplPrint(kERROR, "%s() invalid record_type = %s, data_type = %s", __func__, GdsParser::gds_record_ascii(record_type), GdsParser::gds_data_ascii(data_type));
+            break;
+    }
+}
+void GdsReader::float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vData)
+{
+    switch (record_type)
+    {
+        case GdsParser::GdsRecords::UNITS:
+			db.unit = vData[1]; 
+            break;
+        default:
+            mplPrint(kERROR, "%s() invalid record_type = %s, data_type = %s", __func__, GdsParser::gds_record_ascii(record_type), GdsParser::gds_data_ascii(data_type));
+            break;
+    }
+}
 
 void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_type const& db, 
         std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, 
