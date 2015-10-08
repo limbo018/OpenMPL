@@ -12,7 +12,6 @@
 #include <limits>
 #include <limbo/parsers/gdsii/stream/GdsReader.h>
 #include <limbo/parsers/gdsii/stream/GdsWriter.h>
-#include <limbo/programoptions/ProgramOptions.h>
 
 #include "LayoutDB.h"
 
@@ -99,16 +98,6 @@ struct GdsWriter
     /// write conflict edges 
 	void write_edges(GdsParser::GdsWriter& gw, layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const; 
 
-};
-
-/// parse command line arguments 
-struct CmdParser
-{
-	ControlParameter& parms;
-
-	CmdParser(ControlParameter& p) : parms(p) {}
-
-	bool operator()(int argc, char** argv);
 };
 
 SIMPLEMPL_END_NAMESPACE

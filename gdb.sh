@@ -33,8 +33,8 @@ elif [[ $benchmark == mpl_* ]]; then
     benchmark_dir="${BENCHMARKS_DIR}/mpl_output/ISCAS_sim"
 fi
 
-output="${benchmark%.*}-c${color_num}-out.gds"
-#output=""
+#output="${benchmark%.*}-c${color_num}-out.gds"
+output=""
 
 if [[ $benchmark == output_* ]]; then 
 

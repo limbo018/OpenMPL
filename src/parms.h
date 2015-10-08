@@ -9,10 +9,14 @@
 #define SIMPLEMPL_PARMS_H
 
 #include <set>
+#include <boost/cstdint.hpp>
+#include <limbo/programoptions/ProgramOptions.h>
 #include "msg.h"
 #include "enums.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
+
+using boost::uint32_t;
 
 struct ControlParameter
 {
@@ -72,6 +76,17 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(algo, rhs.algo);
     std::swap(shape_mode, rhs.shape_mode);
 }
+
+/// parse command line arguments 
+struct CmdParser
+{
+	ControlParameter& parms;
+
+	CmdParser(ControlParameter& p) : parms(p) {}
+
+	bool operator()(int argc, char** argv);
+};
+
 
 SIMPLEMPL_END_NAMESPACE
 
