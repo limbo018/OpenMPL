@@ -11,8 +11,8 @@
 #include <set>
 #include <boost/cstdint.hpp>
 #include <limbo/programoptions/ProgramOptions.h>
-#include "msg.h"
-#include "enums.h"
+#include "Msg.h"
+#include "Enums.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

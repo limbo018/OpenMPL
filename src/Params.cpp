@@ -1,11 +1,11 @@
 /*************************************************************************
-    > File Name: parms.cpp
+    > File Name: Params.cpp
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Wed 07 Oct 2015 06:58:01 PM CDT
  ************************************************************************/
 
-#include "parms.h"
+#include "Params.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

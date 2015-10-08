@@ -1,5 +1,5 @@
 /*************************************************************************
-    > File Name: shapes.h
+    > File Name: Shapes.h
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Thu 06 Nov 2014 09:04:57 AM CST
@@ -29,7 +29,7 @@ namespace boost { namespace polygon {
 #include <boost/geometry/index/rtree.hpp>
 
 #include "GeometryApi.h"
-#include "msg.h"
+#include "Msg.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

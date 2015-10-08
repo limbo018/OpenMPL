@@ -10,8 +10,8 @@
 
 #include <vector>
 #include <map>
-#include "shapes.h"
-#include "parms.h"
+#include "Shapes.h"
+#include "Params.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

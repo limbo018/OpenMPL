@@ -1,11 +1,11 @@
 /*************************************************************************
-    > File Name: enums.cpp
+    > File Name: Enums.cpp
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Mon 03 Aug 2015 10:50:21 AM CDT
  ************************************************************************/
 
-#include "enums.h"
+#include "Enums.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
