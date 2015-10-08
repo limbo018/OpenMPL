@@ -12,6 +12,13 @@
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
+/// =====================================================================
+/// LayoutDBRect enables rectangle-only layout with high memory and time 
+/// efficiency. I try to only keep minimum volumn of data without much 
+/// performance overhead. Only one copy of rectangles are allocated and 
+/// their pointers are used in vector array and rtree. 
+/// =====================================================================
+
 /// current implementation assume all the input patterns are rectangles 
 struct LayoutDBRect : public LayoutDB
 {

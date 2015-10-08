@@ -49,6 +49,22 @@ using gtl::polygon_90_set_data;
 
 using namespace gtl::operators;
 
+/// =========================================================================================
+/// All different shapes used in SimpleMPL
+/// One thing should raise your caution: **inheritance and memory usage. 
+/// If a class contains virtual functions, it will add additional 8 bytes to the class. **
+/// In class Shape, we need at most 8 bytes for data member. 
+/// In class Rectangle, 4 coordinates take 16 bytes. 
+/// If we keep a virtual table in Shape, say virtual destructor, 
+/// then the size of Rectangle increases to 32 bytes. 
+/// But actually the data only takes 24 bytes. 
+/// I know it is usually better to have a virtual destructor in the base 
+/// class, but if we make sure there is no deletion to base class pointer 
+/// for derived class, it should be fine without it. 
+/// Class Shape does not necessarily need virtual functions. 
+/// ** As a consequence, no deletion of Shape pointer for derived classes is allowed. **
+/// =========================================================================================
+
 class Shape 
 {
     public:
@@ -63,7 +79,9 @@ class Shape
 				this->copy(rhs);
 			return *this;
 		}
-		virtual ~Shape() {}
+        /// whether should I add virtual here 
+        /// a trade-off between safety and memory 
+		~Shape() {}
 
 #ifdef DEBUG
 		long internal_id() {return m_internal_id;}
@@ -117,6 +135,7 @@ class Shape
 	protected:
 		int32_t m_color : 4; ///< color, 4-bit is enough  
 		int32_t m_layer : 28; ///< input layer, 28-bit is enough
+                            ///< actually 20-bit is already enough, but a class needs a least 8 bytes
 		uint32_t m_pattern_id; ///< index in the pattern array 
 };
 
@@ -154,7 +173,9 @@ class Rectangle : public rectangle_data<T>, public Shape
             print(oss);
             return oss.str();
         }
-		virtual ~Rectangle() {}
+        /// whether should I add virtual here 
+        /// a trade-off between safety and memory 
+		~Rectangle() {}
 
         void print(std::ostream& os) const 
         {
@@ -202,7 +223,9 @@ class Polygon : public polygon_90_data<T>, public Shape
             print(oss);
             return oss.str();
         }
-		virtual ~Polygon() {}
+        /// whether should I add virtual here 
+        /// a trade-off between safety and memory 
+		~Polygon() {}
 
         void print(std::ostream& os) const
         {
