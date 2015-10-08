@@ -62,12 +62,12 @@ class SimpleMPL
 		void construct_graph();
         /// construct graph from coloring distance, set adjacency list m_mAdjVertex 
         /// pass \param vertex_num
-        /// compute total \param edge_num
-        void construct_graph_from_distance(uint32_t vertex_num, uint32_t& edge_num);
+        /// \return total number of edges 
+        uint32_t construct_graph_from_distance(uint32_t vertex_num);
         /// construct graph from paths in gdsii file, set adjacency list m_mAdjVertex 
         /// pass \param vertex_num
-        /// compute total \param edge_num
-        void construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_num);
+        /// \return total number of edges 
+        uint32_t construct_graph_from_paths(uint32_t vertex_num);
 		/// compute connected component 
 		void connected_component();
 		/// DFS for connected component computation

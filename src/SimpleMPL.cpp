@@ -142,17 +142,13 @@ void SimpleMPL::solve()
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
 	// thread number controled by user option 
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
-#endif
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
-#ifdef DEBUG
-//					if (comp_id != 9941)
-//						continue;
-#endif
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
@@ -178,9 +174,9 @@ void SimpleMPL::construct_graph()
 	// construct edges 
 	m_mAdjVertex.resize(vertex_num);
 	if (m_db->hPath.empty()) // construct from distance 
-        construct_graph_from_distance(vertex_num, edge_num);
+        edge_num = construct_graph_from_distance(vertex_num);
 	else // construct from conflict edges in hPath
-        construct_graph_from_paths(vertex_num, edge_num);
+        edge_num = construct_graph_from_paths(vertex_num);
 	m_vCompId.resize(vertex_num, std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db->color_num(), 0);
 	m_vConflict.clear();
@@ -190,10 +186,11 @@ void SimpleMPL::construct_graph()
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 }
 
-void SimpleMPL::construct_graph_from_distance(uint32_t vertex_num, uint32_t& edge_num)
+uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
 {
+    uint32_t edge_num = 0;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:edge_num)
 #endif
     for (uint32_t v = 0; v < vertex_num; ++v)
     {
@@ -221,14 +218,13 @@ void SimpleMPL::construct_graph_from_distance(uint32_t vertex_num, uint32_t& edg
             }
         }
         vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
-#ifdef _OPENMP
-#pragma omp critical(dataupdate)
-#endif
-        {edge_num += vAdjVertex.size();}
+        // parallel with omp reduction here 
+        edge_num += vAdjVertex.size();
     }
+    return edge_num;
 }
 
-void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_num)
+uint32_t SimpleMPL::construct_graph_from_paths(uint32_t vertex_num)
 {
     // at the same time, estimate a coloring distance from conflict edges 
     m_db->coloring_distance = 0;
@@ -239,7 +235,7 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
         std::vector<path_type> const& vPath = m_db->hPath[*itLayer];
 
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads(m_db->thread_num())
 #endif 
         for (uint32_t i = 0; i < vPath.size(); ++i)
         {
@@ -272,7 +268,7 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
             coordinate_difference distance = gtl::length(path);
 
 #ifdef _OPENMP
-#pragma omp critical (dataupdate)
+#pragma omp critical(dataupdate)
 #endif
             {
                 // if the input gds file contains duplicate edges 
@@ -285,8 +281,9 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
         }
     }
     // eliminate all duplicates in adjacency list 
+    uint32_t edge_num = 0;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:edge_num)
 #endif 
     for (uint32_t v = 0; v < vertex_num; ++v)
     {
@@ -294,13 +291,13 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
         set<uint32_t> sAdjVertex (vAdjVertex.begin(), vAdjVertex.end());
         vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
         vAdjVertex.swap(vAdjVertex); // shrink to fit 
-#ifdef _OPENMP
-#pragma omp critical (dataupdate)
-#endif
-        {edge_num += vAdjVertex.size();}
+        // parallel with omp reduction
+        edge_num += vAdjVertex.size();
     }
     m_db->parms.coloring_distance_nm = m_db->coloring_distance*(m_db->unit*1e+9);
     mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db->coloring_distance, m_db->coloring_distance_nm());
+
+    return edge_num;
 }
 
 void SimpleMPL::connected_component()
@@ -599,6 +596,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 {
 	if (itBgn == itEnd) return 0;
 #ifdef DEBUG
+    // check order 
 	for (std::vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
 	{
 		uint32_t v1 = *(it-1), v2 = *it;
@@ -621,7 +619,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-		++color_density;
+		color_density += 1;
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
