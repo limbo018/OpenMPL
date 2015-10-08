@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <map>
+#include <limbo/algorithms/coloring/Coloring.h> // Boost.Graph related 
 #include "Shapes.h"
 #include "Params.h"
 
@@ -34,6 +35,16 @@ struct LayoutDB : public rectangle_data<int32_t>
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
     /// necessary for gtl::rectangle_traits
     using base_type::interval_type; 
+
+    /// define graph_type here because higher level classes need it 
+    // do not use setS, it does not compile for subgraph
+    // do not use custom property tags, it does not compile for most utilities
+    typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
+            boost::property<boost::vertex_index_t, uint32_t>, 
+            boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, float> > 
+                > graph_type;
+    typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
+    typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;
 
 	std::map<int32_t, std::vector<path_type> > hPath;    ///< path 
 	std::string strname;                            ///< TOPCELL name, useful for dump out gds files 

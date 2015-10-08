@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <stack>
-#include <limbo/algorithms/coloring/Coloring.h>
 #include "GdsiiIO.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
@@ -31,15 +30,9 @@ class SimpleMPL
 		typedef layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;
 		typedef layoutdb_type::path_type               path_type;
 		typedef layoutdb_type::rtree_type              rtree_type;
-
-        // do not use setS, it does not compile for subgraph
-        // do not use custom property tags, it does not compile for most utilities
-        typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, 
-                boost::property<boost::vertex_index_t, uint32_t>, 
-                boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, float> > 
-                    > graph_type;
-        typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
-        typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;
+        typedef layoutdb_type::graph_type              graph_type;
+        typedef layoutdb_type::vertex_descriptor       vertex_descriptor;
+        typedef layoutdb_type::edge_descriptor         edge_descriptor;
 
         /// default constructor 
         SimpleMPL();
@@ -81,15 +74,10 @@ class SimpleMPL
         /// \parm sg is the simplified graph 
         /// \return a point of solver base type
         lac::Coloring<graph_type>* create_coloring_solver(graph_type const& sg) const;
-        /// recover color of vertices simplified by HIDE_SMALL_DEGREE
-        /// consider density balance 
-        void recover_hide_vertex_colors(graph_type const& dg, 
-                const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
-                std::vector<int8_t>& vColor, std::stack<vertex_descriptor>& vHiddenVertices) const;
         /// given a graph, solve coloring, contain nested call for itself 
         /// \param dg is decomposition graph before simplification
         uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, 
-                const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
+                std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
                 uint32_t simplify_strategy, std::vector<int8_t>& vColor) const;
         /// given a component, construct graph, mapping from global index to local index, and set precolor 
         void construct_component_graph(const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
