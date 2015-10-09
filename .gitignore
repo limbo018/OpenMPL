@@ -5,8 +5,8 @@ obj
 *.lp
 *.ilp
 *.gds
-src/tags
-src/*.bk
+*tags
+*.bk
 lib/*
 
 bin/.out
@@ -19,3 +19,5 @@ rpt_*
 *.sdpa
 *.sol
 *.txt
+test/regr/*-y.csv
+test/regr/*-beta.csv

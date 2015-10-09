@@ -2,7 +2,7 @@
 #                         Compilation Flags
 # ==========================================================================
 
-# recommend make command: make -j LEMONCBC=1 
+# recommend make command: make -j CSDP=1 
 
 # default DBG is off
 DBG = 0
@@ -103,10 +103,11 @@ endif
 #                         Standard Setting
 # ==========================================================================
 
+PROGRAM_ROOT_DIR = ../..
 MKDIR = if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
-EXEDIR = ../bin
-OBJDIR = ../obj
-LIBDIR = ../lib
+EXEDIR = $(PROGRAM_ROOT_DIR)/bin
+OBJDIR = $(PROGRAM_ROOT_DIR)/obj
+LIBDIR = $(PROGRAM_ROOT_DIR)/lib
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:%.cpp=$(OBJDIR)/%.o)
 OBJS_NOMAIN = $(filter-out $(OBJDIR)/main.o, $(OBJS)) # filter out main.o 
