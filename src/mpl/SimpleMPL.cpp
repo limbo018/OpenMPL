@@ -8,6 +8,7 @@
 #include "SimpleMPL.h"
 #include "LayoutDBRect.h"
 #include "LayoutDBPolygon.h"
+#include "RecoverHiddenVertex.h"
 
 #include <stack>
 #include <boost/graph/graphviz.hpp>
@@ -50,14 +51,17 @@ void SimpleMPL::run(int argc, char** argv)
 void SimpleMPL::reset(bool init)
 {
     // release memory and set to initial value 
-    if (!init && m_db) delete m_db;
+    if (!init)
+    {
+        if (m_db) delete m_db;
+        std::vector<uint32_t>().swap(m_vVertexOrder);
+        std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+        std::vector<uint32_t>().swap(m_vCompId);
+        std::vector<uint32_t>().swap(m_vColorDensity);
+        std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+    }
     m_db = NULL;
     m_comp_cnt = 0;
-    std::vector<uint32_t>().swap(m_vVertexOrder);
-    std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
-    std::vector<uint32_t>().swap(m_vCompId);
-    std::vector<uint32_t>().swap(m_vColorDensity);
-    std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
 }
 void SimpleMPL::read_cmd(int argc, char** argv)
 {
@@ -400,73 +404,10 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 
     return pcs;
 }
-/// recover color of vertices simplified by HIDE_SMALL_DEGREE
-/// consider density balance 
-void SimpleMPL::recover_hide_vertex_colors(SimpleMPL::graph_type const& dg, 
-        const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
-        std::vector<int8_t>& vColor, std::stack<SimpleMPL::vertex_descriptor>& vHiddenVertices) const
-{
-	// recover colors for simplified vertices with balanced assignment 
-	// recover hidden vertices with local balanced density control 
-	while (!vHiddenVertices.empty())
-	{
-		vertex_descriptor v = vHiddenVertices.top();
-		vHiddenVertices.pop();
-
-		// find available colors 
-        std::vector<char> vUnusedColor (m_db->color_num(), true);
-        boost::graph_traits<graph_type>::adjacency_iterator vi, vie;
-		for (tie(vi, vie) = adjacent_vertices(v, dg); vi != vie; ++vi)
-		{
-			vertex_descriptor u = *vi;
-			if (vColor[u] >= 0)
-			{
-				mplAssert(vColor[u] < m_db->color_num());
-				vUnusedColor[vColor[u]] = false;
-			}
-		}
-
-		// find the nearest distance of each color 
-		// search all patterns in the component 
-		// TO DO: further speedup is possible to search a local window 
-		std::vector<coordinate_difference> vDist (m_db->color_num(), std::numeric_limits<coordinate_difference>::max());
-		for (uint32_t u = 0; u != pattern_cnt; ++u)
-		{
-			if (v == u) continue;
-			// skip uncolored vertices 
-			if (vColor[u] < 0) continue; 
-			// we consider euclidean distance
-            // use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
-			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = m_db->euclidean_distance(*m_db->vPatternBbox[*(itBgn+v)], *m_db->vPatternBbox[*(itBgn+u)]);
-#ifdef DEBUG
-			mplAssert(vColor[u] < m_db->color_num() && distance >= 0);
-#endif
-			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
-		}
-
-		// choose the color with largest distance 
-		int8_t best_color = -1;
-		double best_score = -std::numeric_limits<double>::max(); // negative max 
-		for (int8_t i = 0; i != m_db->color_num(); ++i)
-		{
-			if (vUnusedColor[i])
-			{
-				double cur_score = (double)vDist[i]/(1.0+m_vColorDensity[i]);
-				if (best_score < cur_score)
-				{
-					best_color = i;
-					best_score = cur_score;
-				}
-			}
-		}
-		mplAssert(best_color >= 0 && best_color < m_db->color_num());
-		vColor[v] = best_color;
-	}
-}
 /// given a graph, solve coloring 
 /// contain nested call for itself 
 uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, 
-        const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
+        std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
         uint32_t simplify_strategy, std::vector<int8_t>& vColor) const
 {
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
@@ -551,7 +492,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
-    recover_hide_vertex_colors(dg, itBgn, pattern_cnt, vColor, vHiddenVertices);
+    RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
 
     return acc_obj_value;
 }
