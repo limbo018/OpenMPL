@@ -21,3 +21,9 @@ rpt_*
 *.txt
 test/regr/*-y.csv
 test/regr/*-beta.csv
+*.model
+bin/Regr
+*.tar.gz
+test/regr
+test/models
+decomp_*
