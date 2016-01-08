@@ -133,7 +133,19 @@ void SimpleMPL::solve()
 	}
 
 	this->construct_graph();
-	this->connected_component();
+    if (m_db->simplify_level() > 0) // only perform connected component when enabled 
+        this->connected_component();
+    else 
+    {
+        uint32_t vertex_num = m_vVertexOrder.size();
+        uint32_t order_id = 0;
+        for (uint32_t v = 0; v != vertex_num; ++v)
+        {
+            m_vCompId[v] = 0;
+            m_vVertexOrder[v] = order_id++;
+        }
+        m_comp_cnt = 1;
+    }
 
 	// create bookmark to index the starting position of each component 
 	std::vector<uint32_t> vBookmark (m_comp_cnt);
@@ -311,18 +323,18 @@ void SimpleMPL::connected_component()
 	uint32_t order_id = 0; // position in an ordered pattern array with grouped components 
 
 	uint32_t vertex_num = m_vVertexOrder.size();
-	// here we employ the assumption that the graph data structure alreays has vertices labeled with 0~vertex_num-1
+	// here we employ the assumption that the graph data structure always has vertices labeled with 0~vertex_num-1
 	// m_vVertexOrder only saves an order of it 
-	for (uint32_t v = 0; v != vertex_num; ++v)
-	{
-		if (m_vCompId[v] == std::numeric_limits<uint32_t>::max()) // not visited 
-		{
-			depth_first_search(v, comp_id, order_id);
-			comp_id += 1;
-		}
-	}
+    for (uint32_t v = 0; v != vertex_num; ++v)
+    {
+        if (m_vCompId[v] == std::numeric_limits<uint32_t>::max()) // not visited
+        {
+            depth_first_search(v, comp_id, order_id);
+            comp_id += 1;
+        }
+    }
 	// record maximum number of connected components
-	m_comp_cnt = comp_id;
+    m_comp_cnt = comp_id;
 
 #ifdef DEBUG 
 	// check visited 
@@ -330,12 +342,12 @@ void SimpleMPL::connected_component()
 		mplAssert(m_vCompId[v] != std::numeric_limits<uint32_t>::max()); 
 #endif
 
-	// reorder with order_id 
-	// maybe there is a way to save memory 
-	std::vector<uint32_t> vTmpOrder (m_vVertexOrder.size());
-	for (uint32_t v = 0; v != vertex_num; ++v)
-		vTmpOrder[m_vVertexOrder[v]] = v;
-	std::swap(m_vVertexOrder, vTmpOrder);
+    // reorder with order_id 
+    // maybe there is a way to save memory 
+    std::vector<uint32_t> vTmpOrder (m_vVertexOrder.size());
+    for (uint32_t v = 0; v != vertex_num; ++v)
+        vTmpOrder[m_vVertexOrder[v]] = v;
+    std::swap(m_vVertexOrder, vTmpOrder);
 
 #ifdef DEBUG
 	// check ordered 
@@ -566,7 +578,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
     // only valid under no stitch 
     if (acc_obj_value != std::numeric_limits<uint32_t>::max())
-        mplAssert(acc_obj_value == component_conflict_num);
+        mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
 
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
@@ -599,9 +611,9 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
     uint32_t simplify_strategy = graph_simplification_type::NONE;
 	// keep the order of simplification 
-	if (m_db->simplify_level() > 0)
-        simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
 	if (m_db->simplify_level() > 1)
+        simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
+	if (m_db->simplify_level() > 2)
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
     // solve graph coloring 

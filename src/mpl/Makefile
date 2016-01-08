@@ -17,10 +17,10 @@ CSDP = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
-	-include Unix.mk
+	-include ../Unix.mk
 endif 
 ifeq ($(UNAME_S), Darwin)
-	-include Darwin.mk
+	-include ../Darwin.mk
 endif 
 
 ifeq ($(DBG), 1)
