@@ -27,3 +27,4 @@ bin/Regr
 test/regr
 test/models
 decomp_*
+bin/*.zip
