@@ -12,7 +12,18 @@
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
-/// polygon based layout 
+/// ================================================================
+/// LayoutDBPolygon implements the support to rectilinear polygon
+/// based layout. With every input polygon, I first decompose it to
+/// rectangles and store them. After reading completed, DFS is used 
+/// to find connected component and re-union rectangles into polygons 
+/// by identifying the parent polygon id for each rectangle. 
+/// So we actually only stores decomposed rectangles instead of polygons. 
+/// For memory efficiency, the rtree stores poly rects during reading, 
+/// but switches to bounding box of each polygon when reading is finished
+/// (literally after LayoutDBPolygon::initialize_data()).
+/// ================================================================
+
 struct LayoutDBPolygon : public LayoutDB
 {
     typedef LayoutDB base_type;
@@ -24,12 +35,19 @@ struct LayoutDBPolygon : public LayoutDB
     std::vector<uint32_t> vParentPolygonId; ///< no need to actually store polygon patterns as we stored decomposed rectangles 
                                              ///< but we need to know which polygon a rectangle belongs to 
     std::vector<rectangle_pointer_type> vPolyRectPattern; ///< initial patterns decomposed from input polygons 
+                                                        ///< during reading process, it has the same order as that in the input file 
+                                                        ///< but reordered so that rectangles belong to the same polygon are abutting
     std::vector<uint32_t> vPolyRectBeginId; ///< begin index in vPolyRectPattern when querying from parent polygon id 
 
+    /// default constructor 
 	LayoutDBPolygon();
+    /// constructor
 	LayoutDBPolygon(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh);
+    /// copy constructor 
 	LayoutDBPolygon(LayoutDBPolygon const& rhs);
+    /// destructor 
 	virtual ~LayoutDBPolygon();
+    /// assignment 
 	LayoutDBPolygon& operator=(LayoutDBPolygon const& rhs);
 
 	void copy(LayoutDBPolygon const& rhs);
@@ -49,8 +67,12 @@ struct LayoutDBPolygon : public LayoutDB
 	virtual void report_data() const;
     void report_data_kernel() const;
 
+    /// compute parent polygons from vPolyRectPattern
+    /// then reorder vPolyRectPattern so that connected polygons are abutting in the array  
     void compute_parent_polygons();
+    /// DFS to find connected component 
     void depth_first_search(uint32_t source, uint32_t polygon_id, uint32_t& order_id, std::vector<uint32_t>& vOrderId);
+    /// from vPolyRectPattern compute parent polygons and their bounding boxes 
     void compute_parent_polygon_bboxes(uint32_t num_polygon);
 
     /// check vParentPolygonId for parent id 

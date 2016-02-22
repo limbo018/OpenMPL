@@ -9,10 +9,14 @@
 #define SIMPLEMPL_PARMS_H
 
 #include <set>
-#include "msg.h"
-#include "enums.h"
+#include <boost/cstdint.hpp>
+#include <limbo/programoptions/ProgramOptions.h>
+#include "Msg.h"
+#include "Enums.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
+
+using boost::uint32_t;
 
 struct ControlParameter
 {
@@ -22,7 +26,7 @@ struct ControlParameter
 	std::set<int32_t> sPathLayer;              ///< path layers that represent conflict edges 
 	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
 	int32_t color_num;                         ///< number of colors available, only support 3 or 4
-	int32_t simplify_level;                    ///< simplification level 0|1|2, default is 2
+	int32_t simplify_level;                    ///< simplification level 0|1|2|3, default is 3
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
 	bool verbose;                              ///< control screen message 
     uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
@@ -46,7 +50,7 @@ inline ControlParameter::ControlParameter()
 {
     coloring_distance_nm     = 0;
     color_num                = 3;
-    simplify_level           = 2;
+    simplify_level           = 3;
     thread_num               = 1;
     verbose                  = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
@@ -72,6 +76,17 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(algo, rhs.algo);
     std::swap(shape_mode, rhs.shape_mode);
 }
+
+/// parse command line arguments 
+struct CmdParser
+{
+	ControlParameter& parms;
+
+	CmdParser(ControlParameter& p) : parms(p) {}
+
+	bool operator()(int argc, char** argv);
+};
+
 
 SIMPLEMPL_END_NAMESPACE
 

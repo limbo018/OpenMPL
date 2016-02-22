@@ -1,5 +1,5 @@
 /*************************************************************************
-    > File Name: enums.h
+    > File Name: Enums.h
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Mon Jun 15 21:43:53 2015
@@ -11,7 +11,7 @@
 #include <string>
 #include <map>
 #include <ostream>
-#include "namespace.h"
+#include "Namespace.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

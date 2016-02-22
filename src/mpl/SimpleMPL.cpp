@@ -8,6 +8,7 @@
 #include "SimpleMPL.h"
 #include "LayoutDBRect.h"
 #include "LayoutDBPolygon.h"
+#include "RecoverHiddenVertex.h"
 
 #include <stack>
 #include <boost/graph/graphviz.hpp>
@@ -50,14 +51,17 @@ void SimpleMPL::run(int argc, char** argv)
 void SimpleMPL::reset(bool init)
 {
     // release memory and set to initial value 
-    if (!init && m_db) delete m_db;
+    if (!init)
+    {
+        if (m_db) delete m_db;
+        std::vector<uint32_t>().swap(m_vVertexOrder);
+        std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+        std::vector<uint32_t>().swap(m_vCompId);
+        std::vector<uint32_t>().swap(m_vColorDensity);
+        std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+    }
     m_db = NULL;
     m_comp_cnt = 0;
-    std::vector<uint32_t>().swap(m_vVertexOrder);
-    std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
-    std::vector<uint32_t>().swap(m_vCompId);
-    std::vector<uint32_t>().swap(m_vColorDensity);
-    std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
 }
 void SimpleMPL::read_cmd(int argc, char** argv)
 {
@@ -129,7 +133,19 @@ void SimpleMPL::solve()
 	}
 
 	this->construct_graph();
-	this->connected_component();
+    if (m_db->simplify_level() > 0) // only perform connected component when enabled 
+        this->connected_component();
+    else 
+    {
+        uint32_t vertex_num = m_vVertexOrder.size();
+        uint32_t order_id = 0;
+        for (uint32_t v = 0; v != vertex_num; ++v)
+        {
+            m_vCompId[v] = 0;
+            m_vVertexOrder[v] = order_id++;
+        }
+        m_comp_cnt = 1;
+    }
 
 	// create bookmark to index the starting position of each component 
 	std::vector<uint32_t> vBookmark (m_comp_cnt);
@@ -142,17 +158,13 @@ void SimpleMPL::solve()
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
 	// thread number controled by user option 
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
-#endif
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
-#ifdef DEBUG
-//					if (comp_id != 9941)
-//						continue;
-#endif
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
@@ -178,9 +190,9 @@ void SimpleMPL::construct_graph()
 	// construct edges 
 	m_mAdjVertex.resize(vertex_num);
 	if (m_db->hPath.empty()) // construct from distance 
-        construct_graph_from_distance(vertex_num, edge_num);
+        edge_num = construct_graph_from_distance(vertex_num);
 	else // construct from conflict edges in hPath
-        construct_graph_from_paths(vertex_num, edge_num);
+        edge_num = construct_graph_from_paths(vertex_num);
 	m_vCompId.resize(vertex_num, std::numeric_limits<uint32_t>::max());
 	m_vColorDensity.assign(m_db->color_num(), 0);
 	m_vConflict.clear();
@@ -190,10 +202,11 @@ void SimpleMPL::construct_graph()
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 }
 
-void SimpleMPL::construct_graph_from_distance(uint32_t vertex_num, uint32_t& edge_num)
+uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
 {
+    uint32_t edge_num = 0;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:edge_num)
 #endif
     for (uint32_t v = 0; v < vertex_num; ++v)
     {
@@ -221,14 +234,13 @@ void SimpleMPL::construct_graph_from_distance(uint32_t vertex_num, uint32_t& edg
             }
         }
         vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
-#ifdef _OPENMP
-#pragma omp critical(dataupdate)
-#endif
-        {edge_num += vAdjVertex.size();}
+        // parallel with omp reduction here 
+        edge_num += vAdjVertex.size();
     }
+    return edge_num;
 }
 
-void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_num)
+uint32_t SimpleMPL::construct_graph_from_paths(uint32_t vertex_num)
 {
     // at the same time, estimate a coloring distance from conflict edges 
     m_db->coloring_distance = 0;
@@ -239,7 +251,7 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
         std::vector<path_type> const& vPath = m_db->hPath[*itLayer];
 
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads(m_db->thread_num())
 #endif 
         for (uint32_t i = 0; i < vPath.size(); ++i)
         {
@@ -272,7 +284,7 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
             coordinate_difference distance = gtl::length(path);
 
 #ifdef _OPENMP
-#pragma omp critical (dataupdate)
+#pragma omp critical(dataupdate)
 #endif
             {
                 // if the input gds file contains duplicate edges 
@@ -285,8 +297,9 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
         }
     }
     // eliminate all duplicates in adjacency list 
+    uint32_t edge_num = 0;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads (m_db->thread_num())
+#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:edge_num)
 #endif 
     for (uint32_t v = 0; v < vertex_num; ++v)
     {
@@ -294,13 +307,13 @@ void SimpleMPL::construct_graph_from_paths(uint32_t vertex_num, uint32_t& edge_n
         set<uint32_t> sAdjVertex (vAdjVertex.begin(), vAdjVertex.end());
         vAdjVertex.assign(sAdjVertex.begin(), sAdjVertex.end()); 
         vAdjVertex.swap(vAdjVertex); // shrink to fit 
-#ifdef _OPENMP
-#pragma omp critical (dataupdate)
-#endif
-        {edge_num += vAdjVertex.size();}
+        // parallel with omp reduction
+        edge_num += vAdjVertex.size();
     }
     m_db->parms.coloring_distance_nm = m_db->coloring_distance*(m_db->unit*1e+9);
     mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db->coloring_distance, m_db->coloring_distance_nm());
+
+    return edge_num;
 }
 
 void SimpleMPL::connected_component()
@@ -310,18 +323,18 @@ void SimpleMPL::connected_component()
 	uint32_t order_id = 0; // position in an ordered pattern array with grouped components 
 
 	uint32_t vertex_num = m_vVertexOrder.size();
-	// here we employ the assumption that the graph data structure alreays has vertices labeled with 0~vertex_num-1
+	// here we employ the assumption that the graph data structure always has vertices labeled with 0~vertex_num-1
 	// m_vVertexOrder only saves an order of it 
-	for (uint32_t v = 0; v != vertex_num; ++v)
-	{
-		if (m_vCompId[v] == std::numeric_limits<uint32_t>::max()) // not visited 
-		{
-			depth_first_search(v, comp_id, order_id);
-			comp_id += 1;
-		}
-	}
+    for (uint32_t v = 0; v != vertex_num; ++v)
+    {
+        if (m_vCompId[v] == std::numeric_limits<uint32_t>::max()) // not visited
+        {
+            depth_first_search(v, comp_id, order_id);
+            comp_id += 1;
+        }
+    }
 	// record maximum number of connected components
-	m_comp_cnt = comp_id;
+    m_comp_cnt = comp_id;
 
 #ifdef DEBUG 
 	// check visited 
@@ -329,12 +342,12 @@ void SimpleMPL::connected_component()
 		mplAssert(m_vCompId[v] != std::numeric_limits<uint32_t>::max()); 
 #endif
 
-	// reorder with order_id 
-	// maybe there is a way to save memory 
-	std::vector<uint32_t> vTmpOrder (m_vVertexOrder.size());
-	for (uint32_t v = 0; v != vertex_num; ++v)
-		vTmpOrder[m_vVertexOrder[v]] = v;
-	std::swap(m_vVertexOrder, vTmpOrder);
+    // reorder with order_id 
+    // maybe there is a way to save memory 
+    std::vector<uint32_t> vTmpOrder (m_vVertexOrder.size());
+    for (uint32_t v = 0; v != vertex_num; ++v)
+        vTmpOrder[m_vVertexOrder[v]] = v;
+    std::swap(m_vVertexOrder, vTmpOrder);
 
 #ifdef DEBUG
 	// check ordered 
@@ -403,73 +416,10 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 
     return pcs;
 }
-/// recover color of vertices simplified by HIDE_SMALL_DEGREE
-/// consider density balance 
-void SimpleMPL::recover_hide_vertex_colors(SimpleMPL::graph_type const& dg, 
-        const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
-        std::vector<int8_t>& vColor, std::stack<SimpleMPL::vertex_descriptor>& vHiddenVertices) const
-{
-	// recover colors for simplified vertices with balanced assignment 
-	// recover hidden vertices with local balanced density control 
-	while (!vHiddenVertices.empty())
-	{
-		vertex_descriptor v = vHiddenVertices.top();
-		vHiddenVertices.pop();
-
-		// find available colors 
-        std::vector<char> vUnusedColor (m_db->color_num(), true);
-        boost::graph_traits<graph_type>::adjacency_iterator vi, vie;
-		for (tie(vi, vie) = adjacent_vertices(v, dg); vi != vie; ++vi)
-		{
-			vertex_descriptor u = *vi;
-			if (vColor[u] >= 0)
-			{
-				mplAssert(vColor[u] < m_db->color_num());
-				vUnusedColor[vColor[u]] = false;
-			}
-		}
-
-		// find the nearest distance of each color 
-		// search all patterns in the component 
-		// TO DO: further speedup is possible to search a local window 
-		std::vector<coordinate_difference> vDist (m_db->color_num(), std::numeric_limits<coordinate_difference>::max());
-		for (uint32_t u = 0; u != pattern_cnt; ++u)
-		{
-			if (v == u) continue;
-			// skip uncolored vertices 
-			if (vColor[u] < 0) continue; 
-			// we consider euclidean distance
-            // use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
-			gtl::coordinate_traits<coordinate_type>::coordinate_difference distance = m_db->euclidean_distance(*m_db->vPatternBbox[*(itBgn+v)], *m_db->vPatternBbox[*(itBgn+u)]);
-#ifdef DEBUG
-			mplAssert(vColor[u] < m_db->color_num() && distance >= 0);
-#endif
-			vDist[ vColor[u] ] = std::min(vDist[ vColor[u] ], distance);
-		}
-
-		// choose the color with largest distance 
-		int8_t best_color = -1;
-		double best_score = -std::numeric_limits<double>::max(); // negative max 
-		for (int8_t i = 0; i != m_db->color_num(); ++i)
-		{
-			if (vUnusedColor[i])
-			{
-				double cur_score = (double)vDist[i]/(1.0+m_vColorDensity[i]);
-				if (best_score < cur_score)
-				{
-					best_color = i;
-					best_score = cur_score;
-				}
-			}
-		}
-		mplAssert(best_color >= 0 && best_color < m_db->color_num());
-		vColor[v] = best_color;
-	}
-}
 /// given a graph, solve coloring 
 /// contain nested call for itself 
 uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, 
-        const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
+        std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
         uint32_t simplify_strategy, std::vector<int8_t>& vColor) const
 {
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
@@ -554,7 +504,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
-    recover_hide_vertex_colors(dg, itBgn, pattern_cnt, vColor, vHiddenVertices);
+    RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
 
     return acc_obj_value;
 }
@@ -599,6 +549,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 {
 	if (itBgn == itEnd) return 0;
 #ifdef DEBUG
+    // check order 
 	for (std::vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
 	{
 		uint32_t v1 = *(it-1), v2 = *it;
@@ -621,13 +572,13 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-		++color_density;
+		color_density += 1;
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
     // only valid under no stitch 
     if (acc_obj_value != std::numeric_limits<uint32_t>::max())
-        mplAssert(acc_obj_value == component_conflict_num);
+        mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
 
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
@@ -660,9 +611,9 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
     uint32_t simplify_strategy = graph_simplification_type::NONE;
 	// keep the order of simplification 
-	if (m_db->simplify_level() > 0)
-        simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
 	if (m_db->simplify_level() > 1)
+        simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
+	if (m_db->simplify_level() > 2)
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
     // solve graph coloring 
@@ -770,7 +721,7 @@ void SimpleMPL::print_welcome() const
 {
   mplPrint(kNONE, "\n\n");
   mplPrint(kNONE, "=======================================================================\n");
-  mplPrint(kNONE, "                      SimpleMPL - Version 1.0                        \n");
+  mplPrint(kNONE, "                      SimpleMPL - Version 1.1                        \n");
   mplPrint(kNONE, "                                by                                   \n");  
   mplPrint(kNONE, "                   Yibo Lin, Bei Yu, and  David Z. Pan               \n");
   mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");

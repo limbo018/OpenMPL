@@ -1,11 +1,11 @@
 /*************************************************************************
-    > File Name: msg.cpp
+    > File Name: Msg.cpp
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Fri 31 Jul 2015 03:20:14 PM CDT
  ************************************************************************/
 
-#include "msg.h"
+#include "Msg.h"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>

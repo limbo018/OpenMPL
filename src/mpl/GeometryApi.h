@@ -11,7 +11,7 @@
 // for Polygon2Rectangle
 #include <limbo/geometry/api/BoostPolygonApi.h>
 #include <limbo/geometry/Polygon2Rectangle.h>
-#include "namespace.h"
+#include "Namespace.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 

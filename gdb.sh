@@ -9,13 +9,14 @@
 color_num=3
 simplify_level=2
 thread_num=8
-algo=SDP # BACKTRACK or ILP or LP or SDP
+algo=BACKTRACK # BACKTRACK or ILP or LP or SDP
 #benchmark="output_4x4-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
-benchmark="via2.gds"
+#benchmark="via2.gds"
 #benchmark="sim_s3.gds"
 #benchmark="mpl_sim_s3_c${color_num}_algo1.gds" # output from mpl 
+benchmark="Via1_clip_300x300.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm/dpt_array"
@@ -31,10 +32,12 @@ elif [[ $benchmark == total_* ]]; then
     benchmark_dir="${BENCHMARKS_DIR}/ISCAS_total"
 elif [[ $benchmark == mpl_* ]]; then 
     benchmark_dir="${BENCHMARKS_DIR}/mpl_output/ISCAS_sim"
+elif [[ $benchmark == Via1* ]]; then
+    benchmark_dir="/home/local/eda03/shared_benchmarks"
 fi
 
-output="${benchmark%.*}-c${color_num}-out.gds"
-#output=""
+#output="${benchmark%.*}-c${color_num}-out.gds"
+output=""
 
 if [[ $benchmark == output_* ]]; then 
 
@@ -170,6 +173,31 @@ gdb \
 	-algo ${algo} \
     -dbg_comp_id 1686000 \
     -verbose 
+
+elif [[ $benchmark == Via1* ]]; then 
+
+# this parameter works for mpl_sim_c9
+if [[ $color_num == 3 ]]; then 
+    coloring_distance=64
+elif [[ $color_num == 4 ]]; then 
+    coloring_distance=90
+fi
+
+gdb \
+	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
+	--args ./bin/SimpleMPL \
+    -shape "RECTANGLE" \
+	-in "${benchmark_dir}/${benchmark}" \
+	-out "${output}" \
+	-uncolor_layer 71 \
+	-uncolor_layer 72 \
+	-uncolor_layer 73 \
+	-coloring_distance ${coloring_distance} \
+	-color_num ${color_num} \
+	-simplify_level ${simplify_level} \
+	-thread_num ${thread_num} \
+	-algo ${algo} #\
+#	-verbose
 
 fi
 

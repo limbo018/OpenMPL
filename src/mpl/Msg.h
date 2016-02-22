@@ -1,5 +1,5 @@
 /*************************************************************************
-    > File Name: msg.h
+    > File Name: Msg.h
     > Author: Yibo Lin
     > Mail: yibolin@utexas.edu
     > Created Time: Fri 31 Jul 2015 03:18:29 PM CDT
@@ -12,7 +12,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
-#include "namespace.h"
+#include "Namespace.h"
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
