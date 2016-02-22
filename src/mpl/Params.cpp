@@ -18,7 +18,7 @@ bool CmdParser::operator()(int argc, char** argv)
     // append options here 
     typedef limbo::programoptions::ProgramOptions po_type;
     using limbo::programoptions::Value;
-    po_type desc (std::string("SimpleMPL 1.X Usage"));
+    po_type desc (std::string("SimpleMPL 1.1 Usage"));
     desc.add_option(Value<bool>("-help", &help, "toggle printing help message").toggle(true).default_value(false).toggle_value(true).help(true))
         .add_option(Value<std::string>("-in", &parms.input_gds, "input gds file name").required(true))
         .add_option(Value<std::string>("-out", &parms.output_gds, "output gds file name").default_value(defaultParms.output_gds))

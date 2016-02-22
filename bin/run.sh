@@ -27,9 +27,9 @@
     -out out.gds  \
     -coloring_distance 130 \
     -uncolor_layer  100  \
+    -uncolor_layer 201  \
+    -uncolor_layer 202  \
+    -uncolor_layer 203 \
     -color_num 3 \
-    -precolor_layer 201  \
-    -precolor_layer 202  \
-    -precolor_layer 203 \
-    -algo ILP \
+    -algo SDP \
     -thread_num 8
