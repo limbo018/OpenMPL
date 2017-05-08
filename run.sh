@@ -7,22 +7,27 @@
 #!/bin/bash
 
 if [ $# -lt 1 ]; then
-    echo "$0: usage: source run.sh < ISCAS_sim|ISCAS_total > < mpl|nompl >"
+    echo "$0: usage: source run.sh < ISCAS_sim|ISCAS_total > < mpl|nompl > <suffix (optional)>"
     return
 fi
 
 benchmark_suit_hint=$1
 color_num_map=(3 4)
 coloring_distance_map=(120 160) # coloring_distance is paired with color_num
-algo_map=("LP") # BACKTRACK, ILP, LP
-simplify_level=2
+algo_map=("LP") # BACKTRACK, ILP, LP, MIS
+simplify_level=3
 thread_num=8
 use_mpl_output="false"
+suffix=""
 
 if [ $# -ge 2 ]; then
     if [ $2 == "mpl" ]; then
         use_mpl_output="true"
     fi
+fi 
+
+if [ $# -ge 3 ]; then
+    suffix=".$3"
 fi 
 
 # report directory is determined with date 
@@ -116,14 +121,14 @@ for i in "${!color_num_map[@]}"; do
                 #cmd="${cmd} -out ${output}"
 
                 # run command 
-                echo "time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}.rpt 2>&1"
-                time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}.rpt 2>&1
+                echo "time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}${suffix}.rpt 2>&1"
+                time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}${suffix}.rpt 2>&1
             else 
                 # 0 for mpl ILP, 1 for mpl SDP
                 for mpl_algo in `seq 0 1`; do 
                     cmd="${cmd} -in ${benchmark_dir}/${benchmark}_c${color_num}_algo${mpl_algo}.gds"
-                    echo "time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}_mpl${mpl_algo}.rpt 2>&1"
-                    time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}_mpl${mpl_algo}.rpt 2>&1
+                    echo "time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}_mpl${mpl_algo}${suffix}.rpt 2>&1"
+                    time (${cmd}) > ${rpt_dir}/${benchmark}_c${color_num}_${algo}_mpl${mpl_algo}${suffix}.rpt 2>&1
                 done
             fi 
         done

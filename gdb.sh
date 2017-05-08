@@ -7,16 +7,16 @@
 #!/bin/bash
 
 color_num=3
-simplify_level=2
-thread_num=8
-algo=BACKTRACK # BACKTRACK or ILP or LP or SDP
+simplify_level=3
+thread_num=1
+algo=LP # BACKTRACK or ILP or LP or SDP or MIS
 #benchmark="output_4x4-flat.gds"
 #benchmark="Via2_local_precolor.gds"
 #benchmark="via2_local_precolor.gds"
 #benchmark="via2.gds"
-#benchmark="sim_s3.gds"
+benchmark="sim_s2.gds"
 #benchmark="mpl_sim_s3_c${color_num}_algo1.gds" # output from mpl 
-benchmark="Via1_clip_300x300.gds"
+#benchmark="Via1_clip_300x300.gds"
 
 if [[ $benchmark == output_* ]]; then 
 	benchmark_dir="/home/local/eda03/shared_benchmarks/imec_7nm/dpt_array"
@@ -142,7 +142,7 @@ gdb \
 	-simplify_level ${simplify_level} \
 	-thread_num ${thread_num} \
 	-algo ${algo} \
-    -dbg_comp_id 548000 
+    -dbg_comp_id 130 
     #-verbose 
 
 elif [[ $benchmark == mpl_* ]]; then 

@@ -72,6 +72,14 @@ bool CmdParser::operator()(int argc, char** argv)
             mplPrint(kWARN, "SDP is not available without CSDP, set to default algorithm\n");
 #endif
         }
+        else if (limbo::iequals(algo_str, "MIS"))
+        {
+#if GUROBI == 1
+            parms.algo = AlgorithmTypeEnum::MIS_GUROBI; 
+#else 
+            mplPrint(kWARN, "MIS is not available without GUROBI, set to default algorithm\n");
+#endif
+        }
         else if (limbo::iequals(algo_str, "BACKTRACK"))
             parms.algo = AlgorithmTypeEnum::BACKTRACK;
         else mplPrint(kWARN, "Unknown algorithm type %s, set to default algorithm\n", algo_str.c_str());
