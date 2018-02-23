@@ -26,7 +26,7 @@ endif
 ifeq ($(DBG), 1)
 	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING
 else
-	CXXFLAGS = $(CXXFLAGS_RELEASE)
+	CXXFLAGS = $(CXXFLAGS_RELEASE) #-DDEBUG_NONINTEGERS #-DDEBUG_NOANCHOR
 endif
 
 ifeq ($(GPROF), 1)
@@ -49,14 +49,15 @@ endif
 
 INCLUDE = \
 		  -I $(BOOST_DIR)/include \
-		  -I $(LIMBO_DIR)
+		  -I $(LIMBO_DIR)/include
 
 # only gurobi60 is dynamically linked 
 # static libraries have .a as suffix in both unix and darwin 
 # but dynamic libraries have different suffixes 
 LIBS = $(STATIC_LINK_FLAG) \
-	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -lboost_chrono \
-	   -L $(LIMBO_DIR)/lib -lgdsparser -lprogramoptions
+	   -L $(LIMBO_DIR)/lib -lgdsparser -lprogramoptions \
+	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -lboost_chrono -lboost_iostreams \
+	   -L $(ZLIB_DIR) -lz
 
 # boost chrono links to to librt.a under Linux
 ifeq ($(UNAME_S), Linux)
