@@ -19,6 +19,7 @@
 #if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
+#include <limbo/algorithms/coloring/MISColoring.h>
 #endif
 // only valid when lemon cbc api is available 
 #if LEMONCBC == 1
@@ -28,6 +29,16 @@
 #include <limbo/algorithms/coloring/SDPColoringCsdp.h>
 #endif
 #include <limbo/algorithms/coloring/BacktrackColoring.h>
+
+#ifdef DEBUG_NONINTEGERS
+std::vector<unsigned int> vLP1NonInteger; 
+std::vector<unsigned int> vLP1HalfInteger; 
+std::vector<unsigned int> vLP2NonInteger; 
+std::vector<unsigned int> vLP2HalfInteger; 
+std::vector<unsigned int> vLPEndNonInteger; 
+std::vector<unsigned int> vLPEndHalfInteger; 
+std::vector<unsigned int> vLPNumIter; 
+#endif
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
@@ -162,6 +173,10 @@ void SimpleMPL::solve()
 #endif 
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
+#ifdef DEBUG
+        //if (comp_id != 130)
+        //    continue; 
+#endif
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
@@ -169,6 +184,32 @@ void SimpleMPL::solve()
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
 	}
+
+#ifdef DEBUG_NONINTEGERS
+    mplPrint(kNONE, "vLP1NonInteger vLP1HalfInteger vLP2NonInteger vLP2HalfInteger vLPEndNonInteger vLPEndHalfInteger vLPNumIter\n"); 
+    try 
+    {
+        // I make it simple, so it may go out of range 
+        for (uint32_t i = 0; i < vLPNumIter.size(); ++i)
+        {
+            mplPrint(kNONE, "%u %u %u %u %u %u %u\n", 
+                    vLP1NonInteger.at(i), vLP1HalfInteger.at(i), 
+                    vLP2NonInteger.at(i), vLP2HalfInteger.at(i), 
+                    vLPEndNonInteger.at(i), vLPEndHalfInteger.at(i), 
+                    vLPNumIter.at(i)); 
+        }
+    }
+    catch (std::exception const& e)
+    {
+        mplPrint(kERROR, "%s\n", e.what()); 
+    }
+    mplPrint(kNONE, "sum of %lu: %u %u %u %u %u %u %u\n", 
+            vLPNumIter.size(), 
+            limbo::sum(vLP1NonInteger.begin(), vLP1NonInteger.end()), limbo::sum(vLP1HalfInteger.begin(), vLP1HalfInteger.end()), 
+            limbo::sum(vLP2NonInteger.begin(), vLP2NonInteger.end()), limbo::sum(vLP2HalfInteger.begin(), vLP2HalfInteger.end()), 
+            limbo::sum(vLPEndNonInteger.begin(), vLPEndNonInteger.end()), limbo::sum(vLPEndHalfInteger.begin(), vLPEndHalfInteger.end()), 
+            limbo::sum(vLPNumIter.begin(), vLPNumIter.end()));
+#endif
 }
 
 void SimpleMPL::report() const 
@@ -396,6 +437,8 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
             pcs = new lac::ILPColoring<graph_type> (sg); break;
         case AlgorithmTypeEnum::LP_GUROBI:
             pcs = new lac::LPColoring<graph_type> (sg); break;
+        case AlgorithmTypeEnum::MIS_GUROBI:
+            pcs = new lac::MISColoring<graph_type> (sg); break;
 #endif
 #if LEMONCBC == 1
         case AlgorithmTypeEnum::ILP_CBC:
@@ -416,6 +459,7 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 
     return pcs;
 }
+
 /// given a graph, solve coloring 
 /// contain nested call for itself 
 uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, 
@@ -425,6 +469,10 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs (dg, m_db->color_num());
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
+#ifdef DEBUG
+    if (comp_id == 130)
+        mplPrint(kDEBUG, "stop\n"); 
+#endif
     // set max merge level, actually it only works when MERGE_SUBK4 is on 
     if (m_db->color_num() == 3)
         gs.max_merge_level(3);
@@ -472,12 +520,17 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
         // 1st trial 
 		double obj_value1 = (*pcs)(); // solve coloring 
+#ifdef DEBUG
+        mplPrint(kDEBUG, "comp_id = %u, %lu vertices, obj_value1 = %g\n", comp_id, num_vertices(sg), obj_value1); 
+#endif
         // 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
         double obj_value2 = std::numeric_limits<double>::max();
-        // very restric condition to determin whether perform MERGE_SUBK4 or not 
+#ifndef DEBUG_NONINTEGERS
+        // very restrict condition to determin whether perform MERGE_SUBK4 or not 
         if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
             obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
+#endif
 
         // choose smaller objective value 
         if (obj_value1 < obj_value2)
