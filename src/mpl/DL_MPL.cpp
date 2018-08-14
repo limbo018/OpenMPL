@@ -153,63 +153,70 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
 	}
 }
 
-void MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set, 
+bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set, 
 			int vertex_numbers, int mask_numbers,
 			std::map<int, int> & Delete_the_Row_in_which_Col,
 			std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector)
 {
-	// std::cout << std::endl << "In depth " << depth << std::endl;
+	std::cout << std::endl << "In depth " << depth << std::endl;
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
 		// std::cout << "end of MPLD" << std::endl;
-		std::cout << "Solution : " << std::endl;
-		Decode(vertex_numbers, mask_numbers, result_vec);
-		return;
+		// std::cout << "Solution : " << std::endl;
+		Decode(vertex_numbers, mask_numbers, result_vec, conflict_set);
+		return true;
 	}
 	int this_col;
 	if (dl.DL_Header.Right->Col > vertex_numbers )
 	{
-		// std::cout << "col : " << dl.DL_Header.Right->Col << std::endl;
+		std::cout << "col : " << dl.DL_Header.Right->Col << std::endl;
 		this_col = Sorting_Queue(dl);
 	}
 	else
 	{
-		// std::cout << "col : " << dl.DL_Header.Right->Col << std::endl;
+		std::cout << "col : " << dl.DL_Header.Right->Col << std::endl;
 		this_col = Next_Column(MPLD_search_vector, depth);
-		// std::cout << "this_col : " << this_col << std::endl;
+		std::cout << "this_col : " << this_col << std::endl;
 	}
 	Cell *col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
 	if (col->Children_Number == 0)
 	{
-		// std::cout << "Col " << this_col << " No children." << std::endl;
+		std::cout << "Col " << this_col << " No children." << std::endl;
+		std::cout << "find conflicts" << std::endl;
 		int last_row = Order_of_Row_Deleted_in_Col[this_col].back();
 		int conflict_col = Delete_the_Row_in_which_Col[last_row];
+		std::cout << this_col << " and " << conflict_col << std::endl;
 		conflict_set.insert(std::make_pair(conflict_col, this_col));
-		MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector);
+		if (MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector))
+			return true;
 	}
 	for (Cell *j = col->Down; j != col; j = j->Down)
 	{
 		std::set<int> row_set;
 		std::set<int> col_set;
-		// std::cout << "j->Row : " << j->Row << std::endl;
+		std::cout << "j->Row : " << j->Row << std::endl;
 		result_vec.push_back(j->Row);
 		Select_All_Rows_Cols(dl, j->Row, row_set, col_set);
 		store_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 
 		Remove_Rows_Cols(dl, row_set, col_set);
-		MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector);
+		if (MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector))
+			return true;
 
 		result_vec.pop_back();
 		recover_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 		Recover_Rows_Cols(dl, row_set, col_set);
 	}
 	LR_recover(*col);
+	return false;
 }
 
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec)
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>> conflict_set)
 {
 	std::map<int, int> Final_Color;
+	std::ofstream fileout("result.txt");
+	fileout << "Solution : " << std::endl;
 	for (auto i = result_vec.begin(); i != result_vec.end(); i++)
 	{
 		// std::cout << *i << std::endl;
@@ -219,9 +226,21 @@ void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec)
 	}
 	for (auto i = Final_Color.begin(); i != Final_Color.end(); i++)
 	{
-		std::cout << "Vertex " << i->first << " \t : " << i->second << std::endl;
+		fileout << "Vertex " << i->first << " \t : " << i->second << std::endl;
 	}
-	std::cout << "=============================================" << std::endl;
+	fileout << "=============================================" << std::endl;
+
+	if (!conflict_set.empty())
+	{
+		fileout << "Conflicts: " << std::endl;
+		fileout << "No\t Source\t Target" << std::endl;
+		int count = 1;
+		for (auto i = conflict_set.begin(); i != conflict_set.end(); i++)
+			fileout << count++ << "\t " << i->first << "\t " << i->second << std::endl;
+		fileout << "=============================================" << std::endl;
+	}
+	
+	fileout.close();
 } 
 
 void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers)
@@ -239,14 +258,6 @@ void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, b
 	DL_Load(dl, Exact_Cover_Filename);
 	int depth = 1;
 	MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector);
-	if (!conflict_set.empty())
-	{
-		std::cout << "Conflicts : " << std::endl;
-		std::cout << "No\t Source\t Target" << std::endl;
-		int count = 1;
-		for (auto i = conflict_set.begin(); i != conflict_set.end(); i++)
-			std::cout << count++ << "\t " << i->first << "\t " << i->second << std::endl;
-	}
 	/*
 	else {
 		std::cout << "With result : " << std::endl;
