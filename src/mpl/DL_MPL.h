@@ -14,7 +14,7 @@
  *			is a struct object storing the target vertex and edge No. For a undirected graph, each edge has two duplicates in the map,
  *			while their indices are source and target respectively.
  */
-std::map<int, std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers, int & mask_numbers);
+std::map<int, std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers); //, int & mask_numbers);
 
 /*
  * @brief:	This function calculates and returns the column covering order by BFS traversal. 
@@ -139,5 +139,6 @@ void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec);
  *									- 3rd line: number of 1s in the dlx
  *									- following lines: the location of 1, [row_No, col_No]
  * @param	whether_BFS:			whether we use the BFS order
+ * @param	mask_numbers:			the number of masks
  */
-void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS);
+void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers);

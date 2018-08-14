@@ -55,9 +55,24 @@ void SimpleMPL::run(int argc, char** argv)
     this->reset(false);
 	this->read_cmd(argc, argv);
 	this->read_gds();
-	this->solve();
+	this->solve(m_db->output_gds().c_str());
 	this->report();
 	this->write_gds();
+}
+void SimpleMPL::produce_graph_run(int32_t argc, char **argv)
+{
+    this->reset(false);
+    this->read_cmd(argc, argv);
+    this->read_gds();
+    std::string vertex_file_name = m_db->output_gds().c_str();
+    std::string adjacency_file_name = m_db->output_gds().c_str();
+    vertex_file_name.replace(vertex_file_name.end()-4, vertex_file_name.end(),"_vertex.csv");
+    adjacency_file_name.replace(adjacency_file_name.end()-4, adjacency_file_name.end(), "_adjacency.csv");
+    std::cout<<"vertex_file_name : "<<vertex_file_name<<std::endl;
+    std::cout<<"adjacency_file_name : "<<adjacency_file_name<<std::endl;
+    this->construct_graph_with_outputs(vertex_file_name, adjacency_file_name);
+    this->solve(m_db->output_gds().c_str());
+
 }
 void SimpleMPL::reset(bool init)
 {
@@ -80,7 +95,7 @@ void SimpleMPL::read_cmd(int argc, char** argv)
     // in order to support run-time switch of layoutdb_type
     // we need to construct a dummy ControlParameter for CmdParser
     // then construct actual layoutdb_type according to the option of CmdParser
-
+    std::cout<<"In SimpleMPL::read_cmd() being"<<std::endl;
     // construct a dummy ControlParameter
     ControlParameter tmpParms;
 	// read command 
@@ -95,10 +110,12 @@ void SimpleMPL::read_cmd(int argc, char** argv)
         m_db = new LayoutDBPolygon;
     // get options from dummy ControlParameter
     tmpParms.swap(m_db->parms);
+    std::cout<<"In SimpleMPL::read_cmd() end"<<std::endl;
 }
 
 void SimpleMPL::read_gds()
 {
+    std::cout<<"In SimpleMPL::read_gds() begin"<<std::endl;
     char buf[256];
     mplSPrint(kINFO, buf, "reading input files takes %%t seconds CPU, %%w seconds real\n");
 	boost::timer::auto_cpu_timer timer (buf);
@@ -110,6 +127,7 @@ void SimpleMPL::read_gds()
 	m_db->initialize_data();
 	// report data 
 	m_db->report_data();
+    std::cout<<"In SimpleMPL::read_cmd() end"<<std::endl;
 }
 
 void SimpleMPL::write_gds()
@@ -128,12 +146,12 @@ void SimpleMPL::write_gds()
 	writer(m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 }
 
-void SimpleMPL::solve()
+void SimpleMPL::solve(std::string simplified_graph)
 {
     // skip if no uncolored layer 
     if (m_db->parms.sUncolorLayer.empty())
         return;
-
+    std::cout<<"In SimpleMPL::solve() begin"<<std::endl;
     char buf[256];
     mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
 	boost::timer::auto_cpu_timer timer (buf);
@@ -180,9 +198,11 @@ void SimpleMPL::solve()
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
-        // solve component 
-        // pass iterators to save memory 
-        this->solve_component(itBgn, itEnd, comp_id);
+        // this->store_component(itBgn, itEnd, comp_id);
+        // solve component
+        // pass iterators to save memory
+        // Here we only want to store the components instead of solving them. If you want to solve them, please uncomment the next line.
+        this->solve_component(itBgn, itEnd, comp_id, simplified_graph);
 	}
 
 #ifdef DEBUG_NONINTEGERS
@@ -210,6 +230,7 @@ void SimpleMPL::solve()
             limbo::sum(vLPEndNonInteger.begin(), vLPEndNonInteger.end()), limbo::sum(vLPEndHalfInteger.begin(), vLPEndHalfInteger.end()), 
             limbo::sum(vLPNumIter.begin(), vLPNumIter.end()));
 #endif
+    std::cout<<"In SimpleMPL::solve() end"<<std::endl;
 }
 
 void SimpleMPL::report() const 
@@ -219,12 +240,104 @@ void SimpleMPL::report() const
         mplPrint(kINFO, "Color %d density = %u\n", i, m_vColorDensity[i]);
 }
 
+void SimpleMPL::construct_graph_with_outputs(std::string vertex_file_name, std::string adjacency_file_name)
+{
+    // skip if no uncolored layer
+    if (m_db->parms.sUncolorLayer.empty())
+        return;
+
+    char buf[256];
+    mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
+    boost::timer::auto_cpu_timer timer (buf);
+    if (m_db->vPatternBbox.empty())
+    {
+        mplPrint(kWARN, "No patterns found in specified layers\n");
+        return;
+    }
+
+    mplPrint(kINFO, "Constructing graph for %lu patterns...\n", m_db->vPatternBbox.size());
+    // construct vertices
+    // assume vertices start from 0 and end with vertex_num - 1
+    uint32_t vertex_num = m_db->vPatternBbox.size();
+    std::ofstream vertex_out(vertex_file_name.c_str());
+    for (int i=0; i < vertex_num; i++)
+    {
+        vertex_out << gtl::xl(*(m_db->vPatternBbox[i])) << ","
+                   << gtl::yl(*(m_db->vPatternBbox[i])) << ","
+                   << gtl::xh(*(m_db->vPatternBbox[i])) << ","
+                   << gtl::yh(*(m_db->vPatternBbox[i])) << std::endl;
+                   //<< m_db->vPatternBbox[i]->pattern_id() << " "
+    }
+    vertex_out.close();
+
+    uint32_t edge_num = 0;
+    m_vVertexOrder.resize(vertex_num, std::numeric_limits<uint32_t>::max());
+
+    // construct edges
+    m_mAdjVertex.resize(vertex_num);
+    if(m_db->hPath.empty()) // construct from distance
+    {
+        std::ofstream adjacency_out(adjacency_file_name.c_str());
+        for(uint32_t v=0; v < vertex_num; ++v)
+        {
+            rectangle_pointer_type const& pPattern = m_db->vPatternBbox[v];
+            std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[v];
+
+            // find patterns connected with pPattern
+            // query tPatternBbox in m_db
+            rectangle_type rect(*pPattern);
+            // bloat pPattern with minimum coloring distance
+            gtl::bloat(rect, gtl::HORIZONTAL, m_db->coloring_distance);
+            gtl::bloat(rect, gtl::VERTICAL, m_db->coloring_distance);
+
+            for(rtree_type::const_query_iterator itq = m_db->tPatternBbox.qbegin(bgi::intersects(rect));
+                itq != m_db->tPatternBbox.qend(); ++itq)
+            {
+                rectangle_pointer_type const& pAdjPattern = *itq;
+                if(pAdjPattern != pPattern) // skip pPattern itself
+                {
+                    mplAssert(pAdjPattern->pattern_id() != pPattern->pattern_id());
+                    // we consider euclidean distance
+                    // use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
+                    coordinate_difference distance = m_db->euclidean_distance(*pAdjPattern, *pPattern);
+                    if(distance < m_db->coloring_distance)
+                        vAdjVertex.push_back(pAdjPattern->pattern_id());
+                }
+            }
+            vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory
+            // parallel with omp reduction here
+            uint32_t nei_num = vAdjVertex.size();
+            for(int i = 0; i < nei_num; i++)
+            {
+                adjacency_out << pPattern->pattern_id() << "," << vAdjVertex[i] << "\n";
+            }
+            edge_num += vAdjVertex.size();
+        }
+        adjacency_out.close();
+    }
+    else
+        edge_num = construct_graph_from_paths(vertex_num);
+    m_vCompId.resize(vertex_num, std::numeric_limits<uint32_t>::max());
+    m_vColorDensity.assign(m_db->color_num(), 0);
+    m_vConflict.clear();
+    edge_num = edge_num>>1;
+    std::cout << "edge_num : " << edge_num << std::endl;
+}
+
+
 void SimpleMPL::construct_graph()
 {
+    std::cout<<"In SimpleMPL::construct_graph() begin"<<std::endl;
 	mplPrint(kINFO, "Constructing graph for %lu patterns...\n", m_db->vPatternBbox.size());
 	// construct vertices 
 	// assume vertices start from 0 and end with vertex_num-1
 	uint32_t vertex_num = m_db->vPatternBbox.size();
+    std::ofstream vertex_out("/home/qisun/vertex_out.txt");
+    for (int i=0; i < vertex_num; i++)
+    {
+        vertex_out << m_db->vPatternBbox[i]->pattern_id() << std::endl;
+    }
+    vertex_out.close();
 	uint32_t edge_num = 0;
 	m_vVertexOrder.resize(vertex_num, std::numeric_limits<uint32_t>::max()); 
 
@@ -241,10 +354,12 @@ void SimpleMPL::construct_graph()
 
 	// report statistics 
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
+    std::cout<<"In SimpleMPL::construct_graph() end"<<std::endl;
 }
 
 uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
 {
+    std::cout<<"In SimpleMPL::construct_graph_from_distance() begin"<<std::endl;
     uint32_t edge_num = 0;
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:edge_num)
@@ -275,14 +390,17 @@ uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
             }
         }
         vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
-        // parallel with omp reduction here 
+        // parallel with omp reduction here
+
         edge_num += vAdjVertex.size();
     }
+    std::cout<<"In SimpleMPL::construct_graph_from_distance() end"<<std::endl;
     return edge_num;
 }
 
 uint32_t SimpleMPL::construct_graph_from_paths(uint32_t vertex_num)
 {
+    std::cout<<"In SimpleMPL::construct_graph_from_paths() begin"<<std::endl;
     // at the same time, estimate a coloring distance from conflict edges 
     m_db->coloring_distance = 0;
     for (set<int32_t>::const_iterator itLayer = m_db->parms.sPathLayer.begin(), itLayerE = m_db->parms.sPathLayer.end(); itLayer != itLayerE; ++itLayer)
@@ -329,7 +447,7 @@ uint32_t SimpleMPL::construct_graph_from_paths(uint32_t vertex_num)
 #endif
             {
                 // if the input gds file contains duplicate edges 
-                // we will have duplicate edges here 
+                // we will have duplicate edges here
                 m_mAdjVertex[pPattern1->pattern_id()].push_back(pPattern2->pattern_id());
                 m_mAdjVertex[pPattern2->pattern_id()].push_back(pPattern1->pattern_id());
                 // estimate coloring distance 
@@ -353,12 +471,13 @@ uint32_t SimpleMPL::construct_graph_from_paths(uint32_t vertex_num)
     }
     m_db->parms.coloring_distance_nm = m_db->coloring_distance*(m_db->unit*1e+9);
     mplPrint(kINFO, "Estimated coloring distance from conflict edges = %lld (%g nm)\n", m_db->coloring_distance, m_db->coloring_distance_nm());
-
+    std::cout<<"In SimpleMPL::construct_graph_from_paths() end"<<std::endl;
     return edge_num;
 }
 
 void SimpleMPL::connected_component()
 {
+    std::cout<<"In SimpleMPL::connected_component() begin"<<std::endl;
 	mplPrint(kINFO, "Computing connected components...\n");
 	uint32_t comp_id = 0;
 	uint32_t order_id = 0; // position in an ordered pattern array with grouped components 
@@ -395,10 +514,12 @@ void SimpleMPL::connected_component()
 	for (uint32_t v = 1; v != vertex_num; ++v)
 		mplAssert(m_vCompId[m_vVertexOrder[v-1]] <= m_vCompId[m_vVertexOrder[v]]);
 #endif
+    std::cout<<"In SimpleMPL::connected_component() end"<<std::endl;
 }
 
 void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& order_id)
 {
+    std::cout<<"In SimpleMPL::depth_first_search() begin"<<std::endl;
     std::stack<uint32_t> vStack; 
 	vStack.push(source);
 
@@ -419,6 +540,7 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 			}
 		}
 	}
+    std::cout<<"In SimpleMPL::depth_first_search() end"<<std::endl;
 }
 
 ///// helper functions for SimpleMPL::solve_component
@@ -464,7 +586,7 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 /// contain nested call for itself 
 uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, 
         std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
-        uint32_t simplify_strategy, std::vector<int8_t>& vColor) const
+        uint32_t simplify_strategy, std::vector<int8_t>& vColor, std::string simplified_graph) const
 {
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs (dg, m_db->color_num());
@@ -479,6 +601,8 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
     else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better 
         gs.max_merge_level(2);
     gs.simplify(simplify_strategy);
+    gs.write_simplified_graph_by_component(simplified_graph);
+    std::cout<<"Simplification Finished."<<std::endl;
 	// collect simplified information 
     std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 
@@ -529,7 +653,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
         // very restrict condition to determin whether perform MERGE_SUBK4 or not 
         if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
-            obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
+            obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor, simplified_graph); // call again
 #endif
 
         // choose smaller objective value 
@@ -598,7 +722,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 	}
 }
 
-uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph)
 {
 	if (itBgn == itEnd) return 0;
 #ifdef DEBUG
@@ -613,7 +737,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     uint32_t acc_obj_value = std::numeric_limits<uint32_t>::max();
     // if current pattern does not contain uncolored patterns, directly calculate conflicts 
     if (check_uncolored(itBgn, itEnd)) 
-        acc_obj_value = coloring_component(itBgn, itEnd, comp_id);
+        acc_obj_value = coloring_component(itBgn, itEnd, comp_id, simplified_graph);
 
 	// update global color density map 
 	// if parallelization is enabled, there will be uncertainty in the density map 
@@ -639,7 +763,89 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	return component_conflict_num;
 }
 
-uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+void SimpleMPL::store_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+{
+    std::cout << "In SimpleMPL::store_component. This is Component "<< comp_id << " !" << std::endl;
+    if (itBgn == itEnd)
+    {
+        std::cout << "This Component " << comp_id << " has only one pattern. We don't need to consider this component!" << std::endl;
+        return;
+    }
+    std::ostringstream ss;
+    ss << comp_id;
+    std::string id_str = ss.str();
+    std::string id_suffix = "_" + id_str;
+    std::string file_name = m_db->output_gds().c_str();
+    file_name.replace(file_name.end()-4, file_name.end(), id_suffix);
+    std::string vertex_file_name = file_name + "_vertex.txt";
+    std::string adjacency_file_name = file_name + "_adjacency.txt";
+
+    std::ofstream vertex_out(vertex_file_name.c_str());
+    std::ofstream adjacency_out(adjacency_file_name.c_str());
+    for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
+    {
+        rectangle_pointer_type const& pPattern = m_db->vPatternBbox[*it];
+        std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
+        uint32_t nei_num = vAdjVertex.size();
+        adjacency_out<<pPattern->pattern_id()<< " ";
+        for (int i = 0; i < nei_num; i++)
+        {
+            adjacency_out << vAdjVertex[i] << " ";
+        }
+        adjacency_out<< std::endl;
+        vertex_out << m_db->vPatternBbox[*it]->pattern_id() << " "
+                   << gtl::xl(*(m_db->vPatternBbox[*it])) << " "
+                   << gtl::yl(*(m_db->vPatternBbox[*it])) << " "
+                   << gtl::xh(*(m_db->vPatternBbox[*it])) << " "
+                   << gtl::yh(*(m_db->vPatternBbox[*it])) << std::endl;
+    }
+    vertex_out.close();
+    adjacency_out.close();
+    std::cout<<" Store Component " << comp_id <<" Successfully!"<<std::endl;
+}
+
+void store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+{
+	std::cout << "In SimpleMPL::store_component. This is Component "<< comp_id << " !" << std::endl;
+    if (itBgn == itEnd)
+    {
+        std::cout << "This Component " << comp_id << " has only one pattern. We don't need to consider this component!" << std::endl;
+        return;
+    }
+    std::ostringstream ss;
+    ss << comp_id;
+    std::string id_str = ss.str();
+    std::string id_suffix = "_" + id_str;
+    std::string file_name = m_db->output_gds().c_str();
+    file_name.replace(file_name.end()-4, file_name.end(), id_suffix);
+    std::string dlx_file_name = file_name + "_dlx.txt";
+
+    std::ofstream dlx_out(dlx_file_name.c_str());
+    int vertex_number = 0;
+    int edge_numbers = 0;
+    for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
+    {
+    	vertex_number += m_db->vPatternBbox[*it].size();
+        rectangle_pointer_type const& pPattern = m_db->vPatternBbox[*it];
+        std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
+        edge_numbers += vAdjVertex.size();
+    }
+    dlx_out << vertex_number << std::endl << edge_numbers << std::endl;
+    for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
+    {
+    	rectangle_pointer_type const& pPattern = m_db->vPatternBbox[*it];
+        std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
+        uint32_t nei_num = vAdjVertex.size();
+        for (int i = 0; i < nei_num; i++)
+        {
+            dlx_out<<pPattern->pattern_id()<< " "<<dlx_out << vAdjVertex[i] << std::endl;
+        }
+    }
+    dlx_out.close();
+    std::cout<<" Store Component " << comp_id <<" Successfully!"<<std::endl;
+}
+
+uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph)
 {
 	// construct a graph for current component 
 	uint32_t pattern_cnt = itEnd-itBgn;
@@ -670,7 +876,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
     // solve graph coloring 
-    uint32_t acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor);
+    uint32_t acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, simplified_graph);
 
 #ifdef DEBUG
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
@@ -772,6 +978,7 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
 
 void SimpleMPL::print_welcome() const
 {
+    std::cout<<"In print_welcome()"<<std::endl;
   mplPrint(kNONE, "\n\n");
   mplPrint(kNONE, "=======================================================================\n");
   mplPrint(kNONE, "                      SimpleMPL - Version 1.1                        \n");
@@ -784,4 +991,3 @@ void SimpleMPL::print_welcome() const
 }
 
 SIMPLEMPL_END_NAMESPACE
-

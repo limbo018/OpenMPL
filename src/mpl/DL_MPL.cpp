@@ -1,11 +1,11 @@
 #include"DL_MPL.h"
 
 
-std::map<int, std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers, int & mask_numbers)
+std::map<int, std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers)
 {
 	std::ifstream filein(filename);
 	// std::cout << "filename : " << filename << std::endl;
-	filein >> vertex_numbers >> edge_numbers >> mask_numbers;
+	filein >> vertex_numbers >> edge_numbers; // >> mask_numbers;
 	/*
 	std::cout << "vertex_numbers : " << vertex_numbers << std::endl;
 	std::cout << "edge_numbers : " << edge_numbers << std::endl;
@@ -79,7 +79,7 @@ void Convert_to_Exat_Cover(std::string infilename, std::string Exact_Cover_Filen
 {
 	std::ofstream fileout(Exact_Cover_Filename);
 
-	std::map<int, std::list<Edge_Simple>> edge_list = Read_Graph_File(infilename, vertex_numbers, edge_numbers, mask_numbers);
+	std::map<int, std::list<Edge_Simple>> edge_list = Read_Graph_File(infilename, vertex_numbers, edge_numbers); //, mask_numbers);
 
 	if (whether_BFS)
 		MPLD_search_vector = BFS_Order(edge_list);
@@ -224,17 +224,16 @@ void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec)
 	std::cout << "=============================================" << std::endl;
 } 
 
-void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS)
+void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers)
 {
 	int vertex_numbers;
 	int edge_numbers;
-	int mask_numbers;
 	std::vector<int> result_vec;
 	std::set<std::pair<int, int>> conflict_set;
 	std::map<int, int> Delete_the_Row_in_which_Col;
 	std::map<int, std::list<int>> Order_of_Row_Deleted_in_Col;
 	std::vector<int> MPLD_search_vector;
-
+	
 	Convert_to_Exat_Cover(Graph_Filename, Exact_Cover_Filename, whether_BFS, vertex_numbers, edge_numbers, mask_numbers, MPLD_search_vector);
 	DancingLink dl;
 	DL_Load(dl, Exact_Cover_Filename);
