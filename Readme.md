@@ -24,5 +24,5 @@ The Csdp API used in SimpleMPL has been modified and built for threading safety 
 |  Name              | Affiliation                |  email                            |
 | ------------------ | -------------------------- | --------------------------------- |
 | Yibo Lin           | ECE Dept, UT Austin        | yibolin@cerc.utexas.edu           |
-| Bei Yu             | ECE Dept, UT Austin        | bei@cerc.utexas.edu               |
+| Bei Yu             | CSE Dept, CUHK             | byu@cse.cuhk.edu.hk               |
 | David Z. Pan       | ECE Dept, UT Austin        | dpan@ece.utexas.edu               |
