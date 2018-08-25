@@ -156,14 +156,14 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
 bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set, 
 			int vertex_numbers, int mask_numbers,
 			std::map<int, int> & Delete_the_Row_in_which_Col,
-			std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector)
+			std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string reslut_file)
 {
 	std::cout << std::endl << "In depth " << depth << std::endl;
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
 		// std::cout << "end of MPLD" << std::endl;
 		// std::cout << "Solution : " << std::endl;
-		Decode(vertex_numbers, mask_numbers, result_vec, conflict_set);
+		Decode(vertex_numbers, mask_numbers, result_vec, conflict_set, reslut_file);
 		return true;
 	}
 	int this_col;
@@ -212,10 +212,10 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std
 	return false;
 }
 
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>> conflict_set)
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>> conflict_set, std::string filename)
 {
 	std::map<int, int> Final_Color;
-	std::ofstream fileout("result.txt");
+	std::ofstream fileout(filename);
 	fileout << "Solution : " << std::endl;
 	for (auto i = result_vec.begin(); i != result_vec.end(); i++)
 	{
@@ -243,7 +243,7 @@ void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, s
 	fileout.close();
 } 
 
-void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers)
+void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string result_file)
 {
 	int vertex_numbers;
 	int edge_numbers;
@@ -257,7 +257,7 @@ void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, b
 	DancingLink dl;
 	DL_Load(dl, Exact_Cover_Filename);
 	int depth = 1;
-	MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector);
+	MPLD_X_Solver(dl, result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector, result_file);
 	/*
 	else {
 		std::cout << "With result : " << std::endl;

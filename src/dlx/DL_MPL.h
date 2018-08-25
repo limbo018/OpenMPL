@@ -107,12 +107,13 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
  *											which means this row is covered due to the selection of the column.
  * @param	Order_of_Row_Deleted_in_Col:	a map whose index is the No. of a column, the corresponding value is a list storing
  *											the children's row No. in the order of removement.
+ * @param	result_file:	the file storing the final result
  */
 bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set,
 	int vertex_numbers, int mask_numbers,
 	std::map<int, int> & Delete_the_Row_in_which_Col,
 	std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col, 
-	int depth, std::vector<int> & MPLD_search_vector);
+	int depth, std::vector<int> & MPLD_search_vector, std::string result_file);
 
 
 /*
@@ -120,8 +121,9 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std
  * @param	vertex_numbers:		the number of vertices in the graph
  * @param	mask_numbers:		the number of masks in the MPLD problem
  * @param	result_vec:			a vector storing the all the chosen rows
+ * @param	filename:			the file storing the result
  */
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>>  conflict_set);
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>>  conflict_set, std::string filename);
 
 /*
  * @brief:	MPLD_Solver
@@ -140,5 +142,6 @@ void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, s
  *									- following lines: the location of 1, [row_No, col_No]
  * @param	whether_BFS:			whether we use the BFS order
  * @param	mask_numbers:			the number of masks
+ * @param	result_file:			the file storing the result
  */
-void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers);
+void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string result_file);
