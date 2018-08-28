@@ -1,6 +1,6 @@
 # OpenMPL
 
-> **OpenMPL** stands for simple multiple patterning lithography framework.
+> **OpenMPL** stands for open multiple patterning lithography framework.
 ### Pre-requisite
 
 - [Limbo](https://github.com/limbo018/Limbo): require LIMBO_DIR environment variable to the path where Limbo is installed. OpenMPL is based on Limbo library.
