@@ -1,15 +1,15 @@
-#SimpleMPL
+# OpenMPL
 
-> **SimpleMPL** stands for simple multiple patterning lithography framework.
+> **OpenMPL** stands for simple multiple patterning lithography framework.
 ### Pre-requisite
 
-- [Limbo](https://github.com/limbo018/Limbo): require LIMBO_DIR environment variable to the path where Limbo is installed. SimpleMPL is based on Limbo library.
+- [Limbo](https://github.com/limbo018/Limbo): require LIMBO_DIR environment variable to the path where Limbo is installed. OpenMPL is based on Limbo library.
 
 ### How To Compile
 
 ```bash
-$ git clone https://github.com/limbo018/SimpleMPL.git
-$ cd simplempl/src/mpl/
+$ git clone https://github.com/limbo018/OpenMPL.git
+$ cd OpenMPL/src/mpl/
 $ make
 ```
 Here are some optional parameters when make :
@@ -40,13 +40,13 @@ CSDP = 0
      LP  (Gurobi API)
  * Dancing Links
 
-The Csdp API used in SimpleMPL has been modified and built for threading safety at high level. 
+The Csdp API used in OpenMPL has been modified and built for threading safety at high level. 
 
 ### How To Execute
 
 ```bash
 $ cd bin/
-$ ./SimpleMPL
+$ ./OpenMPL
 ```
 
 A table of options :
@@ -72,13 +72,13 @@ Now Dancing Links is an independent component, and the source code is in /src/dl
 
 ### License
 
-- BSD-3-clause License [[LINK](https://github.com/limbo018/SimpleMPL/blob/master/LICENSE)]
+- BSD-3-clause License [[LINK](https://github.com/limbo018/OpenMPL/blob/master/LICENSE)]
 
 ### Authors
 
 | Name         | Affiliation         | email                                                     |
 | ------------ | ------------------- | --------------------------------------------------------- |
-| Yibo Lin     | ECE Dept, UT Austin | [yibolin@cerc.utexas.edu](mailto:yibolin@cerc.utexas.edu) |
+| Yibo Lin     | ECE Dept, UT Austin | [yibolin@utexas.edu](mailto:yibolin@utexas.edu) |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |
 
