@@ -774,7 +774,7 @@ void SimpleMPL::print_welcome() const
 {
   mplPrint(kNONE, "\n\n");
   mplPrint(kNONE, "=======================================================================\n");
-  mplPrint(kNONE, "                      SimpleMPL - Version 1.1                        \n");
+  mplPrint(kNONE, "                      OpenMPL - Version 1.1                        \n");
   mplPrint(kNONE, "                                by                                   \n");  
   mplPrint(kNONE, "                   Yibo Lin, Bei Yu, and  David Z. Pan               \n");
   mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");

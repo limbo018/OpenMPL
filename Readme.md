@@ -70,6 +70,8 @@ A table of options :
 
 Now Dancing Links is an independent component, and the source code is in /src/dlx. One example is in DL_main.cpp. 
 
+One exmaple : /bin/run.sh.
+
 ### License
 
 - BSD-3-clause License [[LINK](https://github.com/limbo018/OpenMPL/blob/master/LICENSE)]
@@ -80,6 +82,7 @@ Now Dancing Links is an independent component, and the source code is in /src/dl
 | ------------ | ------------------- | --------------------------------------------------------- |
 | Yibo Lin     | ECE Dept, UT Austin | [yibolin@utexas.edu](mailto:yibolin@utexas.edu) |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
+| Qi Sun       | CSE Dept, CUHK      | [qsun@cse.cuhk.edu.hk](mailto:qsun@cse.cuhk.edu.hk)       |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |
 
 

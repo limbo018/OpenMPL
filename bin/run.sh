@@ -21,7 +21,7 @@
 
 # if the benchmark contains polygon shapes, -shape must be set to POLYGON;
 # otherwise, set -shape to RECTANGLE is more memory efficient
-./SimpleMPL  \
+./OpenMPL  \
     -shape RECTANGLE \
     -in bench/via2_local_precolor.gds  \
     -out out.gds  \

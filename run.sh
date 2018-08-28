@@ -104,7 +104,7 @@ for i in "${!color_num_map[@]}"; do
     for algo in "${algo_map[@]}"; do
 
         for benchmark in "${benchmark_map[@]}"; do
-            cmd="./bin/SimpleMPL -shape ${shape} -simplify_level ${simplify_level} -thread_num ${thread_num}"
+            cmd="./bin/OpenMPL -shape ${shape} -simplify_level ${simplify_level} -thread_num ${thread_num}"
             for precolor_layer in "${precolor_layer_map[@]}"; do
                 cmd="${cmd} -precolor_layer ${precolor_layer}"
             done

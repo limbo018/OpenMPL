@@ -115,7 +115,7 @@ OBJS_NOMAIN = $(filter-out $(OBJDIR)/main.o, $(OBJS)) # filter out main.o
 DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source
 
 LIB = $(LIBDIR)/SimpleMPL.a
-EXE	= $(EXEDIR)/SimpleMPL
+EXE	= $(EXEDIR)/OpenMPL
 
 .SUFFIXES: .cc .cpp .o .x
 
