@@ -14,7 +14,7 @@
  *			is a struct object storing the target vertex and edge No. For a undirected graph, each edge has two duplicates in the map,
  *			while their indices are source and target respectively.
  */
-std::map<int, std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers); //, int & mask_numbers);
+std::vector<std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers);
 
 /*
  * @brief:	This function calculates and returns the column covering order by BFS traversal. 
@@ -23,12 +23,13 @@ std::map<int, std::list<Edge_Simple>> Read_Graph_File(std::string filename, int 
  * @return	std::vector<int>
  *			a vector in which the elements are stored in order of BFS, each element means the column No. 
  */
-std::vector<int> BFS_Order(std::map<int, std::list<Edge_Simple>> & edge_list);
+
+std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple>> & edge_list);
 
 /*
  * @brief:	This function returns a simple order for next-column selecting in the order of vertex index.
  */
-std::vector<int> Simple_Order(std::map<int, std::list<Edge_Simple>> & edge_list);
+std::vector<int> Simple_Order(int size);
 
 /*
  * @brief:	This function returns the column with least children.
@@ -51,7 +52,7 @@ int Sorting_Queue(DancingLink & dl);
  * @param	mask_numbers:	the number of mask in the MPLD problem
  * 
  */
-void Convert_to_Exat_Cover(std::string infilename, std::string Exact_Cover_Filename, bool whether_BFS,
+void Convert_to_Exat_Cover(int & row_numbers, int & col_numbers, std::string infilename, std::string Exact_Cover_Filename, bool whether_BFS,
 	int & vertex_numbers, int & edge_numbers, int & mask_numbers, std::vector<int> & MPLD_search_vector);
 
 /*
@@ -84,15 +85,15 @@ bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers);
  *											the children's row No. in the order of removement.
  */
 void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & row_set,
-	std::map<int, int> & Delete_the_Row_in_which_Col,
-	std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col);
+	std::vector<int> & Delete_the_Row_in_which_Col,
+	std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col);
 
 /*
  * @brief:	This function is the reverse process of store_intermediate_process()
  */
 void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
-	std::map<int, int> & Delete_the_Row_in_which_Col,
-	std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col);
+	std::vector<int> & Delete_the_Row_in_which_Col,
+	std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col);
 
 /*
  * @brief:	The recursive implementation of Algortihm X*. 
@@ -111,8 +112,8 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
  */
 bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set,
 	int vertex_numbers, int mask_numbers,
-	std::map<int, int> & Delete_the_Row_in_which_Col,
-	std::map<int, std::list<int>> & Order_of_Row_Deleted_in_Col, 
+	std::vector<int> & Delete_the_Row_in_which_Col,
+	std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col, 
 	int depth, std::vector<int> & MPLD_search_vector, std::string result_file);
 
 
