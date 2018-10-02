@@ -29,7 +29,7 @@ CSDP = 0
 
 ### Features
  * Contact or metal layer decomposition 
- * No stitching
+ * Stitching
  * Support 3 or 4 coloring 
  * Density control
  * Multi-threading
