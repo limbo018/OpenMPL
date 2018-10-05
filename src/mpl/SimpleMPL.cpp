@@ -10,7 +10,6 @@
 #include "LayoutDBPolygon.h"
 #include "RecoverHiddenVertex.h"
 
-#include <stack>
 #include <boost/graph/graphviz.hpp>
 #include <boost/timer/timer.hpp>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
@@ -46,10 +45,18 @@ SimpleMPL::SimpleMPL()
 {
     this->reset(true);
 }
+
+SimpleMPL::SimpleMPL(double pitch)
+{
+    this->reset(true);
+    this->PITCH = pitch;
+}
+
 SimpleMPL::~SimpleMPL()
 {
     if (m_db) delete m_db;
 }
+
 void SimpleMPL::run(int argc, char** argv)
 {
     this->reset(false);
@@ -85,6 +92,8 @@ void SimpleMPL::reset(bool init)
         std::vector<uint32_t>().swap(m_vCompId);
         std::vector<uint32_t>().swap(m_vColorDensity);
         std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+        std::vector<std::vector<uint32_t>>().swap(m_Touch);
+        std::vector<std::pair<uint32_t, uint32_t>>().swap(m_DPL);
     }
     m_db = NULL;
     m_comp_cnt = 0;
@@ -95,7 +104,6 @@ void SimpleMPL::read_cmd(int argc, char** argv)
     // in order to support run-time switch of layoutdb_type
     // we need to construct a dummy ControlParameter for CmdParser
     // then construct actual layoutdb_type according to the option of CmdParser
-    std::cout<<"In SimpleMPL::read_cmd() being"<<std::endl;
     // construct a dummy ControlParameter
     ControlParameter tmpParms;
 	// read command 
@@ -176,6 +184,10 @@ void SimpleMPL::solve(std::string simplified_graph)
         m_comp_cnt = 1;
     }
 
+    // Vertex projection, carried out on every component separately.
+    // Maybe it's needed to generate a new vector to store the new component.
+    projection();
+
 	// create bookmark to index the starting position of each component 
 	std::vector<uint32_t> vBookmark (m_comp_cnt);
 	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
@@ -198,6 +210,7 @@ void SimpleMPL::solve(std::string simplified_graph)
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
+        
         // this->store_component(itBgn, itEnd, comp_id);
         // solve component
         // pass iterators to save memory
@@ -332,12 +345,17 @@ void SimpleMPL::construct_graph()
 	// construct vertices 
 	// assume vertices start from 0 and end with vertex_num-1
 	uint32_t vertex_num = m_db->vPatternBbox.size();
+#ifdef DEBUG
+    // **********************************************************
+    // Used to generate the vertex file.
     std::ofstream vertex_out("/home/qisun/vertex_out.txt");
     for (int i=0; i < vertex_num; i++)
     {
         vertex_out << m_db->vPatternBbox[i]->pattern_id() << std::endl;
     }
     vertex_out.close();
+#endif
+    // **********************************************************
 	uint32_t edge_num = 0;
 	m_vVertexOrder.resize(vertex_num, std::numeric_limits<uint32_t>::max()); 
 

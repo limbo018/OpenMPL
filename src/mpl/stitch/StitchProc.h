@@ -55,7 +55,6 @@ public:
 	void relation4rect();
 	// void construct_graph();
 	void projection();
-    void relation4rect();
     
 
 protected:
@@ -90,7 +89,7 @@ protected:
 
 	double MINDPLDIST			= 0;		// minimual DPL distance
 	double PITCH				= 0;		// still not sure whether use pitch in this problem 
-	bool dplstitch				= true;		// whether use DPL method to generate sttich candidates, if false, then use TPL method.
+	bool dplstitch				= true;		// whether use DPL method to generate stitch candidates, if false, then use TPL method.
 
 	coordinate_type m_layout_left		= INT32_MAX;
 	coordinate_type m_layout_right		= INT32_MIN;
