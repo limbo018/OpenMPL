@@ -1,7 +1,7 @@
 /*************************************************************************
     > File Name: SimpleMPL.h
-    > Author: Yibo Lin
-    > Mail: yibolin@utexas.edu
+    > Author: Yibo Lin, Qi Sun
+    > Mail: yibolin@utexas.edu, qsun@cse.cuhk.edu.hk
     > Created Time: Wed May 20 22:21:16 2015
  ************************************************************************/
 
@@ -132,9 +132,15 @@ class SimpleMPL
 
         //*********************** Stitch Insertion ***********************//
     public:
-        void relation4rect();
-        // used to generate projections
-        void projection();
+        // void relation4rect();
+        // I think the storage operation is a little complex, so I combine the storage operation and projection() into one.
+        // The vBookmark can help index the starting position of each component.
+        void runProjection(const std::vector<uint32_t> & vBookmark);
+        // Used to generate projections
+        // The reference variables are used to store the intermediate results.
+        void projection(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd,
+            uint32_t comp_id, std::vector<uint32_t> & new_CompId, std::vector<uint32_t> & new_VertexOrder, 
+            std::vector<std::vector<uint32_t>> & new_AdjVertex, std:vector<rectangle_pointer_type> new_PatternBox);
         // Constructor, I am not sure whether the pitch is useful here.
         // But the default value is 0.
         SimpleMPL(double pitch);
@@ -157,10 +163,11 @@ class SimpleMPL
         std::vector<rectangle_type> m_final_rectangle;
 
         std::vector<std::vector<uint32_t>> m_Touch;     // This vector is for polygon type data, storing the touching rectangles.
-        std::vector<std::vector<uint32_t>> m_DPL;       // This vector stores the conflict patterns.
-
+        
         std::vector<std::vector<uint32_t>> m_Safe;      // This vector stores the safe patterns.
         std::vector<std::vector<rectangle_type>> m_interRect;
+
+        std::vector<std::vector<uint32_t>>  m_StitchNeigh;  // This vector stores the patterns which belong to the same parent pattern. 
 
         double MINDPLDIST           = 0;    // minimual DPL distance
         double PITCH                = 0;    // still not sure whether use pitch in this problem

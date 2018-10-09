@@ -1,7 +1,7 @@
 /*************************************************************************
     > File Name: SimpleMPL.cpp
-    > Author: Yibo Lin
-    > Mail: yibolin@utexas.edu
+    > Author: Yibo Lin, Qi Sun
+    > Mail: yibolin@utexas.edu, qsun@cse.cuhk.edu.hk
     > Created Time: Wed May 20 22:38:50 2015
  ************************************************************************/
 
@@ -184,20 +184,18 @@ void SimpleMPL::solve(std::string simplified_graph)
         m_comp_cnt = 1;
     }
 
-    // Vertex projection, carried out on every component separately.
-    // Maybe it's needed to generate a new vector to store the new component.
-    projection();
+    // create bookmark to index the starting position of each component 
+    std::vector<uint32_t> vBookmark (m_comp_cnt);
+    for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+    {
+        if (i == 0 || m_vCompId[m_vVertexOrder[i-1]] != m_vCompId[m_vVertexOrder[i]])
+            vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+    }
 
-	// create bookmark to index the starting position of each component 
-	std::vector<uint32_t> vBookmark (m_comp_cnt);
-	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
-	{
-		if (i == 0 || m_vCompId[m_vVertexOrder[i-1]] != m_vCompId[m_vVertexOrder[i]])
-			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
-	}
+    runProjection(vBookmark);
 
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
-	// thread number controled by user option 
+	// thread number controled by user option. Solve the components on parallel.
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num())
 #endif 
@@ -346,7 +344,7 @@ void SimpleMPL::construct_graph()
 	// assume vertices start from 0 and end with vertex_num-1
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 #ifdef DEBUG
-    // **********************************************************
+    // Added by Qi Sun.
     // Used to generate the vertex file.
     std::ofstream vertex_out("/home/qisun/vertex_out.txt");
     for (int i=0; i < vertex_num; i++)
@@ -355,7 +353,6 @@ void SimpleMPL::construct_graph()
     }
     vertex_out.close();
 #endif
-    // **********************************************************
 	uint32_t edge_num = 0;
 	m_vVertexOrder.resize(vertex_num, std::numeric_limits<uint32_t>::max()); 
 
@@ -994,17 +991,102 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
     la::graphviz2pdf(filename);
 }
 
+void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
+{
+    // Vertex projection, carried out on every component separately.
+    // In order to execute the projection operations in parallel, I think it's needed to take up more 
+    // spaces to store the intermediate results.
+
+    std::vector<uint32_t> new_CompId;
+    std::vector<uint32_t> new_VertexOrder;
+    std::vector<std::vector<uint32_t>> new_AdjVertex;
+    std::vector<rectangle_pointer_type> new_PatternBox;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(comp_id) num_threads(m_db->thread_num())
+#endif
+    for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+    {
+        std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
+        std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id+1] : m_vVertexOrder.end();
+        
+        std::vector<uint32_t> new_CompId_temp;
+        std::vector<uint32_t> new_VertexOrder_temp;
+        std::vector<std::vector<uint32_t>> new_AdjVertex_temp;
+        std::vector<rectangle_pointer_type> new_PatternBox_temp;
+
+        projection(itBgn, itEnd, comp_id, new_CompId_temp, new_VertexOrder_temp, new_AdjVertex_temp, new_PatternBox_temp);
+
+        #ifdef _OPENMP
+        #pragma omp critical 
+        #endif
+        {
+            new_CompId.insert(new_CompId.end(), new_CompId_temp.begin(), new_CompId_temp.end());
+            new_VertexOrder.insert(new_VertexOrder.end(), new_VertexOrder_temp.begin(), new_VertexOrder_temp.end());
+            new_AdjVertex.insert(new_AdjVertex.end(),new_AdjVertex_temp.begin(), new_AdjVertex_temp.end());
+            new_PatternBox.insert(new_PatternBox.end(), new_PatternBox_temp.begin(), new_PatternBox_temp.end());
+            std::vector<uint32_t>().swap(new_CompId_temp);
+            std::vector<uint32_t>().swap(new_VertexOrder_temp);
+            std::vector<std::vector<uint32_t>>().swap(new_AdjVertex_temp);
+            std::vector<rectangle_pointer_type>().swap(new_PatternBox_temp);
+        }
+    }
+
+    m_vCompId.swap(new_CompId);
+    m_vVertexOrder.swap(new_VertexOrder);
+    m_mAdjVertex.swap(new_AdjVertex);
+    vPatternBbox.swap(new_PatternBox);
+
+    std::vector<uint32_t>().swap(new_CompId);
+    std::vector<uint32_t>().swap(new_VertexOrder);
+    std::vector<std::vector<uint32_t>>().swap(new_AdjVertex);
+    std::vector<rectangle_pointer_type>().swap(new_PatternBox);
+
+    return;
+}
+
+// Use each component as the input, the output is the of the new component. 
+// The relevant information should also be modified.
+// itBgn : component begin node in the vector
+// itEnd : component end node in the vector
+void SimpleMPL::projection(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd,
+            uint32_t comp_id, std::vector<uint32_t> & new_CompId, std::vector<uint32_t> & new_VertexOrder, 
+            std::vector<std::vector<uint32_t>> & new_AdjVertex, std:vector<rectangle_pointer_type> new_PatternBox)
+{
+    // traverse all the vertices in the layout graph
+    for (std::vector<uint32_t>::iterator it = itBgn; it != itEnd; it++)
+    {
+        // step 1 : init vinterRect, store all overlapping bounding boxes.
+        rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
+        bool isHor = whetherHorizontal(pPattern);
+        std::vector<rectangle_pointer_type> vinterRect;
+        vinterRect.clear();
+        
+        
+    }
+}
+
+bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)
+{
+    double xl = gtl::xl(*tmp);
+    double yl = gtl::yl(*tmp);
+    double xh = gtl::xh(*tmp);
+    double yh = gtl::yh(*tmp);
+    return (xh - xl) > (yh - yl);
+}
+
 void SimpleMPL::print_welcome() const
 {
-    std::cout<<"In print_welcome()"<<std::endl;
   mplPrint(kNONE, "\n\n");
   mplPrint(kNONE, "=======================================================================\n");
-  mplPrint(kNONE, "                      SimpleMPL - Version 1.1                        \n");
+  mplPrint(kNONE, "                        OpenMPL - Version 1.1                        \n");
   mplPrint(kNONE, "                                by                                   \n");  
-  mplPrint(kNONE, "                   Yibo Lin, Bei Yu, and  David Z. Pan               \n");
+  mplPrint(kNONE, "                Yibo Lin, Bei Yu, Qi Sun and  David Z. Pan           \n");
   mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");
-  mplPrint(kNONE, "                         Copyright (c) 2015                          \n");
-  mplPrint(kNONE, "            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     \n");
+  mplPrint(kNONE, "               CSE Department, Chinese University of Hong Kong       \n");
+  mplPrint(kNONE, "                         Copyright (c) 2018                          \n");
+  mplPrint(kNONE, "            Contact Authors:  {yibolin, dpan}@cerc.utexas.edu         \n");
+  mplPrint(kNONE, "                              {byu, qsun}@cse.cuhk.edu.hk            \n");
   mplPrint(kNONE, "=======================================================================\n");
 }
 
