@@ -12,6 +12,7 @@
 #include <stack>
 #include <string>
 #include <deque>
+#include <assert.h>
 #include <limbo/algorithms/coloring/Coloring.h>
 #include "GdsiiIO.h"
 #include <limbo/geometry/api/GeoBoostPolygonApi.h>
@@ -19,7 +20,7 @@
 #include <boost/polygon/interval_data.hpp>
 
 SIMPLEMPL_BEGIN_NAMESPACE
-
+#define GUROBI 1
 namespace la = limbo::algorithms;
 namespace lac = la::coloring;
 
@@ -132,15 +133,14 @@ class SimpleMPL
 
         //*********************** Stitch Insertion ***********************//
     public:
-        // void relation4rect();
+		void relation4NewPatterns(const std::vector<uint32_t> & vBookmark, std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping);
         // I think the storage operation is a little complex, so I combine the storage operation and projection() into one.
         // The vBookmark can help index the starting position of each component.
         void runProjection(const std::vector<uint32_t> & vBookmark);
         // Used to generate projections
         // The reference variables are used to store the intermediate results.
-        void projection(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd,
-            uint32_t comp_id, std::vector<uint32_t> & new_CompId, std::vector<uint32_t> & new_VertexOrder, 
-            std::vector<std::vector<uint32_t>> & new_AdjVertex, std:vector<rectangle_pointer_type> new_PatternBox);
+        void projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd,
+			std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping);
         // Constructor, I am not sure whether the pitch is useful here.
         // But the default value is 0.
         SimpleMPL(double pitch);
@@ -155,10 +155,10 @@ class SimpleMPL
         // judge whether the rectangle is horizontal, which may affect the following stitch insertion strategy.
         bool whetherHorizontal (rectangle_pointer_type tmp);
 
-        // Generate Stitch Insertion Points for DPL
-        void StitchGenerateDPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_pointer_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type left, const coordinate_type right, bool vddstitch = false);
+        // Generate Stitch Insertion Points for QPL
+        void stitchGenerateQPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
 	    // Generate Stitch Insertion Points for TPL
-        void StitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_pointer_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type left, const coordinate_type right, bool vddstitch = false);
+        void BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
 
         std::vector<rectangle_type> m_final_rectangle;
 
@@ -169,9 +169,7 @@ class SimpleMPL
 
         std::vector<std::vector<uint32_t>>  m_StitchNeigh;  // This vector stores the patterns which belong to the same parent pattern. 
 
-        double MINDPLDIST           = 0;    // minimual DPL distance
         double PITCH                = 0;    // still not sure whether use pitch in this problem
-        bool dplstitch              = true; // whether use DPL method to generate stitch candidates, if false, then use TPL method.
 
         coordinate_type m_layout_left       = INT32_MAX;
         coordinate_type m_layout_right      = INT32_MIN;

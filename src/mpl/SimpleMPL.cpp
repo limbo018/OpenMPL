@@ -1,4 +1,4 @@
-/*************************************************************************
+﻿/*************************************************************************
     > File Name: SimpleMPL.cpp
     > Author: Yibo Lin, Qi Sun
     > Mail: yibolin@utexas.edu, qsun@cse.cuhk.edu.hk
@@ -93,7 +93,6 @@ void SimpleMPL::reset(bool init)
         std::vector<uint32_t>().swap(m_vColorDensity);
         std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
         std::vector<std::vector<uint32_t>>().swap(m_Touch);
-        std::vector<std::pair<uint32_t, uint32_t>>().swap(m_DPL);
     }
     m_db = NULL;
     m_comp_cnt = 0;
@@ -201,10 +200,6 @@ void SimpleMPL::solve(std::string simplified_graph)
 #endif 
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
-#ifdef DEBUG
-        //if (comp_id != 130)
-        //    continue; 
-#endif
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
@@ -616,7 +611,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
     else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better 
         gs.max_merge_level(2);
     gs.simplify(simplify_strategy);
-    gs.write_simplified_graph_by_component(simplified_graph);
+    // gs.write_simplified_graph_by_component(simplified_graph);
     std::cout<<"Simplification Finished."<<std::endl;
 	// collect simplified information 
     std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
@@ -819,7 +814,7 @@ void SimpleMPL::store_component(const std::vector<uint32_t>::const_iterator itBg
     std::cout<<" Store Component " << comp_id <<" Successfully!"<<std::endl;
 }
 
-void store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+void SimpleMPL::store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
 	std::cout << "In SimpleMPL::store_component. This is Component "<< comp_id << " !" << std::endl;
     if (itBgn == itEnd)
@@ -840,7 +835,8 @@ void store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, cons
     int edge_numbers = 0;
     for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
     {
-    	vertex_number += m_db->vPatternBbox[*it].size();
+		vertex_number += 1;
+    	//vertex_number += m_db->vPatternBbox[*it].size();
         rectangle_pointer_type const& pPattern = m_db->vPatternBbox[*it];
         std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
         edge_numbers += vAdjVertex.size();
@@ -853,7 +849,7 @@ void store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, cons
         uint32_t nei_num = vAdjVertex.size();
         for (int i = 0; i < nei_num; i++)
         {
-            dlx_out<<pPattern->pattern_id()<< " "<<dlx_out << vAdjVertex[i] << std::endl;
+            dlx_out<<pPattern->pattern_id()<< " " << vAdjVertex[i] << std::endl;
         }
     }
     dlx_out.close();
@@ -1001,6 +997,7 @@ void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
     std::vector<uint32_t> new_VertexOrder;
     std::vector<std::vector<uint32_t>> new_AdjVertex;
     std::vector<rectangle_pointer_type> new_PatternBox;
+	std::vector<std::vector<uint32_t>> SplitMapping(m_vVertexOrder.size());
 
 #ifdef _OPENMP
 #pragma omp parallel for private(comp_id) num_threads(m_db->thread_num())
@@ -1015,7 +1012,9 @@ void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
         std::vector<std::vector<uint32_t>> new_AdjVertex_temp;
         std::vector<rectangle_pointer_type> new_PatternBox_temp;
 
-        projection(itBgn, itEnd, comp_id, new_CompId_temp, new_VertexOrder_temp, new_AdjVertex_temp, new_PatternBox_temp);
+        projection(itBgn, itEnd, new_PatternBox_temp, SplitMapping);
+		
+		relation4NewPatterns(vBookmark, new_PatternBox_temp, SplitMapping);
 
         #ifdef _OPENMP
         #pragma omp critical 
@@ -1035,7 +1034,7 @@ void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
     m_vCompId.swap(new_CompId);
     m_vVertexOrder.swap(new_VertexOrder);
     m_mAdjVertex.swap(new_AdjVertex);
-    vPatternBbox.swap(new_PatternBox);
+    m_db->vPatternBbox.swap(new_PatternBox);
 
     std::vector<uint32_t>().swap(new_CompId);
     std::vector<uint32_t>().swap(new_VertexOrder);
@@ -1049,22 +1048,152 @@ void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
 // The relevant information should also be modified.
 // itBgn : component begin node in the vector
 // itEnd : component end node in the vector
-void SimpleMPL::projection(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd,
-            uint32_t comp_id, std::vector<uint32_t> & new_CompId, std::vector<uint32_t> & new_VertexOrder, 
-            std::vector<std::vector<uint32_t>> & new_AdjVertex, std:vector<rectangle_pointer_type> new_PatternBox)
+void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd,
+				std::vector<rectangle_pointer_type> & new_PatternVec, 
+				std::vector<std::vector<uint32_t>> & SplitMapping)
 {
-    // traverse all the vertices in the layout graph
-    for (std::vector<uint32_t>::iterator it = itBgn; it != itEnd; it++)
-    {
-        // step 1 : init vinterRect, store all overlapping bounding boxes.
-        rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
-        bool isHor = whetherHorizontal(pPattern);
-        std::vector<rectangle_pointer_type> vinterRect;
-        vinterRect.clear();
-        
-        
-    }
+	// pattern_count : used to re-generate pattern ids for all patterns in this component
+	int pattern_count = 0;
+	// ===================================================================
+	// traverse all the vertices in the layout graph
+	// ===================================================================
+	for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
+	{
+		// ===================================================================
+		// step 1 : capture the interaction parts with its neighbours.
+		// ===================================================================
+		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
+		bool isHor = whetherHorizontal(pPattern);
+		// vInterRect stores the intersection parts of pPattern and its neighbours.
+		std::vector<rectangle_type> vInterRect;
+		vInterRect.clear();
+		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
+		for (std::vector<uint32_t>::iterator nei = vAdjVertex.begin(); nei != vAdjVertex.end(); nei++)
+		{
+			rectangle_type extendPattern(*m_db->vPatternBbox[*nei]);
+			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
+			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
+			std::queue<rectangle_type> output;
+			// calculate the intersection of two patterns.
+			bg::intersection(extendPattern, pPattern, output);
+			BOOST_FOREACH(rectangle_type p, output)
+			{
+				vInterRect.push_back(p);
+			}
+		} // for nei. Traverse all the intersections with its neighbours.
+
+		// ===================================================================
+		// step 2 : generate all the candidate stitches for this pattern.
+		// ===================================================================
+		std::vector<coordinate_type> vstitches;
+		rectangle_pointer_type tempRect = new rectangle_type(gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
+		// the lower bound and upper bound of the stitch position.
+		// If the pattern is horizontal, the stitches will be horizontal.
+		// If the pattern is vertical, the stitches will be vertical.
+		coordinate_type lower = 0, upper = 0;
+		if (isHor) {
+			lower = gtl::xl(*tempRect);
+			upper = gtl::xh(*tempRect);
+		}
+		else
+		{
+			lower = gtl::yl(*tempRect);
+			upper = gtl::yh(*tempRect);
+		}
+		// TPL
+		if (m_db->color_num() == 3)
+		{
+			BYUstitchGenerateTPL_Points(tempRect, vInterRect, vstitches, lower, upper);
+		}
+		// QPL
+		else
+		{
+
+		}
+
+#ifdef DEBUG
+		// ===================================================================
+		// step 3 : check the positions' legalities
+		// ===================================================================
+		if (isHor) {
+			// If pPattern is horizontal, all the stitches' positions should be in (xl, xh)
+			for (int j = 0; j < vstitches.size(); j++)
+			{
+				int pos = vstitches[j];
+				assert(pos > gtl::xl(*pPattern) && pos < gtl::xh(*pPattern));
+			}
+		}
+		else {
+			// If pPattern is vertical, all the stitches' position should be in (yl, yh)
+			for (int j = 0; j < vstitches.size(); j++)
+			{
+				int pos = vstitches[j];
+				assert(pos > gtl::yl(*pPattern) && pos < gtl::yh(*pPattern));
+			}
+		}
+#endif
+		// ===============================================================================================
+		// step 4 : split the patterns according to the stitches
+		//			new_PatternVec	: stores the newly-generated patterns
+		//			SplitMapping	: mapping relationships between original patterns and splited patterns
+		// ===============================================================================================
+		std::vector<rectangle_pointer_type>().swap(new_PatternVec);
+		// This pattern hasn't been splited.
+		if (vstitches.size() <= 0)
+		{
+			pattern_count++;
+			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
+			new_Pattern->pattern_id(pattern_count);
+			new_PatternVec.push_back(new_Pattern);
+			SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
+		}
+		// This pattern has been splited.
+		else
+		{
+			if (isHor)
+			{
+				// vstitches : position order, from left to right
+				// If horizontal, insert xl and xh into vstitches.
+				vstitches.insert(vstitches.begin(), gtl::xl(*pPattern));
+				vstitches.push_back(gtl::xh(*pPattern));
+				for (int j = 0; j < vstitches.size() - 1; j++)
+				{
+					pattern_count++;
+					rectangle_pointer_type new_Pattern = new rectangle_type;
+					gtl::xl(*new_Pattern, vstitches[j]);
+					gtl::yl(*new_Pattern, gtl::yl(*pPattern));
+					gtl::xh(*new_Pattern, vstitches[j + 1]);
+					gtl::yh(*new_Pattern, gtl::yh(*pPattern));
+					new_Pattern->pattern_id(pattern_count);
+					new_PatternVec.push_back(new_Pattern);
+					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
+				}
+			}
+			else
+			{
+				// vstitches : position order, from bottom to up
+				// If vertical, insert yl and yh into vstitches.
+				vstitches.insert(vstitches.begin(), gtl::yl(*pPattern));
+				vstitches.push_back(gtl::yh(*pPattern));
+				for (int j = 0; j < vstitches.size() - 1; j++)
+				{
+					pattern_count++;
+					rectangle_pointer_type new_Pattern = new rectangle_type();
+					gtl::xl(*new_Pattern, gtl::xl(*pPattern));
+					gtl::yl(*new_Pattern, vstitches[j]);
+					gtl::xh(*new_Pattern, gtl::xh(*pPattern));
+					gtl::yh(*new_Pattern, vstitches[j + 1]);
+					new_Pattern->pattern_id(pattern_count);
+					new_PatternVec.push_back(new_Pattern);
+					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
+				}
+			}
+		}
+		mplAssert(new_PatternVec.size() > 0);
+	}
+	return;
 }
+
 
 bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)
 {
@@ -1073,6 +1202,183 @@ bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)
     double xh = gtl::xh(*tmp);
     double yh = gtl::yh(*tmp);
     return (xh - xl) > (yh - yl);
+}
+
+void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
+	const std::vector<rectangle_type> vinterRect,
+	std::vector <coordinate_type> vstitches, const coordinate_type lower,
+	const coordinate_type upper)
+{
+	// ================================================================================
+	// step 1 : generate candidate stitches' positions according to the intersections
+	// ================================================================================
+	bool isHor = whetherHorizontal(pRect);
+	std::vector<coordinate_type> tempPos;
+	for (std::vector<rectangle_type>::const_iterator it = vinterRect.begin(); it != vinterRect.end(); it++)
+	{
+		if (isHor)
+		{
+			tempPos.push_back(gtl::xl(*it));
+			tempPos.push_back(gtl::xh(*it));
+		}
+		else
+		{
+			tempPos.push_back(gtl::yl(*it));
+			tempPos.push_back(gtl::yh(*it));
+		}
+	}
+	// sort all the positions
+	sort(tempPos.begin(), tempPos.end());
+	
+	// ================================================================================
+	// step 2 : generate stages according to the stitch positions
+	//			that is each pairwise of neighboring positions generates a stage.
+	// ================================================================================
+	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>> vStages;
+	for (uint32_t i = 1; i < tempPos.size(); i++)
+		vStages.push_back(std::make_pair(std::make_pair(tempPos[i - 1], tempPos[i]), 0));
+	// calculate the times every stage covered by all the intersections.
+	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>>::iterator it = vStages.begin();
+		it != vStages.end(); it++)
+	{
+		coordinate_type left = it->first.first;
+		coordinate_type right = it->first.second;
+		int overlapping_count = 0;
+		for (std::vector<rectangle_type>::const_iterator it = vinterRect.begin(); it != vinterRect.end(); it++)
+		{
+			if (isHor)
+			{
+				if (left < gtl::xl(*it)) continue;
+				if (right > gtl::yh(*it)) continue;
+				overlapping_count++;
+			}
+			else
+			{
+				if (left < gtl::yl(*it)) continue;
+				if (right > gtl::yh(*it)) continue;
+				overlapping_count++;
+			}
+		}
+		it->first.second = overlapping_count;
+	}
+
+	// ================================================================================
+	// step 3 : add default terminal zeros
+	//			This will be used in the next step.
+	// ================================================================================
+	if (vStages.size() <= 0) return;
+	if (vStages[0].second != 0)
+		vStages.insert(vStages.begin(), std::make_pair(std::make_pair(lower, lower), 0));
+	if (vStages[vStages.size() - 1].second != 0)
+		vStages.push_back(std::make_pair(std::make_pair(upper, upper), 0));
+#ifdef DEBUG
+	std::cout << "DEBUG_PROJECTION| vStages = ";
+	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>>::iterator it = vStages.begin();
+		it != vStages.end(); it++)
+		std::cout << it->second;
+	std::cout << std::endl;
+#endif
+
+	// ================================================================================
+	// step 4: find the stages with zero overlapping_count
+	//		   The stitches will be chosen from these stages.
+	// ================================================================================
+	std::vector<uint32_t> vZeroIds;
+	for (uint32_t i = 0; i < vStages.size(); i++)
+	{
+		if (vStages[i].second > 0) continue;
+		vZeroIds.push_back(i);
+	}
+
+	// ================================================================================
+	// step 5: choose stitches from vZeroIds
+	// ================================================================================
+	std::vector<coordinate_type>().swap(vstitches);
+	// The operations here are very confusing.
+	for (int i = 0; i < vZeroIds.size() - 1; i++)
+	{
+		uint32_t pos1 = vZeroIds[i];
+		uint32_t pos2 = vZeroIds[i + 1];
+		// since ((lower, lower), 0) has been added into vStages, so pos1 must be 0.
+		if (i == 0) mplAssertMsg(0 == pos1, "pos1 %d doesn't equal to 0", pos1);
+		// remove the useless stitches
+		else if (pos1 == 2)
+		{
+			bool find = false;
+			if (vStages.size() < 5) find = true;
+			else if (i != 1) find = true;
+			else if (1 != vStages[1].second) find = true;
+			else if (1 != vStages[3].second) find = true;
+			else if (0 != vStages[4].second) find = true;
+			if (find == false)
+				continue;
+			coordinate_type position = (vStages[2].first.first + vStages[2].first.second) / 2;
+			vstitches.push_back(position);
+		}
+		else if (pos1 == vStages.size() - 3)
+		{
+			mplAssert(i == vZeroIds.size() - 2);
+			bool find = false;
+			uint32_t zsize = vZeroIds.size();
+			if (vStages.size() < 5) find = true;
+			else if (i != zsize - 2) find = true;
+			else if (1 != vStages[pos1 + 1].second) find = true;
+			else if (1 != vStages[pos1 - 1].second) find = true;
+			else if (0 != vStages[pos1 - 2].second) find = true;
+			if (find = false) continue;
+			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
+			vstitches.push_back(position);
+		}
+		else
+		{
+			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
+			vstitches.push_back(position);
+		}
+
+		// search lost stitch in vStages[pos1 --> pos2]
+		double maxValue = 0.9;
+		uint32_t posLost = pos1 + 2;
+		if (pos2 - pos1 < 4) continue;
+		for (uint32_t i = pos1 + 2; i < pos2 - 1; i++)
+		{
+			if (vStages[i - 1].second <= vStages[i].second) continue;
+			if (vStages[i + 1].second <= vStages[i].second) continue;
+			uint32_t mind = std::min(vStages[i - 1].second - vStages[i].second, vStages[i + 1].second - vStages[i].second);
+			uint32_t diff = std::abs(static_cast<int>(vStages[i + 1].second - vStages[i - 1].second));
+			double value = (double)mind + (double)diff * 0.1;
+			if (value > maxValue)
+			{
+				maxValue = value;
+				posLost = i;
+			}
+		}
+		if (maxValue > 0.9)
+		{
+			uint32_t position = (vStages[posLost].first.first + vStages[posLost].first.second) / 2;
+			vstitches.push_back(position);
+		}
+	}
+	sort(vstitches.begin(), vstitches.end());
+#ifdef DEBUG
+	std::cout << "DEBUG| output the vStages: " << std::endl;
+	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>>::iterator it = vStages.begin();
+		it != vStages.end(); it++)
+		std::cout << it->second << "[" << it->first.first << ", " << it->first.second << "]" << std::endl;
+	std::cout << std::endl;
+
+	std::cout << "DEBUG| output the vstitches: " << std::endl;
+	std::cout << "lower = " << lower << std::endl;
+	std::cout << "upper = " << upper << std::endl;
+	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
+		std::cout << *it << " ";
+	std::cout << std::endl;
+#endif
+	return;
+}
+
+void SimpleMPL::relation4NewPatterns(const std::vector<uint32_t> & vBookmark ,std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping)
+{
+
 }
 
 void SimpleMPL::print_welcome() const
@@ -1085,7 +1391,7 @@ void SimpleMPL::print_welcome() const
   mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");
   mplPrint(kNONE, "               CSE Department, Chinese University of Hong Kong       \n");
   mplPrint(kNONE, "                         Copyright (c) 2018                          \n");
-  mplPrint(kNONE, "            Contact Authors:  {yibolin, dpan}@cerc.utexas.edu         \n");
+  mplPrint(kNONE, "            Contact Authors:  {yibolin, dpan}@cerc.utexas.edu        \n");
   mplPrint(kNONE, "                              {byu, qsun}@cse.cuhk.edu.hk            \n");
   mplPrint(kNONE, "=======================================================================\n");
 }
