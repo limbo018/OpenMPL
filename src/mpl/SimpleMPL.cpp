@@ -1014,7 +1014,6 @@ void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
 
         projection(itBgn, itEnd, new_PatternBox_temp, SplitMapping);
 		
-		relation4NewPatterns(vBookmark, new_PatternBox_temp, SplitMapping);
 
         #ifdef _OPENMP
         #pragma omp critical 
@@ -1030,6 +1029,14 @@ void SimpleMPL::runProjection(const std::vector<uint32_t> & vBookmark)
             std::vector<rectangle_pointer_type>().swap(new_PatternBox_temp);
         }
     }
+
+    int pattern_count = 0;
+    for(uint32_t comp_id = 0; comp_id < m_comp_cnt; comp_id++)
+    {
+
+    }
+
+    relation4NewPatterns(vBookmark, new_PatternBox_temp, SplitMapping);
 
     m_vCompId.swap(new_CompId);
     m_vVertexOrder.swap(new_VertexOrder);
@@ -1374,6 +1381,15 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 	std::cout << std::endl;
 #endif
 	return;
+}
+
+
+void SimpleMPL::genNewId(const std::vector<uint32_t> &vBookmark,
+                         
+                         vector<SimpleMPL::SimpleMPL::rectangle_pointer_type> &new_PatternVec,
+                         std::vector<std::vector<uint32_t>> &SplitMapping)
+{
+
 }
 
 void SimpleMPL::relation4NewPatterns(const std::vector<uint32_t> & vBookmark ,std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping)

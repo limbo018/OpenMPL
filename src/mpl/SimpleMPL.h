@@ -133,6 +133,10 @@ class SimpleMPL
 
         //*********************** Stitch Insertion ***********************//
     public:
+        // Generate new Id for all the original patterns and newly-generated patterns.
+        void genNewId(const std::vector<uint32_t> & vBookmark, std::vector<rectangle_pointer_type> & new_PatternBox,
+                std::vector<rectangle_pointer_type> & new_PatternBox_temp, std::vector<std::vector<uint32_t>> & SplitMapping);
+
 		void relation4NewPatterns(const std::vector<uint32_t> & vBookmark, std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping);
         // I think the storage operation is a little complex, so I combine the storage operation and projection() into one.
         // The vBookmark can help index the starting position of each component.
