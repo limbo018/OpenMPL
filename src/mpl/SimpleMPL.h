@@ -133,53 +133,42 @@ class SimpleMPL
 
         //*********************** Stitch Insertion ***********************//
     public:
-        // Generate new Id for all the original patterns and newly-generated patterns.
-        void genNewId(const std::vector<uint32_t> & vBookmark, std::vector<rectangle_pointer_type> & new_PatternBox,
-                std::vector<rectangle_pointer_type> & new_PatternBox_temp, std::vector<std::vector<uint32_t>> & SplitMapping);
-
-		void relation4NewPatterns(const std::vector<uint32_t> & vBookmark, std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping);
-        // I think the storage operation is a little complex, so I combine the storage operation and projection() into one.
-        // The vBookmark can help index the starting position of each component.
-        void runProjection(const std::vector<uint32_t> & vBookmark);
-        // Used to generate projections
-        // The reference variables are used to store the intermediate results.
-        void projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd,
-			std::vector<rectangle_pointer_type> & new_PatternVec, std::vector<std::vector<uint32_t>> & SplitMapping);
-        // Constructor, I am not sure whether the pitch is useful here.
+		// Constructor, I am not sure whether the pitch is useful here.
         // But the default value is 0.
         SimpleMPL(double pitch);
 
     protected:
         // get the width of the rectangle
-        coordinate_type getWidth(rectangle_pointer_type rect) { return gtl::xh(*rect) - gtl::xl(*rect); }
+        // coordinate_type getWidth(rectangle_pointer_type rect) { return gtl::xh(*rect) - gtl::xl(*rect); }
         // get the height of the rectangle
-        coordinate_type getHeight(rectangle_pointer_type rect) { return gtl::yh(*rect) - gtl::yl(*rect); }
+        // coordinate_type getHeight(rectangle_pointer_type rect) { return gtl::yh(*rect) - gtl::yl(*rect); }
 
+		void adj4NewPatterns(std::vector<std::vector<uint32_t>> & new_mAdjVertex);
+		// I think the storage operation is a little complex, so I combine the storage operation and projection() into one.
+		// The vBookmark can help index the starting position of each component.
+		void runProjection(std::vector<uint32_t> & vBookmark);
+		// Used to generate projections
+		// The reference variables are used to store the intermediate results.
+		void projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd,
+			std::vector<rectangle_pointer_type> & new_PatternVec);
 
         // judge whether the rectangle is horizontal, which may affect the following stitch insertion strategy.
         bool whetherHorizontal (rectangle_pointer_type tmp);
 
         // Generate Stitch Insertion Points for QPL
-        void stitchGenerateQPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
+        // void stitchGenerateQPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
 	    // Generate Stitch Insertion Points for TPL
         void BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
 
-        std::vector<rectangle_type> m_final_rectangle;
-
-        std::vector<std::vector<uint32_t>> m_Touch;     // This vector is for polygon type data, storing the touching rectangles.
-        
-        std::vector<std::vector<uint32_t>> m_Safe;      // This vector stores the safe patterns.
-        std::vector<std::vector<rectangle_type>> m_interRect;
-
-        std::vector<std::vector<uint32_t>>  m_StitchNeigh;  // This vector stores the patterns which belong to the same parent pattern. 
-
         double PITCH                = 0;    // still not sure whether use pitch in this problem
 
-        coordinate_type m_layout_left       = INT32_MAX;
-        coordinate_type m_layout_right      = INT32_MIN;
-        coordinate_type m_layout_top        = INT32_MIN;
-        coordinate_type m_layout_down       = INT32_MAX;
+        // coordinate_type m_layout_left       = INT32_MAX;
+        // coordinate_type m_layout_right      = INT32_MIN;
+        // coordinate_type m_layout_top        = INT32_MIN;
+        // coordinate_type m_layout_down       = INT32_MAX;
 
+		std::vector<uint32_t>	new2ori;	// store the mapping relationships from new patterns back to original patterns.
+		std::vector<std::vector<uint32_t>> SplitMapping; // stores the mapping relationships between original patterns and newly - generated patterns.
 };
 
 SIMPLEMPL_END_NAMESPACE
