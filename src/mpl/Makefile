@@ -9,11 +9,11 @@ DBG = 0
 # default GPROF is off, used to enable runtime profiling
 GPROF = 0
 # default GUROBI is off 
-GUROBI = 0
+GUROBI = 1
 # default LEMONCBC is off 
 LEMONCBC = 0
 # default CSDP is off 
-CSDP = 0
+CSDP = 1
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -57,11 +57,12 @@ INCLUDE = \
 LIBS = $(STATIC_LINK_FLAG) \
 	   -L $(LIMBO_DIR)/lib -lgdsparser -lprogramoptions \
 	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -lboost_chrono -lboost_iostreams \
-	   -L $(ZLIB_DIR) -lz
+	   -L $(ZLIB_DIR)/lib -lz
 
 # boost chrono links to to librt.a under Linux
 ifeq ($(UNAME_S), Linux)
-LIBS += $(STATIC_LINK_FLAG) -lrt 
+#LIBS += $(STATIC_LINK_FLAG) -lrt 
+LIBS += -L $(BOOST_DIR)/lib -lboost_system
 endif 
 
 # GUROBI 
@@ -87,7 +88,7 @@ LIBS += -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lsdp \
 	   -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -lopenblas-st -lm 
 # CSDP links to Fortran under Linux 
 ifeq ($(UNAME_S), Linux)
-LIBS += -lgfortran 
+LIBS += $(DYNAMIC_LINK_FLAG) -lrt -lgfortran 
 endif
 ifeq ($(GUROBI), 1) 
 LIBS += $(DYNAMIC_LINK_FLAG) -lpthread 
