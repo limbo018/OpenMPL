@@ -610,9 +610,11 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 #endif
     if (itBgn == itEnd) return 0;
 #ifdef DEBUG
+    uint32_t count = 0;
     // check order 
 	for (std::vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
 	{
+        count ++;
 		uint32_t v1 = *(it-1), v2 = *it;
 		mplAssert(m_vCompId[v1] == m_vCompId[v2]);
 	}
@@ -645,7 +647,10 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
 #ifdef GEMPL
-    std::cout<< "Component" << comp_id << " : \t" << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
+    std::cout << "===================  Component  " << comp_id << "  ===================" << std::endl;
+    std::cout << "\t" << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
+    std::cout << "\t" << "Conflict numbers : " << component_conflict_num << std::endl;
+    std::cout << "\t" << "Pattern numbers : " << count << std::endl;
 #endif
 
 	return component_conflict_num;
