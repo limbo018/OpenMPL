@@ -497,6 +497,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	std::vector<std::vector<int8_t> > mSubColor (gs.num_component());
 	std::vector<std::vector<vertex_descriptor> > mSimpl2Orig (gs.num_component());
 	double acc_obj_value = 0;
+	std::cout << "Component " << comp_id << " has " << gs.num_component() << " componetns." << std::endl;
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
 #ifdef GEMPL
