@@ -600,7 +600,10 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
-	if (itBgn == itEnd) return 0;
+#ifdef GEMPL
+    boost::timer::cpu_timer t;
+#endif
+    if (itBgn == itEnd) return 0;
 #ifdef DEBUG
     // check order 
 	for (std::vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
@@ -635,6 +638,10 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
+
+#ifdef GEMPL
+    std::cout<< "Component" << comp_id << " : \t" << t.format(5, "%us user + %ss system = %ts (%p%)") << std::endl;
+#endif
 
 	return component_conflict_num;
 }
