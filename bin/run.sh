@@ -23,13 +23,12 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape RECTANGLE \
-    -in bench/via2_local_precolor.gds  \
-    -out out.gds  \
-    -coloring_distance 130 \
-    -uncolor_layer  100  \
-    -uncolor_layer 201  \
-    -uncolor_layer 202  \
-    -uncolor_layer 203 \
-    -color_num 3 \
+	-in /uac/gds/qsun/App/ISCAS_total/total_c4.gds  \
+    -out ./out.gds  \
+    -coloring_distance 120 \
+    -uncolor_layer  1 \
+	-uncolor_layer 101 \
+    -color_num 4 \
     -algo SDP \
-    -thread_num 8
+    -thread_num 8 \
+	-simplify_level 3

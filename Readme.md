@@ -74,6 +74,8 @@ Now Dancing Links is an independent component, and the source code is in /src/dl
 
 One exmaple : /bin/run.sh.
 
+'-out' must be specified, or the generated file will cover the original one.
+
 ### License
 
 - BSD-3-clause License [[LINK](https://github.com/limbo018/OpenMPL/blob/master/LICENSE)]

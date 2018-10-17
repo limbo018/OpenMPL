@@ -1,7 +1,7 @@
 /*************************************************************************
     > File Name: SimpleMPL.cpp
-    > Author: Yibo Lin
-    > Mail: yibolin@utexas.edu
+    > Author: Yibo Lin, Qi Sun
+    > Mail: yibolin@utexas.edu, qsun@cse.cuhk.edu.hk
     > Created Time: Wed May 20 22:38:50 2015
  ************************************************************************/
 
@@ -600,7 +600,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
-#ifdef GEMPL
+#ifdef _GEMPL
     boost::timer::cpu_timer t;
 #endif
     if (itBgn == itEnd) return 0;
@@ -639,8 +639,8 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
-#ifdef GEMPL
-    std::cout<< "Component" << comp_id << " : \t" << t.format(5, "%us user + %ss system = %ts (%p%)") << std::endl;
+#ifdef _GEMPL
+    std::cout<< "Component" << comp_id << " : \t" << t.format(10, "%us user + %ss system = %ts (%p%)") << std::endl;
 #endif
 
 	return component_conflict_num;

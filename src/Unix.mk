@@ -4,7 +4,7 @@
 
 # detect compiler 
 ifneq ($(shell which g++48),)
-	CXX = g++48
+	CXX = g++
 	AR = ar
 else
 ifneq ($(shell which g++47),)
