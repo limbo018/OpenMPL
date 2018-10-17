@@ -499,6 +499,9 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	double acc_obj_value = 0;
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
+#ifdef GEMPL
+		boost::timer::cpu_timer t;
+#endif
 		graph_type sg;
 		std::vector<int8_t>& vSubColor = mSubColor[sub_comp_id];
 		std::vector<vertex_descriptor>& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
@@ -554,6 +557,11 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
         else // no need to update vSubColor, as it is already updated by sub call 
             acc_obj_value += obj_value2;
 		delete pcs;
+#ifdef GEMPL
+		std::cout << "====** Sub_Component " << comp_id << "_" <<sub_comp_id << "  **====" << std::endl;
+		std::cout << "\t" << "pattern number : " << num_vertices(sg) << std::endl;;
+		std::cout << "\t" << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
+#endif
 	}
 
 	// recover color assignment according to the simplification level set previously 
@@ -607,14 +615,14 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 {
 #ifdef GEMPL
     boost::timer::cpu_timer t;
+    std::cout << "===================  Component  " << comp_id << " ===================="  << std::endl;
 #endif
     if (itBgn == itEnd) return 0;
-#ifdef DEBUG
     uint32_t count = 0;
+#ifdef DEBUG
     // check order 
 	for (std::vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
 	{
-        count ++;
 		uint32_t v1 = *(it-1), v2 = *it;
 		mplAssert(m_vCompId[v1] == m_vCompId[v2]);
 	}
@@ -631,6 +639,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; ++it)
 	{
         int8_t color = m_db->vPatternBbox[*it]->color();
+        count ++;
 		uint32_t& color_density = m_vColorDensity[color];
 #ifdef _OPENMP
 #pragma omp atomic
@@ -647,10 +656,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
 #ifdef GEMPL
-    std::cout << "===================  Component  " << comp_id << "  ===================" << std::endl;
-    std::cout << "\t" << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
-    std::cout << "\t" << "Conflict numbers : " << component_conflict_num << std::endl;
-    std::cout << "\t" << "Pattern numbers : " << count << std::endl;
+	std::cout << "**** total time : " << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
 #endif
 
 	return component_conflict_num;

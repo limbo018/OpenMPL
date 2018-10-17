@@ -13,7 +13,7 @@ fi
 
 benchmark_suit_hint=$1
 color_num_map=(3 4)
-coloring_distance_map=(120 160) # coloring_distance is paired with color_num
+coloring_distance_map=(120 160) # coloring_distance is paired with color_num, 120 for TPL, 160 for QPL
 algo_map=("LP") # BACKTRACK, ILP, LP, MIS
 simplify_level=3
 thread_num=8

@@ -1,2 +1,8 @@
 We want to solve every component independently. 
 Use graph embedding methods to determine the most suitable solver for every component.
+
+
+linux10:~/App/OpenMPL/bin> ./run.sh  > ../rpt_10-17-2018/sim_c6_c3_SDP.rpt
+/uac/gds/qsun/App/limbo/include/limbo/algorithms/coloring/SDPColoringCsdp.h:361: double limbo::algorithms::coloring::SDPColoringCsdp<GraphType>::coloring() [with GraphType = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::property<boost::vertex_index_t, unsigned int>, boost::property<boost::edge_index_t, unsigned int, boost::property<boost::edge_weight_t, float> > >]: Assertion `ret == 0' failed: SDP failed
+./run.sh: line 34: 39892 Aborted                 (core dumped) ./OpenMPL -shape POLYGON -in /uac/gds/qsun/App/ISCAS_sim/sim_c6.gds -out out.gds -coloring_distance 120 -uncolor_layer 101 -uncolor_layer 1 -color_num 3 -algo SDP -thread_num 8 -simplify_level 3
+
