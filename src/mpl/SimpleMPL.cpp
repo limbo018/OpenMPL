@@ -52,6 +52,11 @@ SimpleMPL::~SimpleMPL()
 }
 void SimpleMPL::run(int argc, char** argv)
 {
+#ifdef _OPENMP
+	std::cout << "----OPENMP defined !----" << std::endl;
+#else
+	std::cout << "****OPENMP not defined !****" << std::endl;  
+#endif
     this->reset(false);
 	this->read_cmd(argc, argv);
 	this->read_gds();
@@ -600,7 +605,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
-#ifdef _GEMPL
+#ifdef GEMPL
     boost::timer::cpu_timer t;
 #endif
     if (itBgn == itEnd) return 0;
@@ -639,8 +644,8 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
-#ifdef _GEMPL
-    std::cout<< "Component" << comp_id << " : \t" << t.format(10, "%us user + %ss system = %ts (%p%)") << std::endl;
+#ifdef GEMPL
+    std::cout<< "Component" << comp_id << " : \t" << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
 #endif
 
 	return component_conflict_num;

@@ -103,7 +103,7 @@ endif
 endif
 
 ifeq ($(GEMPL), 1)
-	CXXFLAGS += -D _GEMPL
+	CXXFLAGS += -D GEMPL
 endif
 
 # ==========================================================================
