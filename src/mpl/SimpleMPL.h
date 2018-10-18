@@ -18,13 +18,15 @@
 #include <limbo/geometry/api/GeoBoostPolygonApi.h>
 #include <limbo/geometry/Geometry.h>
 #include <boost/polygon/interval_data.hpp>
-//#include <boost/geometry/geometries/adapted/boost_tuple.hpp>
+#include <boost/geometry/geometries/register/multi_polygon.hpp>
+
 SIMPLEMPL_BEGIN_NAMESPACE
 #define GUROBI 1
-//BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs:cartesian)
+BOOST_GEOMETRY_REGISTER_MULTI_POLYGON(std::vector<LayoutDB::rectangle_type>)
 namespace la = limbo::algorithms;
 namespace lac = la::coloring;
-
+namespace bgm = boost::geometry::model;
+namespace bgc = boost::geometry::cs;
 class SimpleMPL
 {
     public:
@@ -41,8 +43,10 @@ class SimpleMPL
         typedef layoutdb_type::graph_type              graph_type;
         typedef layoutdb_type::vertex_descriptor       vertex_descriptor;
         typedef layoutdb_type::edge_descriptor         edge_descriptor;
-
-        /// default constructor 
+		typedef bgm::point<int, 2, bgc::cartesian>	   intSecPoint;
+		typedef bgm::box<intSecPoint>				   intSecBox;
+        
+		/// default constructor 
         SimpleMPL();
         /// destructor 
         ~SimpleMPL();
@@ -134,9 +138,10 @@ class SimpleMPL
 
         //*********************** Stitch Insertion ***********************//
     public:
-		// Constructor, I am not sure whether the pitch is useful here.
-        // But the default value is 0.
-        SimpleMPL(double pitch);
+		// I failed to use BOOST_GEOMETRY_REGISTER_BOX to register Rectangle<int> type. So I use the newly defined
+		// and boost friendly method to solve this problem.
+
+		
 
     protected:
         // get the width of the rectangle
@@ -159,16 +164,11 @@ class SimpleMPL
         // Generate Stitch Insertion Points for QPL
         // void stitchGenerateQPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
 	    // Generate Stitch Insertion Points for TPL
-        void BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
-
-
-        // coordinate_type m_layout_left       = INT32_MAX;
-        // coordinate_type m_layout_right      = INT32_MIN;
-        // coordinate_type m_layout_top        = INT32_MIN;
-        // coordinate_type m_layout_down       = INT32_MAX;
+        void BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);	
 
 		std::vector<uint32_t>	new2ori;	// store the mapping relationships from new patterns back to original patterns.
 		std::vector<std::vector<uint32_t> > SplitMapping; // stores the mapping relationships between original patterns and newly - generated patterns.
+
 };
 
 SIMPLEMPL_END_NAMESPACE

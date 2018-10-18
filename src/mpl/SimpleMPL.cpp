@@ -1290,12 +1290,17 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
 			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
 			std::vector<rectangle_type> output;
+			//std::vector<intSecBox> output;
+		//	intSecBox tempA{{gtl::xl(extendPattern),gtl::yl(extendPattern)},{gtl::xh(extendPattern), gtl::yh(extendPattern)} };	
+		//	intSecBox tempB{{gtl::xl(pPattern),gtl::yl(pPattern)},{gtl::xh(pPattern), gtl::yh(pPattern)} };
 			// calculate the intersection of two patterns.
+			//bg::intersection(tempA, tempB, output);
 			bg::intersection(extendPattern, pPattern, output);
 			for (std::vector<rectangle_type>::iterator itOutput = output.begin(); itOutput != output.end(); itOutput++)
 			//BOOST_FOREACH(rectangle_type p, output)
 			{
-				vInterRect.push_back(*itOutput);
+		//		rectangle_pointer_type tempRect = new rectangle_type(itOutput->min_corner().get<0>(), itOutput->min_corner().get<1>(), itOutput->max_corner().get<0>(),itOutput->max_corner().get<1>(),);
+				vInterRect.push_back(*tempRect);
 			}
 		} // for nei. Traverse all the intersections with its neighbours.
 
