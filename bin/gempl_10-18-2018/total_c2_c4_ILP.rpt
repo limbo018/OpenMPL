@@ -1,0 +1,109 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c2.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 3963
+(I) Total patterns # = 2196
+(I) Shape mode = POLYGON
+(I) Coloring distance = 160 db ( 160 nm )
+(I) Color num = 4
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = ILP_GURBOI
+(I) reading input files takes 0.010000 seconds CPU, 0.018403 seconds real
+(I) Constructing graph for 2196 patterns...
+(I) 2196 vertices, 6397 edges
+(I) Computing connected components...
+(I) Solving 10 independent components...
+===================  Component  0 ====================
+Component 0 has 11 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 78
+	0.790000000s user + 0.010000000s system = 0.800000000s (96.6%)
+====** Sub_Component 0_1  **====
+	pattern number : 79
+	0.050000000s user + 0.000000000s system = 0.050000000s (91.2%)
+====** Sub_Component 0_2  **====
+	pattern number : 110
+	0.150000000s user + 0.010000000s system = 0.160000000s (94.4%)
+====** Sub_Component 0_3  **====
+	pattern number : 94
+	42.840000000s user + 0.100000000s system = 42.940000000s (98.7%)
+====** Sub_Component 0_4  **====
+	pattern number : 113
+	32.770000000s user + 0.130000000s system = 32.900000000s (98.0%)
+====** Sub_Component 0_5  **====
+	pattern number : 97
+	4.400000000s user + 0.010000000s system = 4.410000000s (99.1%)
+====** Sub_Component 0_6  **====
+	pattern number : 115
+	0.100000000s user + 0.000000000s system = 0.100000000s (101.9%)
+====** Sub_Component 0_7  **====
+	pattern number : 77
+	35.820000000s user + 0.050000000s system = 35.870000000s (99.1%)
+====** Sub_Component 0_8  **====
+	pattern number : 74
+	0.300000000s user + 0.010000000s system = 0.310000000s (100.8%)
+====** Sub_Component 0_9  **====
+	pattern number : 89
+	7.080000000s user + 0.010000000s system = 7.090000000s (98.7%)
+====** Sub_Component 0_10  **====
+	pattern number : 135
+	1.770000000s user + 0.020000000s system = 1.790000000s (98.3%)
+**** total time : 126.380000000s user + 0.350000000s system = 126.730000000s (98.6%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  4 ====================
+Component 4 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  5 ====================
+Component 5 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  6 ====================
+Component 6 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  7 ====================
+Component 7 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  8 ====================
+Component 8 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  9 ====================
+Component 9 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 126.740000 seconds CPU, 128.517503 seconds real
+(I) Conflict number = 17
+(I) Color 0 density = 572
+(I) Color 1 density = 619
+(I) Color 2 density = 427
+(I) Color 3 density = 578
+(W) Output file not specified, no file generated
+(I) writing output file takes 0.000000 seconds CPU, 0.000002 seconds real
+(I) program takes 126.750000 seconds CPU, 128.536326 seconds real
+
+real	2m8.546s
+user	2m6.404s
+sys	0m0.356s

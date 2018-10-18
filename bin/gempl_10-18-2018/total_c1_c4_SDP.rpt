@@ -1,0 +1,21 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(A) SimpleMPL.cpp:113: void SimpleMPL::SimpleMPL::read_gds(): Assertion `reader(m_db->input_gds())' failed: failed to read /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/ISCAS_total/total_c1.gds
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/ISCAS_total/total_c1.gds
+./gempl.sh: line 49: 37760 Aborted                 (core dumped) ${cmd}
+
+real	0m0.038s
+user	0m0.002s
+sys	0m0.003s

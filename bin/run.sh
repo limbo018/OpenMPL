@@ -23,12 +23,12 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape POLYGON \
-	-in bench/total_c1.gds \
+	-in /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c3.gds \
     -out benchout/total_c1_out.gds \
-	-coloring_distance 120 \
+	-coloring_distance 160 \
     -uncolor_layer 101 \
     -uncolor_layer 1 \
-	-color_num 3 \
+	-color_num 4 \
     -algo SDP \
     -thread_num 8 \
 	-simplify_level 3

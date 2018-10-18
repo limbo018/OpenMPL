@@ -1,0 +1,81 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c1.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 2093
+(I) Total patterns # = 1124
+(I) Shape mode = POLYGON
+(I) Coloring distance = 120 db ( 120 nm )
+(I) Color num = 3
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = LP_GUROBI
+(I) reading input files takes 0.000000 seconds CPU, 0.012414 seconds real
+(I) Constructing graph for 1124 patterns...
+(I) 1124 vertices, 2146 edges
+(I) Computing connected components...
+(I) Solving 4 independent components...
+===================  Component  0 ====================
+Component 0 has 8 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 34
+	0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+====** Sub_Component 0_1  **====
+	pattern number : 39
+	0.010000000s user + 0.000000000s system = 0.010000000s (96.5%)
+====** Sub_Component 0_2  **====
+	pattern number : 26
+	0.010000000s user + 0.000000000s system = 0.010000000s (70.1%)
+====** Sub_Component 0_3  **====
+	pattern number : 39
+	0.000000000s user + 0.010000000s system = 0.010000000s (105.7%)
+====** Sub_Component 0_4  **====
+	pattern number : 33
+	0.010000000s user + 0.000000000s system = 0.010000000s (127.4%)
+====** Sub_Component 0_5  **====
+	pattern number : 44
+	0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+====** Sub_Component 0_6  **====
+	pattern number : 46
+	0.010000000s user + 0.000000000s system = 0.010000000s (93.6%)
+====** Sub_Component 0_7  **====
+	pattern number : 32
+	0.010000000s user + 0.000000000s system = 0.010000000s (118.8%)
+**** total time : 0.130000000s user + 0.010000000s system = 0.140000000s (88.9%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 0.150000 seconds CPU, 0.160392 seconds real
+(I) Conflict number = 48
+(I) Color 0 density = 447
+(I) Color 1 density = 433
+(I) Color 2 density = 244
+(W) Output file not specified, no file generated
+(I) writing output file takes 0.000000 seconds CPU, 0.000003 seconds real
+(I) program takes 0.150000 seconds CPU, 0.173116 seconds real
+
+real	0m0.191s
+user	0m0.144s
+sys	0m0.021s
