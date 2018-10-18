@@ -18,9 +18,10 @@
 #include <limbo/geometry/api/GeoBoostPolygonApi.h>
 #include <limbo/geometry/Geometry.h>
 #include <boost/polygon/interval_data.hpp>
-
+//#include <boost/geometry/geometries/adapted/boost_tuple.hpp>
 SIMPLEMPL_BEGIN_NAMESPACE
 #define GUROBI 1
+//BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs:cartesian)
 namespace la = limbo::algorithms;
 namespace lac = la::coloring;
 
@@ -143,7 +144,7 @@ class SimpleMPL
         // get the height of the rectangle
         // coordinate_type getHeight(rectangle_pointer_type rect) { return gtl::yh(*rect) - gtl::yl(*rect); }
 
-		void adj4NewPatterns(std::vector<std::vector<uint32_t>> & new_mAdjVertex);
+		void adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVertex);
 		// I think the storage operation is a little complex, so I combine the storage operation and projection() into one.
 		// The vBookmark can help index the starting position of each component.
 		void runProjection(std::vector<uint32_t> & vBookmark);
@@ -160,7 +161,6 @@ class SimpleMPL
 	    // Generate Stitch Insertion Points for TPL
         void BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
 
-        double PITCH                = 0;    // still not sure whether use pitch in this problem
 
         // coordinate_type m_layout_left       = INT32_MAX;
         // coordinate_type m_layout_right      = INT32_MIN;
@@ -168,7 +168,7 @@ class SimpleMPL
         // coordinate_type m_layout_down       = INT32_MAX;
 
 		std::vector<uint32_t>	new2ori;	// store the mapping relationships from new patterns back to original patterns.
-		std::vector<std::vector<uint32_t>> SplitMapping; // stores the mapping relationships between original patterns and newly - generated patterns.
+		std::vector<std::vector<uint32_t> > SplitMapping; // stores the mapping relationships between original patterns and newly - generated patterns.
 };
 
 SIMPLEMPL_END_NAMESPACE

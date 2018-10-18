@@ -46,12 +46,6 @@ SimpleMPL::SimpleMPL()
     this->reset(true);
 }
 
-SimpleMPL::SimpleMPL(double pitch)
-{
-    this->reset(true);
-    this->PITCH = pitch;
-}
-
 SimpleMPL::~SimpleMPL()
 {
     if (m_db) delete m_db;
@@ -92,7 +86,7 @@ void SimpleMPL::reset(bool init)
         std::vector<uint32_t>().swap(m_vCompId);
         std::vector<uint32_t>().swap(m_vColorDensity);
         std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
-		std::vector<std::vector<uint32_t>>().swap(SplitMapping);
+		std::vector<std::vector<uint32_t> >().swap(SplitMapping);
 		std::vector<uint32_t>().swap(new2ori);
     }
     m_db = NULL;
@@ -267,7 +261,7 @@ void SimpleMPL::construct_graph_with_outputs(std::string vertex_file_name, std::
     // assume vertices start from 0 and end with vertex_num - 1
     uint32_t vertex_num = m_db->vPatternBbox.size();
     std::ofstream vertex_out(vertex_file_name.c_str());
-    for (int i=0; i < vertex_num; i++)
+    for (uint32_t i=0; i < vertex_num; i++)
     {
         vertex_out << gtl::xl(*(m_db->vPatternBbox[i])) << ","
                    << gtl::yl(*(m_db->vPatternBbox[i])) << ","
@@ -314,7 +308,7 @@ void SimpleMPL::construct_graph_with_outputs(std::string vertex_file_name, std::
             vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory
             // parallel with omp reduction here
             uint32_t nei_num = vAdjVertex.size();
-            for(int i = 0; i < nei_num; i++)
+            for(uint32_t i = 0; i < nei_num; i++)
             {
                 adjacency_out << pPattern->pattern_id() << "," << vAdjVertex[i] << "\n";
             }
@@ -343,7 +337,7 @@ void SimpleMPL::construct_graph()
     // Added by Qi Sun.
     // Used to generate the vertex file.
     std::ofstream vertex_out("/home/qisun/vertex_out.txt");
-    for (int i=0; i < vertex_num; i++)
+    for (uint32_t i=0; i < vertex_num; i++)
     {
         vertex_out << m_db->vPatternBbox[i]->pattern_id() << std::endl;
     }
@@ -824,7 +818,7 @@ void SimpleMPL::store_component(const std::vector<uint32_t>::const_iterator itBg
         std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
         uint32_t nei_num = vAdjVertex.size();
         adjacency_out<<pPattern->pattern_id()<< " ";
-        for (int i = 0; i < nei_num; i++)
+        for (uint32_t i = 0; i < nei_num; i++)
         {
             adjacency_out << vAdjVertex[i] << " ";
         }
@@ -839,7 +833,7 @@ void SimpleMPL::store_component(const std::vector<uint32_t>::const_iterator itBg
     adjacency_out.close();
     std::cout<<" Store Component " << comp_id <<" Successfully!"<<std::endl;
 }
-
+/*
 void SimpleMPL::store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
 	std::cout << "In SimpleMPL::store_component. This is Component "<< comp_id << " !" << std::endl;
@@ -863,7 +857,7 @@ void SimpleMPL::store_component_dlx(const std::vector<uint32_t>::const_iterator 
     {
 		vertex_number += 1;
     	//vertex_number += m_db->vPatternBbox[*it].size();
-        rectangle_pointer_type const& pPattern = m_db->vPatternBbox[*it];
+        rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
         std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
         edge_numbers += vAdjVertex.size();
     }
@@ -873,7 +867,7 @@ void SimpleMPL::store_component_dlx(const std::vector<uint32_t>::const_iterator 
     	rectangle_pointer_type const& pPattern = m_db->vPatternBbox[*it];
         std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[*it];
         uint32_t nei_num = vAdjVertex.size();
-        for (int i = 0; i < nei_num; i++)
+        for (uint32_t i = 0; i < nei_num; i++)
         {
             dlx_out<<pPattern->pattern_id()<< " " << vAdjVertex[i] << std::endl;
         }
@@ -881,7 +875,7 @@ void SimpleMPL::store_component_dlx(const std::vector<uint32_t>::const_iterator 
     dlx_out.close();
     std::cout<<" Store Component " << comp_id <<" Successfully!"<<std::endl;
 }
-
+*/
 uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph)
 {
 	// construct a graph for current component 
@@ -1053,28 +1047,28 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 	// step 2 : generate stages according to the stitch positions
 	//			that is each pairwise of neighboring positions generates a stage.
 	// ================================================================================
-	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>> vStages;
+	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> > vStages;
 	for (uint32_t i = 1; i < tempPos.size(); i++)
 		vStages.push_back(std::make_pair(std::make_pair(tempPos[i - 1], tempPos[i]), 0));
 	// calculate the times every stage covered by all the intersections.
-	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>>::iterator it = vStages.begin();
+	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> >::iterator it = vStages.begin();
 		it != vStages.end(); it++)
 	{
 		coordinate_type left = it->first.first;
 		coordinate_type right = it->first.second;
 		int overlapping_count = 0;
-		for (std::vector<rectangle_type>::const_iterator it = vinterRect.begin(); it != vinterRect.end(); it++)
+		for (std::vector<rectangle_type>::const_iterator itInt = vinterRect.begin(); itInt != vinterRect.end(); itInt++)
 		{
 			if (isHor)
 			{
-				if (left < gtl::xl(*it)) continue;
-				if (right > gtl::yh(*it)) continue;
+				if (left < gtl::xl(*itInt)) continue;
+				if (right > gtl::yh(*itInt)) continue;
 				overlapping_count++;
 			}
 			else
 			{
-				if (left < gtl::yl(*it)) continue;
-				if (right > gtl::yh(*it)) continue;
+				if (left < gtl::yl(*itInt)) continue;
+				if (right > gtl::yh(*itInt)) continue;
 				overlapping_count++;
 			}
 		}
@@ -1092,7 +1086,7 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 		vStages.push_back(std::make_pair(std::make_pair(upper, upper), 0));
 #ifdef DEBUG
 	std::cout << "DEBUG_PROJECTION| vStages = ";
-	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>>::iterator it = vStages.begin();
+	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> >::iterator it = vStages.begin();
 		it != vStages.end(); it++)
 		std::cout << it->second;
 	std::cout << std::endl;
@@ -1114,7 +1108,7 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 	// ================================================================================
 	std::vector<coordinate_type>().swap(vstitches);
 	// The operations here are very confusing.
-	for (int i = 0; i < vZeroIds.size() - 1; i++)
+	for (uint32_t i = 0; i < vZeroIds.size() - 1; i++)
 	{
 		uint32_t pos1 = vZeroIds[i];
 		uint32_t pos2 = vZeroIds[i + 1];
@@ -1144,7 +1138,7 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 			else if (1 != vStages[pos1 + 1].second) find = true;
 			else if (1 != vStages[pos1 - 1].second) find = true;
 			else if (0 != vStages[pos1 - 2].second) find = true;
-			if (find = false) continue;
+			if (find == false) continue;
 			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
 			vstitches.push_back(position);
 		}
@@ -1180,7 +1174,7 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 	sort(vstitches.begin(), vstitches.end());
 #ifdef DEBUG
 	std::cout << "DEBUG| output the vStages: " << std::endl;
-	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t>>::iterator it = vStages.begin();
+	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> >::iterator it = vStages.begin();
 		it != vStages.end(); it++)
 		std::cout << it->second << "[" << it->first.first << ", " << it->first.second << "]" << std::endl;
 	std::cout << std::endl;
@@ -1209,12 +1203,13 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	uint32_t total_pattern_number = 0;
 	// resize SplitMapping to store all patterns in original graph
 	SplitMapping.resize(m_vVertexOrder.size());
-	std::vector<std::vector<rectangle_pointer_type>> Component_Pattern_list(m_comp_cnt);
+	std::vector<std::vector<rectangle_pointer_type> > Component_Pattern_list(m_comp_cnt);
 
+	uint32_t comp_id = 0;
 #ifdef _OPENMP
 #pragma omp parallel for private(comp_id) num_threads(m_db->thread_num())
 #endif
-	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	for ( comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
 	{
 		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
 		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
@@ -1260,9 +1255,9 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	//			For the patterns in one original pattern, all the relationships will be measured 
 	//			during the component solving process.
 	// ==============================================================================================
-	std::vector<std::vector<uint32_t>> new_mAdjVertex;
+	std::vector<std::vector<uint32_t> > new_mAdjVertex;
 	adj4NewPatterns(new_mAdjVertex);
-	std::vector<std::vector<uint32_t>>().swap(m_mAdjVertex);
+	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex = new_mAdjVertex;
 	return;
 }
@@ -1294,12 +1289,13 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 			rectangle_type extendPattern(*m_db->vPatternBbox[*nei]);
 			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
 			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
-			std::queue<rectangle_type> output;
+			std::vector<rectangle_type> output;
 			// calculate the intersection of two patterns.
 			bg::intersection(extendPattern, pPattern, output);
-			BOOST_FOREACH(rectangle_type p, output)
+			for (std::vector<rectangle_type>::iterator itOutput = output.begin(); itOutput != output.end(); itOutput++)
+			//BOOST_FOREACH(rectangle_type p, output)
 			{
-				vInterRect.push_back(p);
+				vInterRect.push_back(*itOutput);
 			}
 		} // for nei. Traverse all the intersections with its neighbours.
 
@@ -1330,7 +1326,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		// ===================================================================
 		if (isHor) {
 			// If pPattern is horizontal, all the stitches' positions should be in (xl, xh)
-			for (int j = 0; j < vstitches.size(); j++)
+			for (uint32_t j = 0; j < vstitches.size(); j++)
 			{
 				int pos = vstitches[j];
 				assert(pos > gtl::xl(*pPattern) && pos < gtl::xh(*pPattern));
@@ -1338,7 +1334,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		}
 		else {
 			// If pPattern is vertical, all the stitches' position should be in (yl, yh)
-			for (int j = 0; j < vstitches.size(); j++)
+			for (uint32_t j = 0; j < vstitches.size(); j++)
 			{
 				int pos = vstitches[j];
 				assert(pos > gtl::yl(*pPattern) && pos < gtl::yh(*pPattern));
@@ -1370,7 +1366,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 				// If horizontal, insert xl and xh into vstitches.
 				vstitches.insert(vstitches.begin(), gtl::xl(*pPattern));
 				vstitches.push_back(gtl::xh(*pPattern));
-				for (int j = 0; j < vstitches.size() - 1; j++)
+				for (uint32_t j = 0; j < vstitches.size() - 1; j++)
 				{
 					rectangle_pointer_type new_Pattern = new rectangle_type;
 					gtl::xl(*new_Pattern, vstitches[j]);
@@ -1391,7 +1387,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 				// If vertical, insert yl and yh into vstitches.
 				vstitches.insert(vstitches.begin(), gtl::yl(*pPattern));
 				vstitches.push_back(gtl::yh(*pPattern));
-				for (int j = 0; j < vstitches.size() - 1; j++)
+				for (uint32_t j = 0; j < vstitches.size() - 1; j++)
 				{
 					rectangle_pointer_type new_Pattern = new rectangle_type();
 					gtl::xl(*new_Pattern, gtl::xl(*pPattern));
@@ -1412,7 +1408,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 	return;
 }
 
-void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t>> & new_mAdjVertex)
+void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVertex)
 {
 	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
 	{
