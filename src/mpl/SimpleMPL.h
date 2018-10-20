@@ -18,15 +18,43 @@
 #include <limbo/geometry/api/GeoBoostPolygonApi.h>
 #include <limbo/geometry/Geometry.h>
 #include <boost/polygon/interval_data.hpp>
-#include <boost/geometry/geometries/register/multi_polygon.hpp>
+
+#ifdef BOOST_REG_INTERSECTION
+// register the defined data structures in BOOST and use the orginal boost functions to compute the intersections
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/box.hpp>
+#endif
 
 SIMPLEMPL_BEGIN_NAMESPACE
+
 #define GUROBI 1
-BOOST_GEOMETRY_REGISTER_MULTI_POLYGON(std::vector<LayoutDB::rectangle_type>)
+#ifdef BOOST_REG_INTERSECTION
+	struct QiPoint
+	{
+		int x, y;
+	};
+	struct QiBox{
+		QiPoint ll;
+		QiPoint ur;
+	};
+
+	BOOST_GEOMETRY_REGISTER_POINT_2D(QiPoint, int, bg::cs::cartesian, x, y)
+	BOOST_GEOMETRY_REGISTER_BOX(QiBox, QiPoint, ll, ur)
+	
+	LayoutDB::rectangle_type interSectionRectBoost(LayoutDB::rectangle_type rect1, LayoutDB::rectangle_type QRectangle rect2)
+	{
+		QiBox box1 = bg::make<QiBox> (gtl::xl(rect1), gtl::yl(rect1), gtl::xh(rect1), gtl::yh(rect1));
+		QiBox box2 = bg::make<QiBox> (gtl::xl(rect2), gtl::yl(rect2), gtl::xh(rect2), gtl::yh(rect2));
+		QiBox temp;
+		bg::intersection(box1, box2, temp);
+		LayoutDB::rectangle_type output = new LayoutDB::rectangle_type(temp.ll.x, temp.ll.y, temp.ur.x, temp.ur.y);
+		return output;
+	}
+#endif
+
 namespace la = limbo::algorithms;
 namespace lac = la::coloring;
-namespace bgm = boost::geometry::model;
-namespace bgc = boost::geometry::cs;
 class SimpleMPL
 {
     public:
@@ -43,9 +71,8 @@ class SimpleMPL
         typedef layoutdb_type::graph_type              graph_type;
         typedef layoutdb_type::vertex_descriptor       vertex_descriptor;
         typedef layoutdb_type::edge_descriptor         edge_descriptor;
-		typedef bgm::point<int, 2, bgc::cartesian>	   intSecPoint;
-		typedef bgm::box<intSecPoint>				   intSecBox;
-        
+
+
 		/// default constructor 
         SimpleMPL();
         /// destructor 
@@ -137,14 +164,12 @@ class SimpleMPL
         mutable std::vector<std::pair<uint32_t, uint32_t> > m_vConflict; ///< conflict patterns  
 
         //*********************** Stitch Insertion ***********************//
-    public:
-		// I failed to use BOOST_GEOMETRY_REGISTER_BOX to register Rectangle<int> type. So I use the newly defined
-		// and boost friendly method to solve this problem.
-
-		
-
     protected:
-        // get the width of the rectangle
+#ifndef BOOST_REG_INTERSECTION
+		// I failed to use BOOST_GEOMETRY_REGISTER_BOX to register Rectangle<int> type. So I use the newly defined
+		rectangle_type interSectionRect(rectangle_type rect1, rectangle_type rect2);
+#endif	
+		// get the width of the rectangle
         // coordinate_type getWidth(rectangle_pointer_type rect) { return gtl::xh(*rect) - gtl::xl(*rect); }
         // get the height of the rectangle
         // coordinate_type getHeight(rectangle_pointer_type rect) { return gtl::yh(*rect) - gtl::yl(*rect); }

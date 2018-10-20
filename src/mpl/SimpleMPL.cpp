@@ -1289,19 +1289,12 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 			rectangle_type extendPattern(*m_db->vPatternBbox[*nei]);
 			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
 			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
-			std::vector<rectangle_type> output;
-			//std::vector<intSecBox> output;
-		//	intSecBox tempA{{gtl::xl(extendPattern),gtl::yl(extendPattern)},{gtl::xh(extendPattern), gtl::yh(extendPattern)} };	
-		//	intSecBox tempB{{gtl::xl(pPattern),gtl::yl(pPattern)},{gtl::xh(pPattern), gtl::yh(pPattern)} };
-			// calculate the intersection of two patterns.
-			//bg::intersection(tempA, tempB, output);
-			bg::intersection(extendPattern, pPattern, output);
-			for (std::vector<rectangle_type>::iterator itOutput = output.begin(); itOutput != output.end(); itOutput++)
-			//BOOST_FOREACH(rectangle_type p, output)
-			{
-		//		rectangle_pointer_type tempRect = new rectangle_type(itOutput->min_corner().get<0>(), itOutput->min_corner().get<1>(), itOutput->max_corner().get<0>(),itOutput->max_corner().get<1>(),);
-				vInterRect.push_back(*tempRect);
-			}
+			
+#ifdef BOOST_REG_INTERSECTION
+			vInterRect.push_back(interSectionRectBoost(extendPattern, *pPattern));
+#else
+			vInterRect.push_back(interSectionRect(extendPattern, *pPattern));
+#endif
 		} // for nei. Traverse all the intersections with its neighbours.
 
 		  // ===================================================================
@@ -1433,6 +1426,18 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVe
 	}
 	return;
 }
+
+LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1,  rectangle_type rect2)
+{
+	coordinate_type xl = std::max(gtl::xl(rect1), gtl::xl(rect2));
+	coordinate_type yl = std::max(gtl::yl(rect1), gtl::yl(rect2));
+	coordinate_type xh = std::min(gtl::xh(rect1), gtl::xh(rect2));
+	coordinate_type yh = std::min(gtl::yh(rect1), gtl::yh(rect2));
+	rectangle_pointer_type output = new rectangle_type(xl, yl, xh, yh);
+	return output;
+}
+
+
 
 void SimpleMPL::print_welcome() const
 {

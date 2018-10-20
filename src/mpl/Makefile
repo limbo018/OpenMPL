@@ -14,6 +14,8 @@ GUROBI = 1
 LEMONCBC = 0
 # default CSDP is off 
 CSDP = 1
+# default BOOST_REG_INTERSECTION is off
+BOOST_REG_INTERSECTION = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -99,6 +101,11 @@ else
 LIBS += $(STATIC_LINK_FLAG) -lpthread
 endif
 endif
+endif
+
+# BOOST_REG_INTERSECTION
+ifeq ($(BOOST_REG_INTERSECTION), 1)
+	CXXFLAGS += -DBOOST_REG_INTERSECTION
 endif
 
 # ==========================================================================
