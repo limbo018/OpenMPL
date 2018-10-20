@@ -1240,7 +1240,6 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
 	std::vector<uint32_t>().swap(m_vVertexOrder);
 	std::vector<uint32_t>().swap(m_vCompId);
-	new2ori.resize(total_pattern_number);
 	
 
     // generate new vBookmark
@@ -1284,7 +1283,7 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	//			during the component solving process.
 	// ==============================================================================================
 	std::vector<std::vector<uint32_t> > new_mAdjVertex;
-	adj4NewPatterns(new_mAdjVertex);`
+	adj4NewPatterns(new_mAdjVertex);
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex = new_mAdjVertex;
 	return;
