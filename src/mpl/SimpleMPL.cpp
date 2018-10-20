@@ -185,8 +185,24 @@ void SimpleMPL::solve(std::string simplified_graph)
         if (i == 0 || m_vCompId[m_vVertexOrder[i-1]] != m_vCompId[m_vVertexOrder[i]])
             vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
     }
+#ifdef DEBUG
+    std::cout << "============== Before runProjection.. =============="<< std::endl;
+    for(uint32_t i = 0; i < vBookmark.size(); i++)
+    {
+        std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
+    }
+#endif
 
     runProjection(vBookmark);
+
+
+#ifdef DEBUG
+    std::cout << "============== After runProjection.. ==============" << std::endl;
+    for(uint32_t i = 0; i < vBookmark.size(); i++)
+    {
+        std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
+    }
+#endif
 
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
 	// thread number controled by user option. Solve the components on parallel.
@@ -1007,7 +1023,6 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
     la::graphviz2pdf(filename);
 }
 
-
 bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)
 {
     double xl = gtl::xl(*tmp);
@@ -1200,12 +1215,12 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	//			The newly-generated patterns are stored in Component_Pattern_list, 
 	//			with the index of pattern ids.
 	// ===========================================================================================
-	uint32_t total_pattern_number = 0;
+	
 	// resize SplitMapping to store all patterns in original graph
 	SplitMapping.resize(m_vVertexOrder.size());
 	std::vector<std::vector<rectangle_pointer_type> > Component_Pattern_list(m_comp_cnt);
 
-	uint32_t comp_id = 0;
+    uint32_t comp_id = 0;
 #ifdef _OPENMP
 #pragma omp parallel for private(comp_id) num_threads(m_db->thread_num())
 #endif
@@ -1213,10 +1228,9 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	{
 		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
 		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
-		std::vector<rectangle_pointer_type> new_PatternBox_temp;
-
+		
+        std::vector<rectangle_pointer_type> new_PatternBox_temp;
 		projection(itBgn, itEnd, new_PatternBox_temp);
-		total_pattern_number += new_PatternBox_temp.size();
 		Component_Pattern_list[comp_id] = new_PatternBox_temp;
 	}
 	// ================================================================================================
@@ -1227,27 +1241,41 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	std::vector<uint32_t>().swap(m_vVertexOrder);
 	std::vector<uint32_t>().swap(m_vCompId);
 	new2ori.resize(total_pattern_number);
-	uint32_t pattern_number = 0;
-	for(uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	
+
+    // generate new vBookmark
+    std::vector<uint32_t>().swap(vBookmark);
+    // total_pattern_number means the number of patterns after projection.
+    uint32_t total_pattern_number = 0;
+    for(comp_id = 0; comp_id < m_comp_cnt; comp_id++)
+    {
+        vBookmark.push_back(total_pattern_number);
+        total_pattern_number += Component_Pattern_list[comp_id].size();
+    }
+
+    
+    std::vector<uint32_t>().swap(new2ori);
+    new2ori.resize(total_pattern_number);
+    vBookmark.push_back(total_pattern_number);
+    uint32_t pattern_number = 0;
+    comp_id = 0;
+	for (uint32_t itVec = 0; itVec < SplitMapping.size(); itVec++)
 	{
-		// generate new pattern id
-		vBookmark[comp_id] = pattern_number;
-		for (uint32_t itVec = 0; itVec < SplitMapping.size(); itVec++)
+		for (std::vector<uint32_t>::iterator itsplit = SplitMapping[itVec].begin(); itsplit != SplitMapping[itVec].end(); itsplit++)
 		{
-			for (std::vector<uint32_t>::iterator itsplit = SplitMapping[itVec].begin(); itsplit != SplitMapping[itVec].end(); itsplit++)
-			{
-				Component_Pattern_list[comp_id][*itsplit]->pattern_id(pattern_number);
-				m_db->vPatternBbox.push_back(Component_Pattern_list[comp_id][*itsplit]);
-				m_vCompId.push_back(comp_id);
-				// update the mapping relationship, which will be used in step 3.
-				*itsplit = pattern_number;
-				// map new patterns back to original patterns 
-				new2ori[pattern_number] = itVec;
-				m_vVertexOrder.push_back(pattern_number);
-				pattern_number++;
-			}
+			Component_Pattern_list[comp_id][*itsplit]->pattern_id(pattern_number);
+			m_db->vPatternBbox.push_back(Component_Pattern_list[comp_id][*itsplit]);
+			// update the mapping relationship, which will be used in step 3.
+			*itsplit = pattern_number;
+			// map new patterns back to original patterns 
+			new2ori[pattern_number] = itVec;
+			m_vVertexOrder.push_back(pattern_number);
+            if(pattern_number >= vBookmark[comp_id + 1]) comp_id++;
+            m_vCompId[pattern_number] = comp_id;
+			pattern_number++;
 		}
 	}
+    vBookmark.pop_back();
 
 	// ==============================================================================================
 	// step 3 : compute the adjacency matrix.
@@ -1256,7 +1284,7 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	//			during the component solving process.
 	// ==============================================================================================
 	std::vector<std::vector<uint32_t> > new_mAdjVertex;
-	adj4NewPatterns(new_mAdjVertex);
+	adj4NewPatterns(new_mAdjVertex);`
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex = new_mAdjVertex;
 	return;
@@ -1268,11 +1296,11 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 // itEnd : component end node in the vector
 void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, std::vector<rectangle_pointer_type>& new_PatternVec)
 {
-	// pattern_count : used to re-generate pattern ids for all patterns in this component
-	int pattern_count;
 	// ===================================================================
 	// traverse all the vertices in the layout graph
 	// ===================================================================
+    // pattern_count : used to regenerate pattern ids for all patterns in this component
+    uint32_t pattern_count = 0;
 	for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
 	{
 		// ===================================================================
@@ -1284,16 +1312,20 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		std::vector<rectangle_type> vInterRect;
 		vInterRect.clear();
 		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
-		for (std::vector<uint32_t>::iterator nei = vAdjVertex.begin(); nei != vAdjVertex.end(); nei++)
+        vInterRect.resize(vAdjVertex.size());
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+		for (uint32_t nei = 0; nei != vAdjVertex.size(); nei ++)
 		{
-			rectangle_type extendPattern(*m_db->vPatternBbox[*nei]);
+			rectangle_type extendPattern(*m_db->vPatternBbox[vAdjVertex[nei]]);
 			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
 			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
 			
 #ifdef BOOST_REG_INTERSECTION
-			vInterRect.push_back(interSectionRectBoost(extendPattern, *pPattern));
+			vInterRect[nei] = interSectionRectBoost(extendPattern, *pPattern);
 #else
-			vInterRect.push_back(interSectionRect(extendPattern, *pPattern));
+			vInterRect[nei] = interSectionRect(extendPattern, *pPattern);
 #endif
 		} // for nei. Traverse all the intersections with its neighbours.
 
@@ -1345,10 +1377,10 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		//			SplitMapping	: mapping relationships between original patterns and splited patterns
 		// ===============================================================================================
 		std::vector<rectangle_pointer_type>().swap(new_PatternVec);
-		// This pattern hasn't been splited.
-		pattern_count = 0;
+        // If this pattern hasn't been splited,
 		if (vstitches.size() <= 0)
 		{
+            // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
 			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
 			new_Pattern->pattern_id(pattern_count);
 			new_PatternVec.push_back(new_Pattern);
@@ -1408,6 +1440,9 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 
 void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVertex)
 {
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
 	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
 	{
 		uint32_t parentId = new2ori[newPattern];
@@ -1420,7 +1455,12 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVe
 			{
 				coordinate_difference distance = m_db->euclidean_distance(*m_db->vPatternBbox[*it], *m_db->vPatternBbox[newPattern]);
 				if (distance < m_db->coloring_distance)
-					new_mAdjVertex[newPattern].push_back(*it);
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+                {
+                    new_mAdjVertex[newPattern].push_back(*it);
+				}
 			}
 		}
 	}

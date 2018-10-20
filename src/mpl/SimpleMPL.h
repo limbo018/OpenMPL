@@ -165,6 +165,7 @@ class SimpleMPL
 
         //*********************** Stitch Insertion ***********************//
     protected:
+        
 #ifndef BOOST_REG_INTERSECTION
 		// I failed to use BOOST_GEOMETRY_REGISTER_BOX to register Rectangle<int> type. So I use the newly defined
 		rectangle_type interSectionRect(rectangle_type rect1, rectangle_type rect2);
