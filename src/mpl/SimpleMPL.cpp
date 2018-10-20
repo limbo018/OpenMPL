@@ -1434,7 +1434,7 @@ LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1,  rect
 	coordinate_type xh = std::min(gtl::xh(rect1), gtl::xh(rect2));
 	coordinate_type yh = std::min(gtl::yh(rect1), gtl::yh(rect2));
 	rectangle_pointer_type output = new rectangle_type(xl, yl, xh, yh);
-	return output;
+	return *output;
 }
 
 

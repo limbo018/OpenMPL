@@ -72,7 +72,7 @@ ifeq ($(GUROBI), 1)
 INCLUDE += -I $(GUROBI_HOME)/include
 LIBS += -L $(GUROBI_HOME)/lib \
 		$(STATIC_LINK_FLAG) -lgurobi_c++ \
-		$(DYNAMIC_LINK_FLAG) -lgurobi60
+		$(DYNAMIC_LINK_FLAG) -lgurobi70
 endif 
 # Cbc lemon api (Cbc must be installed with static flag and lemon must be installed with Cbc as MIP solver)
 ifeq ($(LEMONCBC), 1)
