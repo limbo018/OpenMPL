@@ -12,10 +12,95 @@
 (D) size of Rectangle = 24 bytes
 (D) size of Polygon = 32 bytes
 ****OPENMP not defined !****
-(A) SimpleMPL.cpp:113: void SimpleMPL::SimpleMPL::read_gds(): Assertion `reader(m_db->input_gds())' failed: failed to read /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/ISCAS_total/total_c4.gds
-(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/ISCAS_total/total_c4.gds
-./gempl.sh: line 49: 37769 Aborted                 (core dumped) ${cmd}
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c4.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 6257
+(I) Total patterns # = 3217
+(I) Shape mode = POLYGON
+(I) Coloring distance = 160 db ( 160 nm )
+(I) Color num = 4
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = SDP_CSDP
+(I) reading input files takes 0.020000 seconds CPU, 0.034187 seconds real
+(I) Constructing graph for 3217 patterns...
+(I) 3217 vertices, 8802 edges
+(I) Computing connected components...
+(I) Solving 6 independent components...
+===================  Component  0 ====================
+Component 0 has 14 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 127
+	0.500000000s user + 0.010000000s system = 0.510000000s (96.6%)
+====** Sub_Component 0_1  **====
+	pattern number : 48
+	0.040000000s user + 0.000000000s system = 0.040000000s (94.7%)
+====** Sub_Component 0_2  **====
+	pattern number : 73
+	0.150000000s user + 0.000000000s system = 0.150000000s (102.1%)
+====** Sub_Component 0_3  **====
+	pattern number : 102
+	0.330000000s user + 0.000000000s system = 0.330000000s (101.0%)
+====** Sub_Component 0_4  **====
+	pattern number : 77
+	0.150000000s user + 0.000000000s system = 0.150000000s (96.8%)
+====** Sub_Component 0_5  **====
+	pattern number : 101
+	0.310000000s user + 0.000000000s system = 0.310000000s (94.5%)
+====** Sub_Component 0_6  **====
+	pattern number : 61
+	0.090000000s user + 0.000000000s system = 0.090000000s (89.6%)
+====** Sub_Component 0_7  **====
+	pattern number : 75
+	0.170000000s user + 0.000000000s system = 0.170000000s (102.1%)
+====** Sub_Component 0_8  **====
+	pattern number : 59
+	0.080000000s user + 0.000000000s system = 0.080000000s (95.8%)
+====** Sub_Component 0_9  **====
+	pattern number : 58
+	0.090000000s user + 0.000000000s system = 0.090000000s (108.4%)
+====** Sub_Component 0_10  **====
+	pattern number : 48
+	0.030000000s user + 0.000000000s system = 0.030000000s (76.3%)
+====** Sub_Component 0_11  **====
+	pattern number : 65
+	0.120000000s user + 0.000000000s system = 0.120000000s (107.7%)
+====** Sub_Component 0_12  **====
+	pattern number : 70
+	0.100000000s user + 0.000000000s system = 0.100000000s (94.4%)
+====** Sub_Component 0_13  **====
+	pattern number : 63
+	0.100000000s user + 0.000000000s system = 0.100000000s (99.2%)
+**** total time : 3.140000000s user + 0.010000000s system = 3.150000000s (97.5%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  4 ====================
+Component 4 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  5 ====================
+Component 5 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 3.160000 seconds CPU, 3.238020 seconds real
+(I) Conflict number = 30
+(I) Color 0 density = 907
+(I) Color 1 density = 920
+(I) Color 2 density = 908
+(I) Color 3 density = 482
+(W) Output file not specified, no file generated
+(I) writing output file takes 0.000000 seconds CPU, 0.000002 seconds real
+(I) program takes 3.180000 seconds CPU, 3.272612 seconds real
 
-real	0m0.035s
-user	0m0.002s
-sys	0m0.002s
+real	0m3.289s
+user	0m3.178s
+sys	0m0.018s

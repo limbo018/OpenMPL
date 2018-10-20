@@ -651,8 +651,10 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
     // only valid under no stitch 
     if (acc_obj_value != std::numeric_limits<uint32_t>::max())
-        mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
-
+    {
+		std::cout << "component_conflict_num = " << component_conflict_num << "\t" << "acc_obj_value = " << acc_obj_value << std::endl; 
+		mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
+	}
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 

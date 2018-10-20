@@ -1,0 +1,62 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c5.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 9786
+(I) Total patterns # = 5067
+(I) Shape mode = POLYGON
+(I) Coloring distance = 160 db ( 160 nm )
+(I) Color num = 4
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = ILP_GURBOI
+(I) reading input files takes 0.030000 seconds CPU, 0.107983 seconds real
+(I) Constructing graph for 5067 patterns...
+(I) 5067 vertices, 13606 edges
+(I) Computing connected components...
+(I) Solving 4 independent components...
+===================  Component  0 ====================
+Component 0 has 18 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 64
+	0.070000000s user + 0.010000000s system = 0.080000000s (93.8%)
+====** Sub_Component 0_1  **====
+	pattern number : 106
+	63.770000000s user + 0.180000000s system = 63.950000000s (98.6%)
+====** Sub_Component 0_2  **====
+	pattern number : 111
+	2.190000000s user + 0.030000000s system = 2.220000000s (97.9%)
+====** Sub_Component 0_3  **====
+	pattern number : 81
+	0.680000000s user + 0.000000000s system = 0.680000000s (97.6%)
+====** Sub_Component 0_4  **====
+	pattern number : 91
+	0.160000000s user + 0.010000000s system = 0.170000000s (103.3%)
+====** Sub_Component 0_5  **====
+	pattern number : 63
+	0.150000000s user + 0.010000000s system = 0.160000000s (104.5%)
+====** Sub_Component 0_6  **====
+	pattern number : 98
+	14.660000000s user + 0.020000000s system = 14.680000000s (97.5%)
+====** Sub_Component 0_7  **====
+	pattern number : 88
+	1.290000000s user + 0.010000000s system = 1.300000000s (89.4%)
+====** Sub_Component 0_8  **====
+	pattern number : 48
+	0.010000000s user + 0.010000000s system = 0.020000000s (108.6%)

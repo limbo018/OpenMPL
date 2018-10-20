@@ -26,7 +26,7 @@
 (I) Precolored layer # = 0
 (I) Path layer # = 0
 (I) Algorithm = ILP_GURBOI
-(I) reading input files takes 0.020000 seconds CPU, 0.039061 seconds real
+(I) reading input files takes 0.030000 seconds CPU, 0.033687 seconds real
 (I) Constructing graph for 3217 patterns...
 (I) 3217 vertices, 8802 edges
 (I) Computing connected components...
@@ -35,10 +35,68 @@
 Component 0 has 14 componetns.
 ====** Sub_Component 0_0  **====
 	pattern number : 127
-	0.280000000s user + 0.020000000s system = 0.300000000s (101.5%)
+	0.280000000s user + 0.010000000s system = 0.290000000s (96.3%)
 ====** Sub_Component 0_1  **====
 	pattern number : 48
-	1.570000000s user + 0.010000000s system = 1.580000000s (99.0%)
+	1.600000000s user + 0.020000000s system = 1.620000000s (97.0%)
 ====** Sub_Component 0_2  **====
 	pattern number : 73
-	1.370000000s user + 0.010000000s system = 1.380000000s (98.5%)
+	1.340000000s user + 0.000000000s system = 1.340000000s (98.2%)
+====** Sub_Component 0_3  **====
+	pattern number : 102
+	5878.950000000s user + 53.150000000s system = 5932.100000000s (99.0%)
+====** Sub_Component 0_4  **====
+	pattern number : 77
+	17.270000000s user + 0.020000000s system = 17.290000000s (98.6%)
+====** Sub_Component 0_5  **====
+	pattern number : 101
+	12.860000000s user + 0.020000000s system = 12.880000000s (98.5%)
+====** Sub_Component 0_6  **====
+	pattern number : 61
+	2.470000000s user + 0.010000000s system = 2.480000000s (100.0%)
+====** Sub_Component 0_7  **====
+	pattern number : 75
+	3.220000000s user + 0.010000000s system = 3.230000000s (98.4%)
+====** Sub_Component 0_8  **====
+	pattern number : 59
+	4.950000000s user + 0.010000000s system = 4.960000000s (99.1%)
+====** Sub_Component 0_9  **====
+	pattern number : 58
+	0.380000000s user + 0.010000000s system = 0.390000000s (103.2%)
+====** Sub_Component 0_10  **====
+	pattern number : 48
+	0.180000000s user + 0.000000000s system = 0.180000000s (98.2%)
+====** Sub_Component 0_11  **====
+	pattern number : 65
+	2.320000000s user + 0.000000000s system = 2.320000000s (99.8%)
+====** Sub_Component 0_12  **====
+	pattern number : 70
+	0.040000000s user + 0.000000000s system = 0.040000000s (87.3%)
+====** Sub_Component 0_13  **====
+	pattern number : 63
+	2.040000000s user + 0.010000000s system = 2.050000000s (100.4%)
+**** total time : 5928.770000000s user + 53.270000000s system = 5982.040000000s (99.0%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  4 ====================
+Component 4 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  5 ====================
+Component 5 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 5982.040000 seconds CPU, 6040.243935 seconds real
+(I) Conflict number = 30
+(I) Color 0 density = 881
+(I) Color 1 density = 947
+(I) Color 2 density = 909
+(I) Color 3 density = 480
+(I) Write output gds file: benchout/total_c4_out.gds
+(I) writing output file takes 0.010000 seconds CPU, 0.172705 seconds real
+(I) program takes 5982.080000 seconds CPU, 6040.450907 seconds real

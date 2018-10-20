@@ -6,9 +6,9 @@
 #fi
 
 benchmark_suit_hint=total
-color_num_map=(3 4)
-coloring_distance_map=(120 160)
-algo_map=("LP" "ILP" "SDP")
+color_num_map=(4)
+coloring_distance_map=(160)
+algo_map=("SDP")
 simplify_level=3
 thread_num=8
 precolor_layer_map=()

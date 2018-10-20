@@ -12,10 +12,71 @@
 (D) size of Rectangle = 24 bytes
 (D) size of Polygon = 32 bytes
 ****OPENMP not defined !****
-(A) SimpleMPL.cpp:113: void SimpleMPL::SimpleMPL::read_gds(): Assertion `reader(m_db->input_gds())' failed: failed to read /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/ISCAS_total/total_c1.gds
-(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/ISCAS_total/total_c1.gds
-./gempl.sh: line 49: 37760 Aborted                 (core dumped) ${cmd}
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c1.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 2093
+(I) Total patterns # = 1124
+(I) Shape mode = POLYGON
+(I) Coloring distance = 160 db ( 160 nm )
+(I) Color num = 4
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = SDP_CSDP
+(I) reading input files takes 0.000000 seconds CPU, 0.010761 seconds real
+(I) Constructing graph for 1124 patterns...
+(I) 1124 vertices, 3084 edges
+(I) Computing connected components...
+(I) Solving 4 independent components...
+===================  Component  0 ====================
+Component 0 has 8 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 45
+	0.030000000s user + 0.000000000s system = 0.030000000s (79.3%)
+====** Sub_Component 0_1  **====
+	pattern number : 67
+	0.130000000s user + 0.000000000s system = 0.130000000s (106.9%)
+====** Sub_Component 0_2  **====
+	pattern number : 48
+	0.030000000s user + 0.000000000s system = 0.030000000s (82.0%)
+====** Sub_Component 0_3  **====
+	pattern number : 56
+	0.060000000s user + 0.000000000s system = 0.060000000s (101.4%)
+====** Sub_Component 0_4  **====
+	pattern number : 31
+	0.020000000s user + 0.000000000s system = 0.020000000s (119.4%)
+====** Sub_Component 0_5  **====
+	pattern number : 42
+	0.030000000s user + 0.000000000s system = 0.030000000s (89.5%)
+====** Sub_Component 0_6  **====
+	pattern number : 54
+	0.060000000s user + 0.000000000s system = 0.060000000s (93.1%)
+====** Sub_Component 0_7  **====
+	pattern number : 27
+	0.020000000s user + 0.000000000s system = 0.020000000s (151.5%)
+**** total time : 0.460000000s user + 0.000000000s system = 0.460000000s (98.8%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 0.470000 seconds CPU, 0.468515 seconds real
+(I) Conflict number = 8
+(I) Color 0 density = 268
+(I) Color 1 density = 258
+(I) Color 2 density = 270
+(I) Color 3 density = 328
+(W) Output file not specified, no file generated
+(I) writing output file takes 0.000000 seconds CPU, 0.000002 seconds real
+(I) program takes 0.470000 seconds CPU, 0.479640 seconds real
 
-real	0m0.038s
-user	0m0.002s
-sys	0m0.003s
+real	0m0.486s
+user	0m0.472s
+sys	0m0.010s
