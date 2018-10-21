@@ -26,7 +26,7 @@
 (I) Precolored layer # = 0
 (I) Path layer # = 0
 (I) Algorithm = ILP_GURBOI
-(I) reading input files takes 0.030000 seconds CPU, 0.107983 seconds real
+(I) reading input files takes 0.040000 seconds CPU, 0.052010 seconds real
 (I) Constructing graph for 5067 patterns...
 (I) 5067 vertices, 13606 edges
 (I) Computing connected components...
@@ -35,28 +35,52 @@
 Component 0 has 18 componetns.
 ====** Sub_Component 0_0  **====
 	pattern number : 64
-	0.070000000s user + 0.010000000s system = 0.080000000s (93.8%)
+	0.070000000s user + 0.010000000s system = 0.080000000s (88.6%)
 ====** Sub_Component 0_1  **====
 	pattern number : 106
-	63.770000000s user + 0.180000000s system = 63.950000000s (98.6%)
+	63.780000000s user + 0.190000000s system = 63.970000000s (98.9%)
 ====** Sub_Component 0_2  **====
 	pattern number : 111
-	2.190000000s user + 0.030000000s system = 2.220000000s (97.9%)
+	2.160000000s user + 0.020000000s system = 2.180000000s (96.2%)
 ====** Sub_Component 0_3  **====
 	pattern number : 81
-	0.680000000s user + 0.000000000s system = 0.680000000s (97.6%)
+	0.680000000s user + 0.000000000s system = 0.680000000s (98.5%)
 ====** Sub_Component 0_4  **====
 	pattern number : 91
-	0.160000000s user + 0.010000000s system = 0.170000000s (103.3%)
+	0.160000000s user + 0.010000000s system = 0.170000000s (91.7%)
 ====** Sub_Component 0_5  **====
 	pattern number : 63
-	0.150000000s user + 0.010000000s system = 0.160000000s (104.5%)
+	0.150000000s user + 0.000000000s system = 0.150000000s (90.9%)
 ====** Sub_Component 0_6  **====
 	pattern number : 98
-	14.660000000s user + 0.020000000s system = 14.680000000s (97.5%)
+	14.520000000s user + 0.030000000s system = 14.550000000s (98.7%)
 ====** Sub_Component 0_7  **====
 	pattern number : 88
-	1.290000000s user + 0.010000000s system = 1.300000000s (89.4%)
+	1.350000000s user + 0.010000000s system = 1.360000000s (98.0%)
 ====** Sub_Component 0_8  **====
 	pattern number : 48
-	0.010000000s user + 0.010000000s system = 0.020000000s (108.6%)
+	0.020000000s user + 0.000000000s system = 0.020000000s (74.0%)
+====** Sub_Component 0_10  **====
+	pattern number : 61
+	5.620000000s user + 0.020000000s system = 5.640000000s (97.9%)
+====** Sub_Component 0_11  **====
+	pattern number : 82
+	0.890000000s user + 0.010000000s system = 0.900000000s (97.8%)
+====** Sub_Component 0_12  **====
+	pattern number : 52
+	4.850000000s user + 0.010000000s system = 4.860000000s (98.1%)
+====** Sub_Component 0_13  **====
+	pattern number : 121
+	1.530000000s user + 0.010000000s system = 1.540000000s (94.3%)
+====** Sub_Component 0_14  **====
+	pattern number : 83
+	0.660000000s user + 0.000000000s system = 0.660000000s (97.7%)
+====** Sub_Component 0_15  **====
+	pattern number : 64
+	0.480000000s user + 0.010000000s system = 0.490000000s (101.1%)
+====** Sub_Component 0_16  **====
+	pattern number : 54
+	0.320000000s user + 0.010000000s system = 0.330000000s (99.4%)
+====** Sub_Component 0_17  **====
+	pattern number : 72
+	0.850000000s user + 0.000000000s system = 0.850000000s (96.6%)
