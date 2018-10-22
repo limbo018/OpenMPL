@@ -34,4 +34,5 @@
 	-uncolor_layer 101 \
     -color_num 3 \
     -algo SDP \
-    -thread_num 8
+    -thread_num 8 \
+	-stitch

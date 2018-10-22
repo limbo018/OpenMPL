@@ -184,7 +184,7 @@ void SimpleMPL::solve()
         if (i == 0 || m_vCompId[m_vVertexOrder[i-1]] != m_vCompId[m_vVertexOrder[i]])
             vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
     }
-#ifdef DEBUG
+#ifdef QDEBUG
     std::cout << "============== Before runProjection.. =============="<< std::endl;
     for(uint32_t i = 0; i < vBookmark.size(); i++)
     {
@@ -198,7 +198,7 @@ void SimpleMPL::solve()
 		runProjection(vBookmark);
 	}
 
-#ifdef DEBUG
+#ifdef QDEBUG
     std::cout << "============== After runProjection.. ==============" << std::endl;
     for(uint32_t i = 0; i < vBookmark.size(); i++)
     {
@@ -616,8 +616,8 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
     std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 
     // for debug, it does not affect normal run 
-    if (comp_id == m_db->dbg_comp_id() && simplify_strategy != graph_simplification_type::MERGE_SUBK4)
-        gs.write_simplified_graph_dot("graph_simpl");
+    //if (comp_id == m_db->dbg_comp_id() && simplify_strategy != graph_simplification_type::MERGE_SUBK4)
+    //    gs.write_simplified_graph_dot("graph_simpl");
 
     // in order to recover color from articulation points 
     // we have to record all components and mappings 
@@ -873,8 +873,8 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
 
     // for debug, it does not affect normal run 
-    if (comp_id == m_db->dbg_comp_id())
-        write_graph(dg, "graph_init");
+    // if (comp_id == m_db->dbg_comp_id())
+    //    write_graph(dg, "graph_init");
 
     // graph simplification 
     typedef lac::GraphSimplification<graph_type> graph_simplification_type;
@@ -1000,6 +1000,9 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	std::vector <coordinate_type> vstitches, const coordinate_type lower,
 	const coordinate_type upper)
 {
+#ifdef QDEBUG
+	std::cout << "pattern id : " << pRect->pattern_id() << "\tlower : " << lower << "\tupper : " << upper << std::endl;
+#endif
 	// ================================================================================
 	// step 1 : generate candidate stitches' positions according to the intersections
 	// ================================================================================
@@ -1025,7 +1028,14 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 		tempVec.push_back(*itr);
 	// sort all the positions
 	sort(tempVec.begin(), tempVec.end());
-	
+#ifdef QDEBUG
+	// output tempvec
+	std::cout << "==== tempVec ====" << std::endl;
+	for(uint32_t i = 0; i < tempVec.size(); i ++)
+	{
+		std::cout << i << " : \t" << tempVec[i] << std::endl; 
+	}
+#endif
 	// ================================================================================
 	// step 2 : generate stages according to the stitch positions
 	//			that is each pairwise of neighboring positions generates a stage.
@@ -1045,7 +1055,7 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 			if (isHor)
 			{
 				if (left < gtl::xl(*itInt)) continue;
-				if (right > gtl::yh(*itInt)) continue;
+				if (right > gtl::xh(*itInt)) continue;
 				overlapping_count++;
 			}
 			else
@@ -1068,11 +1078,13 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	if (vStages[vStages.size() - 1].second != 0)
 		vStages.push_back(std::make_pair(std::make_pair(upper, upper), 0));
 #ifdef DEBUG
+	
 	std::cout << "DEBUG_PROJECTION| vStages = ";
 	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> >::iterator it = vStages.begin();
 		it != vStages.end(); it++)
 		std::cout << it->second;
 	std::cout << std::endl;
+	
 #endif
 
 	// ================================================================================
@@ -1082,10 +1094,21 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	std::vector<uint32_t> vZeroIds;
 	for (uint32_t i = 0; i < vStages.size(); i++)
 	{
+#ifdef QDEBUG
+		std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second << std::endl;
+#endif
 		if (vStages[i].second > 0) continue;
 		vZeroIds.push_back(i);
 	}
-
+#ifdef QDEBUG
+	// output vZeroIds
+	std::cout << "Zero stages : " << std::endl;
+	for (uint32_t i = 0; i < vZeroIds.size(); i++ )
+	{
+		std::cout << i << " : " << "vStages[" << vZeroIds[i] << "] " << vStages[vZeroIds[i]].first.first << " -- " << vStages[vZeroIds[i]].first.second << std::endl;
+	}
+	std::cout << "==== Choose stitches ==== " << std::endl << "vStages.size() :  " << vStages.size() << std::endl;
+#endif
 	// ================================================================================
 	// step 5: choose stitches from vZeroIds
 	// ================================================================================
@@ -1095,6 +1118,9 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	{
 		uint32_t pos1 = vZeroIds[i];
 		uint32_t pos2 = vZeroIds[i + 1];
+#ifdef QDEBUG
+		std::cout << "i = " << i << " \t" << "pos1 = " << pos1 << " \t" << "pos2 = " << pos2 << std::endl;
+#endif
 		// since ((lower, lower), 0) has been added into vStages, so pos1 must be 0.
 		if (i == 0) mplAssertMsg(0 == pos1, "pos1 %d doesn't equal to 0", pos1);
 		// remove the useless stitches
@@ -1113,6 +1139,7 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 		}
 		else if (pos1 == vStages.size() - 3)
 		{
+			std::cout << "i = " << i << "\t" << " vZeroIds.size() = " << vZeroIds.size() << std::endl;
 			mplAssert(i == vZeroIds.size() - 2);
 			bool find = false;
 			uint32_t zsize = vZeroIds.size();
@@ -1156,12 +1183,16 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	}
 	sort(vstitches.begin(), vstitches.end());
 #ifdef DEBUG
-	std::cout << "DEBUG| output the vStages: " << std::endl;
+	
+	 std::cout << "DEBUG| output the vStages: " << std::endl;
 	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> >::iterator it = vStages.begin();
 		it != vStages.end(); it++)
 		std::cout << it->second << "[" << it->first.first << ", " << it->first.second << "]" << std::endl;
 	std::cout << std::endl;
+	
+#endif
 
+#ifdef QDEBUG
 	std::cout << "DEBUG| output the vstitches: " << std::endl;
 	std::cout << "lower = " << lower << std::endl;
 	std::cout << "upper = " << upper << std::endl;
@@ -1275,11 +1306,13 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		// step 1 : capture the interaction parts with its neighbors.
 		// ===================================================================
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
+		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
+		if(vAdjVertex.size()<=0)
+			continue;
 		bool isHor = whetherHorizontal(pPattern);
 		// vInterRect stores the intersection parts of pPattern and its neighbors.
 		std::vector<rectangle_type> vInterRect;
 		vInterRect.clear();
-		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
         vInterRect.resize(vAdjVertex.size());
 //#ifdef _OPENMP
 //#pragma omp parallel for
@@ -1301,7 +1334,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		  // step 2 : generate all the candidate stitches for this pattern.
 		  // ===================================================================
 		std::vector<coordinate_type> vstitches;
-		rectangle_pointer_type tempRect = new rectangle_type(gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
+		rectangle_pointer_type tempRect = new rectangle_type(*pPattern);
+		//rectangle_pointer_type tempRect = new rectangle_type(gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
 		// the lower bound and upper bound of the stitch position.
 		// If the pattern is horizontal, the stitches will be horizontal.
 		// If the pattern is vertical, the stitches will be vertical.
