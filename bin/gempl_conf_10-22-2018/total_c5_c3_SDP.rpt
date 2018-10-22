@@ -1,0 +1,115 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c5.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 9786
+(I) Total patterns # = 5067
+(I) Shape mode = POLYGON
+(I) Coloring distance = 120 db ( 120 nm )
+(I) Color num = 3
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = SDP_CSDP
+(I) reading input files takes 0.920000 seconds CPU, 0.937736 seconds real
+(I) Constructing graph for 5067 patterns...
+(I) 5067 vertices, 10362 edges
+(I) Computing connected components...
+(I) Solving 4 independent components...
+===================  Component  0 ====================
+Component 0 has 18 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 100
+	0.300000000s user + 0.000000000s system = 0.300000000s (100.3%)
+====** Sub_Component 0_1  **====
+	pattern number : 120
+	0.500000000s user + 0.000000000s system = 0.500000000s (86.9%)
+====** Sub_Component 0_2  **====
+	pattern number : 119
+	0.480000000s user + 0.010000000s system = 0.490000000s (94.5%)
+====** Sub_Component 0_3  **====
+	pattern number : 113
+	0.420000000s user + 0.000000000s system = 0.420000000s (100.0%)
+====** Sub_Component 0_4  **====
+	pattern number : 114
+	0.410000000s user + 0.000000000s system = 0.410000000s (99.5%)
+====** Sub_Component 0_5  **====
+	pattern number : 100
+	0.280000000s user + 0.000000000s system = 0.280000000s (91.6%)
+====** Sub_Component 0_6  **====
+	pattern number : 93
+	0.250000000s user + 0.000000000s system = 0.250000000s (97.7%)
+====** Sub_Component 0_7  **====
+	pattern number : 89
+	0.230000000s user + 0.000000000s system = 0.230000000s (93.6%)
+====** Sub_Component 0_8  **====
+	pattern number : 70
+	0.130000000s user + 0.000000000s system = 0.130000000s (101.9%)
+====** Sub_Component 0_9  **====
+	pattern number : 120
+	0.530000000s user + 0.000000000s system = 0.530000000s (98.2%)
+====** Sub_Component 0_10  **====
+	pattern number : 91
+	0.230000000s user + 0.000000000s system = 0.230000000s (103.1%)
+====** Sub_Component 0_11  **====
+	pattern number : 111
+	0.380000000s user + 0.000000000s system = 0.380000000s (98.1%)
+====** Sub_Component 0_12  **====
+	pattern number : 92
+	0.250000000s user + 0.000000000s system = 0.250000000s (100.0%)
+====** Sub_Component 0_13  **====
+	pattern number : 112
+	0.370000000s user + 0.000000000s system = 0.370000000s (99.5%)
+====** Sub_Component 0_14  **====
+	pattern number : 105
+	0.230000000s user + 0.000000000s system = 0.230000000s (100.6%)
+====** Sub_Component 0_15  **====
+	pattern number : 85
+	0.140000000s user + 0.000000000s system = 0.140000000s (100.8%)
+====** Sub_Component 0_16  **====
+	pattern number : 115
+	0.270000000s user + 0.000000000s system = 0.270000000s (97.0%)
+====** Sub_Component 0_17  **====
+	pattern number : 97
+	0.180000000s user + 0.000000000s system = 0.180000000s (102.1%)
+component_conflict_num = 324	acc_obj_value = 324
+**** total time : 59.550000000s user + 0.030000000s system = 59.580000000s (63.7%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 60.010000 seconds CPU, 93.886693 seconds real
+(I) Conflict number = 324
+(I) Color 0 density = 942
+(I) Color 1 density = 2065
+(I) Color 2 density = 2060
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_c5_out.gds
+(I) writing output file takes 0.060000 seconds CPU, 0.090901 seconds real
+(I) program takes 60.990000 seconds CPU, 94.917114 seconds real
+
+real	1m34.986s
+user	1m0.960s
+sys	0m0.042s

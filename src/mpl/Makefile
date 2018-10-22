@@ -17,13 +17,13 @@ CSDP = 1
 # default GEMPL is off
 GEMPL = 1
 
-UNAME_S = $(shell uname -s)
-ifeq ($(UNAME_S), Linux)
-	-include ../Unix.mk
-endif 
-ifeq ($(UNAME_S), Darwin)
-	-include ../Darwin.mk
-endif 
+#UNAME_S = $(shell uname -s)
+#ifeq ($(UNAME_S), Linux)
+#	-include ../Unix.mk
+#endif 
+#ifeq ($(UNAME_S), Darwin)
+#	-include ../Darwin.mk
+#endif 
 
 ifeq ($(DBG), 1)
 	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING
@@ -125,7 +125,7 @@ EXE	= $(EXEDIR)/OpenMPL
 
 .SUFFIXES: .cc .cpp .o .x
 
-all: $(EXE) $(LIB) tags
+MPL: $(EXE) $(LIB) tags
 
 $(EXE): $(OBJDIR)/main.o $(LIB)
 	@$(MKDIR)

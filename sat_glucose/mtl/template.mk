@@ -27,9 +27,9 @@ COPTIMIZE ?= -O3
 CFLAGS    += -I$(MROOT) -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS
 LFLAGS    += -lz
 
-.PHONY : s p d r rs clean 
+.PHONY : SAT p d r rs clean 
 
-s:	$(EXEC)
+SAT:	$(EXEC)
 p:	$(EXEC)_profile
 d:	$(EXEC)_debug
 r:	$(EXEC)_release

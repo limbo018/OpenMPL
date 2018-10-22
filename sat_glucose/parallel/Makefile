@@ -1,4 +1,4 @@
 EXEC      = glucose-syrup
 DEPDIR    = mtl utils core simp
-MROOT = $(PWD)/..
+MROOT = ./..
 include $(MROOT)/mtl/template.mk

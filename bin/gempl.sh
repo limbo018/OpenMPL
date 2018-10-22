@@ -8,7 +8,7 @@
 benchmark_suit_hint=total
 color_num_map=(4)
 coloring_distance_map=(160)
-algo_map=("SDP")
+algo_map=("LP" "SDP")
 simplify_level=3
 thread_num=8
 precolor_layer_map=()
@@ -16,7 +16,7 @@ uncolor_layer_map=(1 101)
 shape="POLYGON"
 
 
-current_date=$(date +'%m-%d-%Y')
+current_date=$(date +'conf_%m-%d-%Y')
 gempl_dir="gempl_${current_date}"
 mkdir -p ${gempl_dir}
 
@@ -24,7 +24,7 @@ mkdir -p ${gempl_dir}
 BENCHMARKS_DIR="/research/byu2/qsun/project/ISCAS_bench"
 insert1=""
 insert2=""
-
+BENCHOUT_DIR="/research/byu2/qsun/project/gempl/bin/benchout"
 
 
 if [ $benchmark_suit_hint == "sim" ]; then
@@ -57,6 +57,7 @@ for i in "${!color_num_map[@]}"; do
 			cmd="${cmd} -algo ${algo}"
 			cmd="${cmd} -color_num ${color_num} -coloring_distance ${coloring_distance}"
 			cmd="${cmd} -in ${benchmark_dir}/${benchmark}.gds"
+			cmd="${cmd} -out ${BENCHOUT_DIR}/${benchmark}_out.gds"
 
 			# run command
 			echo "time (${cmd}) > ${gempl_dir}/${benchmark}_c${color_num}_${algo}.rpt 2>&1"	

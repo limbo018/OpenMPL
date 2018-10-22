@@ -500,8 +500,8 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	std::cout << "Component " << comp_id << " has " << gs.num_component() << " componetns." << std::endl;
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
-		if (sub_comp_id == 9)
-			continue;
+		//if (sub_comp_id == 9)
+		//	continue;
 #ifdef GEMPL
 		boost::timer::cpu_timer t;
 #endif
