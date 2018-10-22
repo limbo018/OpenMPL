@@ -542,12 +542,12 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
             obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
 #endif
-
+		double con = 0;
         // choose smaller objective value 
         if (obj_value1 < obj_value2)
         {
             acc_obj_value += obj_value1;
-
+			con = obj_value1;
             // collect coloring results from simplified graph 
             for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
             {
@@ -558,11 +558,15 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
             }
         }
         else // no need to update vSubColor, as it is already updated by sub call 
-            acc_obj_value += obj_value2;
+        {
+			acc_obj_value += obj_value2;
+			con = obj_value2;
+		}
 		delete pcs;
 #ifdef GEMPL
 		std::cout << "====** Sub_Component " << comp_id << "_" <<sub_comp_id << "  **====" << std::endl;
 		std::cout << "\t" << "pattern number : " << num_vertices(sg) << std::endl;;
+		std::cout << "\t" << "conflict number : " << con << std::endl;
 		std::cout << "\t" << t.format(20, "%us user + %ss system = %ts (%p%)") << std::endl;
 #endif
 	}

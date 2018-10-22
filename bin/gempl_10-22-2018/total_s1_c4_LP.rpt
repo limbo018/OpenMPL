@@ -1,0 +1,138 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_s1.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 7906
+(I) Total patterns # = 4586
+(I) Shape mode = POLYGON
+(I) Coloring distance = 160 db ( 160 nm )
+(I) Color num = 4
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = LP_GUROBI
+(I) reading input files takes 0.730000 seconds CPU, 0.746104 seconds real
+(I) Constructing graph for 4586 patterns...
+(I) 4586 vertices, 13274 edges
+(I) Computing connected components...
+(I) Solving 5 independent components...
+===================  Component  0 ====================
+Component 0 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  1 ====================
+Component 1 has 18 componetns.
+====** Sub_Component 1_0  **====
+	pattern number : 101
+	conflict number : 0
+	0.340000000s user + 0.000000000s system = 0.340000000s (88.4%)
+====** Sub_Component 1_1  **====
+	pattern number : 94
+	conflict number : 2
+	0.240000000s user + 0.010000000s system = 0.250000000s (97.4%)
+====** Sub_Component 1_2  **====
+	pattern number : 115
+	conflict number : 8
+	0.350000000s user + 0.000000000s system = 0.350000000s (95.8%)
+====** Sub_Component 1_3  **====
+	pattern number : 96
+	conflict number : 6
+	0.250000000s user + 0.000000000s system = 0.250000000s (93.2%)
+====** Sub_Component 1_4  **====
+	pattern number : 100
+	conflict number : 2
+	0.320000000s user + 0.010000000s system = 0.330000000s (98.8%)
+====** Sub_Component 1_5  **====
+	pattern number : 88
+	conflict number : 1
+	0.190000000s user + 0.000000000s system = 0.190000000s (82.8%)
+====** Sub_Component 1_6  **====
+	pattern number : 144
+	conflict number : 6
+	0.630000000s user + 0.000000000s system = 0.630000000s (100.3%)
+====** Sub_Component 1_7  **====
+	pattern number : 81
+	conflict number : 1
+	0.120000000s user + 0.010000000s system = 0.130000000s (102.5%)
+====** Sub_Component 1_8  **====
+	pattern number : 119
+	conflict number : 7
+	0.450000000s user + 0.000000000s system = 0.450000000s (99.9%)
+====** Sub_Component 1_9  **====
+	pattern number : 139
+	conflict number : 3
+	0.760000000s user + 0.000000000s system = 0.760000000s (98.6%)
+====** Sub_Component 1_10  **====
+	pattern number : 121
+	conflict number : 7
+	0.660000000s user + 0.010000000s system = 0.670000000s (97.5%)
+====** Sub_Component 1_11  **====
+	pattern number : 90
+	conflict number : 2
+	0.200000000s user + 0.000000000s system = 0.200000000s (94.6%)
+====** Sub_Component 1_12  **====
+	pattern number : 73
+	conflict number : 1
+	0.210000000s user + 0.010000000s system = 0.220000000s (105.0%)
+====** Sub_Component 1_13  **====
+	pattern number : 103
+	conflict number : 8
+	0.270000000s user + 0.000000000s system = 0.270000000s (94.2%)
+====** Sub_Component 1_14  **====
+	pattern number : 121
+	conflict number : 7
+	0.360000000s user + 0.000000000s system = 0.360000000s (95.0%)
+====** Sub_Component 1_15  **====
+	pattern number : 98
+	conflict number : 0
+	0.380000000s user + 0.000000000s system = 0.380000000s (99.1%)
+====** Sub_Component 1_16  **====
+	pattern number : 94
+	conflict number : 2
+	0.230000000s user + 0.010000000s system = 0.240000000s (106.0%)
+====** Sub_Component 1_17  **====
+	pattern number : 81
+	conflict number : 7
+	0.170000000s user + 0.000000000s system = 0.170000000s (95.8%)
+component_conflict_num = 70	acc_obj_value = 70
+**** total time : 48.840000000s user + 0.080000000s system = 48.920000000s (98.1%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  4 ====================
+Component 4 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 49.300000 seconds CPU, 50.281594 seconds real
+(I) Conflict number = 70
+(I) Color 0 density = 1170
+(I) Color 1 density = 1194
+(I) Color 2 density = 1286
+(I) Color 3 density = 936
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_s1_out.gds
+(I) writing output file takes 0.040000 seconds CPU, 0.092644 seconds real
+(I) program takes 50.080000 seconds CPU, 51.122264 seconds real
+
+real	0m51.137s
+user	0m50.011s
+sys	0m0.087s

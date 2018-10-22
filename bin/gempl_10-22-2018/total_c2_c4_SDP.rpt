@@ -26,7 +26,7 @@
 (I) Precolored layer # = 0
 (I) Path layer # = 0
 (I) Algorithm = SDP_CSDP
-(I) reading input files takes 0.330000 seconds CPU, 0.353584 seconds real
+(I) reading input files takes 0.320000 seconds CPU, 0.351979 seconds real
 (I) Constructing graph for 2196 patterns...
 (I) 2196 vertices, 6397 edges
 (I) Computing connected components...
@@ -35,39 +35,50 @@
 Component 0 has 11 componetns.
 ====** Sub_Component 0_0  **====
 	pattern number : 78
-	0.140000000s user + 0.000000000s system = 0.140000000s (92.2%)
+	conflict number : 1
+	0.160000000s user + 0.010000000s system = 0.170000000s (108.3%)
 ====** Sub_Component 0_1  **====
 	pattern number : 79
-	0.170000000s user + 0.000000000s system = 0.170000000s (101.9%)
+	conflict number : 0
+	0.160000000s user + 0.000000000s system = 0.160000000s (96.6%)
 ====** Sub_Component 0_2  **====
 	pattern number : 110
-	0.390000000s user + 0.010000000s system = 0.400000000s (99.4%)
+	conflict number : 0
+	0.390000000s user + 0.000000000s system = 0.390000000s (96.3%)
 ====** Sub_Component 0_3  **====
 	pattern number : 94
-	0.270000000s user + 0.000000000s system = 0.270000000s (98.0%)
+	conflict number : 7
+	0.280000000s user + 0.000000000s system = 0.280000000s (99.7%)
 ====** Sub_Component 0_4  **====
 	pattern number : 113
-	0.470000000s user + 0.000000000s system = 0.470000000s (100.5%)
+	conflict number : 3
+	0.480000000s user + 0.000000000s system = 0.480000000s (99.0%)
 ====** Sub_Component 0_5  **====
 	pattern number : 97
-	0.270000000s user + 0.000000000s system = 0.270000000s (98.3%)
+	conflict number : 2
+	0.280000000s user + 0.000000000s system = 0.280000000s (97.6%)
 ====** Sub_Component 0_6  **====
 	pattern number : 115
-	0.370000000s user + 0.000000000s system = 0.370000000s (100.4%)
+	conflict number : 0
+	0.390000000s user + 0.000000000s system = 0.390000000s (99.2%)
 ====** Sub_Component 0_7  **====
 	pattern number : 77
-	0.180000000s user + 0.000000000s system = 0.180000000s (97.4%)
+	conflict number : 4
+	0.190000000s user + 0.000000000s system = 0.190000000s (99.6%)
 ====** Sub_Component 0_8  **====
 	pattern number : 74
-	0.110000000s user + 0.000000000s system = 0.110000000s (98.3%)
+	conflict number : 1
+	0.120000000s user + 0.000000000s system = 0.120000000s (100.0%)
 ====** Sub_Component 0_9  **====
 	pattern number : 89
-	0.220000000s user + 0.000000000s system = 0.220000000s (100.3%)
+	conflict number : 2
+	0.220000000s user + 0.000000000s system = 0.220000000s (101.9%)
 ====** Sub_Component 0_10  **====
 	pattern number : 135
-	0.650000000s user + 0.000000000s system = 0.650000000s (97.8%)
+	conflict number : 1
+	0.670000000s user + 0.000000000s system = 0.670000000s (99.5%)
 component_conflict_num = 21	acc_obj_value = 21
-**** total time : 11.030000000s user + 0.020000000s system = 11.050000000s (99.1%)
+**** total time : 11.110000000s user + 0.010000000s system = 11.120000000s (99.3%)
 ===================  Component  1 ====================
 Component 1 has 0 componetns.
 component_conflict_num = 0	acc_obj_value = 0
@@ -104,16 +115,16 @@ component_conflict_num = 0	acc_obj_value = 0
 Component 9 has 0 componetns.
 component_conflict_num = 0	acc_obj_value = 0
 **** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
-(I) coloring takes 11.230000 seconds CPU, 11.323436 seconds real
+(I) coloring takes 11.300000 seconds CPU, 11.376748 seconds real
 (I) Conflict number = 21
 (I) Color 0 density = 607
 (I) Color 1 density = 514
 (I) Color 2 density = 517
 (I) Color 3 density = 558
-(W) Output file not specified, no file generated
-(I) writing output file takes 0.000000 seconds CPU, 0.000020 seconds real
-(I) program takes 11.560000 seconds CPU, 11.677909 seconds real
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_c2_out.gds
+(I) writing output file takes 0.030000 seconds CPU, 0.061367 seconds real
+(I) program takes 11.650000 seconds CPU, 11.791160 seconds real
 
-real	0m11.690s
-user	0m11.543s
-sys	0m0.024s
+real	0m11.808s
+user	0m11.644s
+sys	0m0.022s

@@ -26,7 +26,7 @@
 (I) Precolored layer # = 0
 (I) Path layer # = 0
 (I) Algorithm = LP_GUROBI
-(I) reading input files takes 0.170000 seconds CPU, 0.191958 seconds real
+(I) reading input files takes 0.170000 seconds CPU, 0.187848 seconds real
 (I) Constructing graph for 1124 patterns...
 (I) 1124 vertices, 3084 edges
 (I) Computing connected components...
@@ -35,30 +35,38 @@
 Component 0 has 8 componetns.
 ====** Sub_Component 0_0  **====
 	pattern number : 45
-	0.070000000s user + 0.010000000s system = 0.080000000s (108.9%)
+	conflict number : 1
+	0.050000000s user + 0.000000000s system = 0.050000000s (75.9%)
 ====** Sub_Component 0_1  **====
 	pattern number : 67
-	0.110000000s user + 0.000000000s system = 0.110000000s (94.6%)
+	conflict number : 6
+	0.120000000s user + 0.010000000s system = 0.130000000s (108.7%)
 ====** Sub_Component 0_2  **====
 	pattern number : 48
-	0.140000000s user + 0.000000000s system = 0.140000000s (82.6%)
+	conflict number : 0
+	0.160000000s user + 0.000000000s system = 0.160000000s (95.1%)
 ====** Sub_Component 0_3  **====
 	pattern number : 56
-	0.080000000s user + 0.010000000s system = 0.090000000s (98.1%)
+	conflict number : 1
+	0.090000000s user + 0.000000000s system = 0.090000000s (99.7%)
 ====** Sub_Component 0_4  **====
 	pattern number : 31
-	0.040000000s user + 0.000000000s system = 0.040000000s (83.2%)
+	conflict number : 1
+	0.030000000s user + 0.000000000s system = 0.030000000s (77.2%)
 ====** Sub_Component 0_5  **====
 	pattern number : 42
-	0.040000000s user + 0.000000000s system = 0.040000000s (74.6%)
+	conflict number : 2
+	0.040000000s user + 0.000000000s system = 0.040000000s (91.0%)
 ====** Sub_Component 0_6  **====
 	pattern number : 54
-	0.070000000s user + 0.000000000s system = 0.070000000s (76.4%)
+	conflict number : 2
+	0.080000000s user + 0.010000000s system = 0.090000000s (116.7%)
 ====** Sub_Component 0_7  **====
 	pattern number : 27
-	0.040000000s user + 0.010000000s system = 0.050000000s (123.3%)
+	conflict number : 1
+	0.040000000s user + 0.000000000s system = 0.040000000s (104.9%)
 component_conflict_num = 14	acc_obj_value = 14
-**** total time : 2.680000000s user + 0.030000000s system = 2.710000000s (97.3%)
+**** total time : 2.680000000s user + 0.020000000s system = 2.700000000s (99.1%)
 ===================  Component  1 ====================
 Component 1 has 0 componetns.
 component_conflict_num = 0	acc_obj_value = 0
@@ -71,16 +79,16 @@ component_conflict_num = 0	acc_obj_value = 0
 Component 3 has 0 componetns.
 component_conflict_num = 0	acc_obj_value = 0
 **** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
-(I) coloring takes 2.790000 seconds CPU, 2.869881 seconds real
+(I) coloring takes 2.780000 seconds CPU, 2.805690 seconds real
 (I) Conflict number = 14
 (I) Color 0 density = 284
 (I) Color 1 density = 280
 (I) Color 2 density = 241
 (I) Color 3 density = 319
-(W) Output file not specified, no file generated
-(I) writing output file takes 0.000000 seconds CPU, 0.000009 seconds real
-(I) program takes 2.960000 seconds CPU, 3.062611 seconds real
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_c1_out.gds
+(I) writing output file takes 0.020000 seconds CPU, 0.030210 seconds real
+(I) program takes 2.970000 seconds CPU, 3.024461 seconds real
 
-real	0m3.082s
-user	0m2.932s
-sys	0m0.034s
+real	0m3.045s
+user	0m2.952s
+sys	0m0.025s

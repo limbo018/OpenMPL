@@ -6,8 +6,8 @@
 #fi
 
 benchmark_suit_hint=total
-color_num_map=(4)
-coloring_distance_map=(160)
+color_num_map=(3 4)
+coloring_distance_map=(120 160)
 algo_map=("LP" "SDP")
 simplify_level=3
 thread_num=8
@@ -16,7 +16,7 @@ uncolor_layer_map=(1 101)
 shape="POLYGON"
 
 
-current_date=$(date +'conf_%m-%d-%Y')
+current_date=$(date +'_%m-%d-%Y')
 gempl_dir="gempl_${current_date}"
 mkdir -p ${gempl_dir}
 
@@ -37,6 +37,7 @@ elif [ $benchmark_suit_hint == "total" ]; then
 		"total_c2" \
 		"total_c3" \
 		"total_c4" \
+		"total_s1" \
 		"total_c5" \
 		)
 fi

@@ -26,7 +26,7 @@
 (I) Precolored layer # = 0
 (I) Path layer # = 0
 (I) Algorithm = SDP_CSDP
-(I) reading input files takes 0.350000 seconds CPU, 0.365735 seconds real
+(I) reading input files takes 0.340000 seconds CPU, 0.369802 seconds real
 (I) Constructing graph for 2372 patterns...
 (I) 2372 vertices, 6645 edges
 (I) Computing connected components...
@@ -35,42 +35,54 @@
 Component 0 has 12 componetns.
 ====** Sub_Component 0_0  **====
 	pattern number : 55
-	0.060000000s user + 0.000000000s system = 0.060000000s (91.9%)
+	conflict number : 0
+	0.060000000s user + 0.010000000s system = 0.070000000s (105.6%)
 ====** Sub_Component 0_1  **====
 	pattern number : 51
-	0.060000000s user + 0.000000000s system = 0.060000000s (98.7%)
+	conflict number : 1
+	0.060000000s user + 0.000000000s system = 0.060000000s (92.0%)
 ====** Sub_Component 0_2  **====
 	pattern number : 35
-	0.030000000s user + 0.000000000s system = 0.030000000s (131.2%)
+	conflict number : 0
+	0.020000000s user + 0.000000000s system = 0.020000000s (91.1%)
 ====** Sub_Component 0_3  **====
 	pattern number : 81
-	0.170000000s user + 0.000000000s system = 0.170000000s (99.2%)
+	conflict number : 1
+	0.170000000s user + 0.000000000s system = 0.170000000s (99.7%)
 ====** Sub_Component 0_4  **====
 	pattern number : 72
-	0.130000000s user + 0.000000000s system = 0.130000000s (97.4%)
+	conflict number : 2
+	0.130000000s user + 0.000000000s system = 0.130000000s (99.3%)
 ====** Sub_Component 0_5  **====
 	pattern number : 64
-	0.100000000s user + 0.000000000s system = 0.100000000s (104.5%)
+	conflict number : 0
+	0.100000000s user + 0.000000000s system = 0.100000000s (106.7%)
 ====** Sub_Component 0_6  **====
 	pattern number : 83
-	0.200000000s user + 0.000000000s system = 0.200000000s (99.1%)
+	conflict number : 1
+	0.200000000s user + 0.000000000s system = 0.200000000s (95.7%)
 ====** Sub_Component 0_7  **====
 	pattern number : 59
-	0.070000000s user + 0.000000000s system = 0.070000000s (102.4%)
+	conflict number : 0
+	0.070000000s user + 0.000000000s system = 0.070000000s (103.6%)
 ====** Sub_Component 0_8  **====
 	pattern number : 66
-	0.090000000s user + 0.000000000s system = 0.090000000s (98.9%)
+	conflict number : 0
+	0.090000000s user + 0.000000000s system = 0.090000000s (101.0%)
 ====** Sub_Component 0_9  **====
 	pattern number : 43
-	0.030000000s user + 0.000000000s system = 0.030000000s (90.7%)
+	conflict number : 0
+	0.030000000s user + 0.000000000s system = 0.030000000s (90.3%)
 ====** Sub_Component 0_10  **====
 	pattern number : 79
-	0.190000000s user + 0.000000000s system = 0.190000000s (100.3%)
+	conflict number : 3
+	0.190000000s user + 0.000000000s system = 0.190000000s (101.1%)
 ====** Sub_Component 0_11  **====
 	pattern number : 61
-	0.080000000s user + 0.000000000s system = 0.080000000s (93.4%)
+	conflict number : 0
+	0.080000000s user + 0.000000000s system = 0.080000000s (95.5%)
 component_conflict_num = 8	acc_obj_value = 8
-**** total time : 11.130000000s user + 0.020000000s system = 11.150000000s (98.3%)
+**** total time : 11.130000000s user + 0.010000000s system = 11.140000000s (98.3%)
 ===================  Component  1 ====================
 Component 1 has 0 componetns.
 component_conflict_num = 0	acc_obj_value = 0
@@ -83,16 +95,16 @@ component_conflict_num = 0	acc_obj_value = 0
 Component 3 has 0 componetns.
 component_conflict_num = 0	acc_obj_value = 0
 **** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
-(I) coloring takes 11.330000 seconds CPU, 11.518665 seconds real
+(I) coloring takes 11.330000 seconds CPU, 11.520311 seconds real
 (I) Conflict number = 8
 (I) Color 0 density = 658
 (I) Color 1 density = 633
 (I) Color 2 density = 691
 (I) Color 3 density = 390
-(W) Output file not specified, no file generated
-(I) writing output file takes 0.000000 seconds CPU, 0.000030 seconds real
-(I) program takes 11.680000 seconds CPU, 11.885631 seconds real
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_c3_out.gds
+(I) writing output file takes 0.040000 seconds CPU, 0.371680 seconds real
+(I) program takes 11.710000 seconds CPU, 12.262838 seconds real
 
-real	0m11.897s
-user	0m11.665s
-sys	0m0.023s
+real	0m12.286s
+user	0m11.694s
+sys	0m0.022s
