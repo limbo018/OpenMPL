@@ -29,6 +29,7 @@ struct ControlParameter
 	int32_t simplify_level;                    ///< simplification level 0|1|2|3, default is 3
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
 	bool verbose;                              ///< control screen message 
+    bool stitch;                               ///< control stitch insertion
     uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
 
 	std::string   input_gds;                   ///< input gdsii filename 
@@ -53,6 +54,7 @@ inline ControlParameter::ControlParameter()
     simplify_level           = 3;
     thread_num               = 1;
     verbose                  = false;
+    stitch                   = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";
     output_gds               = "";
@@ -70,6 +72,7 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(simplify_level, rhs.simplify_level);
     std::swap(thread_num, rhs.thread_num);
     std::swap(verbose, rhs.verbose);
+    std::swap(stitch, rhs.stitch)
     std::swap(dbg_comp_id, rhs.dbg_comp_id);
     std::swap(input_gds, rhs.input_gds);
     std::swap(output_gds, rhs.output_gds);

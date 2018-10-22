@@ -86,7 +86,7 @@ class SimpleMPL
         void read_gds();
         void write_gds();
         /// solve decomposition
-        void solve(std::string simplified_graph);
+        void solve();
         /// report statistics 
         void report() const;
         /// print welcome information
@@ -120,7 +120,7 @@ class SimpleMPL
         /// Store every component for Dancinglinks
         void store_component_dlx(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
         /// kernel for coloring a component
-        uint32_t coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph);
+        uint32_t coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
         /// create solver and initialize 
         /// \parm sg is the simplified graph 
         /// \return a point of solver base type
@@ -129,7 +129,7 @@ class SimpleMPL
         /// \param dg is decomposition graph before simplification
         uint32_t solve_graph_coloring(uint32_t comp_id, graph_type const& dg, 
                 std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
-                uint32_t simplify_strategy, std::vector<int8_t>& vColor, std::string simplified_graph) const;
+                uint32_t simplify_strategy, std::vector<int8_t>& vColor) const;
         /// given a component, construct graph, mapping from global index to local index, and set precolor 
         void construct_component_graph(const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
                 graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor) const;
@@ -183,15 +183,13 @@ class SimpleMPL
 		// Used to generate projections
 		// The reference variables are used to store the intermediate results.
 		void projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd,
-			std::vector<rectangle_pointer_type> & new_PatternVec);
+			std::vector<rectangle_type> & new_PatternVec);
 
         // judge whether the rectangle is horizontal, which may affect the following stitch insertion strategy.
         bool whetherHorizontal (rectangle_pointer_type tmp);
 
-        // Generate Stitch Insertion Points for QPL
-        // void stitchGenerateQPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
-	    // Generate Stitch Insertion Points for TPL
-        void BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);	
+        // Generate Stitch Insertion Points
+        void GenerateStitchPosition(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);	
 
 		std::vector<uint32_t>	new2ori;	// store the mapping relationships from new patterns back to original patterns.
 		std::vector<std::vector<uint32_t> > SplitMapping; // stores the mapping relationships between original patterns and newly - generated patterns.

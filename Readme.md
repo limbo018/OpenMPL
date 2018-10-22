@@ -64,7 +64,8 @@ A table of options :
 -uncolor_layer               an integer indicating layer for coloring
 -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP >
 -shape (RECTANGLE)           shape mode < RECTANGLE|POLYGON >
--verbose (false)             toggle controling screen messages
+-verbose (false)             toggle controlling screen messages
+-stitch (false)              toggle controlling stitch insertion, default is false
 -dbg_comp_id (4294967295)    debug component id
 ```
 

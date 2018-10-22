@@ -56,7 +56,7 @@ void SimpleMPL::run(int argc, char** argv)
     this->reset(false);
 	this->read_cmd(argc, argv);
 	this->read_gds();
-	this->solve(m_db->output_gds().c_str());
+	this->solve();
 	this->report();
 	this->write_gds();
 }
@@ -148,7 +148,7 @@ void SimpleMPL::write_gds()
 	writer(m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 }
 
-void SimpleMPL::solve(std::string simplified_graph)
+void SimpleMPL::solve()
 {
     // skip if no uncolored layer 
     if (m_db->parms.sUncolorLayer.empty())
@@ -193,7 +193,8 @@ void SimpleMPL::solve(std::string simplified_graph)
     }
 #endif
 
-	runProjection(vBookmark);
+    if(m_db->stitch())
+        runProjection(vBookmark);
 
 
 #ifdef DEBUG
@@ -608,7 +609,7 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 /// contain nested call for itself 
 uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, 
         std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
-        uint32_t simplify_strategy, std::vector<int8_t>& vColor, std::string simplified_graph) const
+        uint32_t simplify_strategy, std::vector<int8_t>& vColor) const
 {
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs (dg, m_db->color_num());
@@ -675,7 +676,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
         // very restrict condition to determin whether perform MERGE_SUBK4 or not 
         if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
-            obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor, simplified_graph); // call again
+            obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again
 #endif
 
         // choose smaller objective value 
@@ -893,7 +894,7 @@ void SimpleMPL::store_component_dlx(const std::vector<uint32_t>::const_iterator 
     std::cout<<" Store Component " << comp_id <<" Successfully!"<<std::endl;
 }
 */
-uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph)
+uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
 	// construct a graph for current component 
 	uint32_t pattern_cnt = itEnd-itBgn;
@@ -924,7 +925,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
     // solve graph coloring 
-    uint32_t acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, simplified_graph);
+    uint32_t acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor);
 
 #ifdef DEBUG
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
@@ -1033,7 +1034,7 @@ bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)
     return (xh - xl) > (yh - yl);
 }
 
-void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
+void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	const std::vector<rectangle_type> vinterRect,
 	std::vector <coordinate_type> vstitches, const coordinate_type lower,
 	const coordinate_type upper)
@@ -1224,45 +1225,45 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	
 	// resize SplitMapping to store all patterns in original graph
 	SplitMapping.resize(m_vVertexOrder.size());
-	std::vector<std::vector<rectangle_pointer_type> > Component_Pattern_list(m_comp_cnt);
-
-    uint32_t comp_id = 0;
-#ifdef _OPENMP
-#pragma omp parallel for private(comp_id) num_threads(m_db->thread_num())
-#endif
-	for ( comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	std::vector<std::vector<rectangle_type> > Component_Pattern_list;
+    
+//#ifdef _OPENMP
+//#pragma omp parallel for private(comp_id) num_threads(m_db->thread_num())
+//#endif
+	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
 	{
 		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
 		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
 		
-        std::vector<rectangle_pointer_type> new_PatternBox_temp;
+        std::vector<rectangle_type> new_PatternBox_temp;
 		projection(itBgn, itEnd, new_PatternBox_temp);
-		Component_Pattern_list[comp_id] = new_PatternBox_temp;
+		Component_Pattern_list.push_back(new_PatternBox_temp);
 	}
 	// ================================================================================================
 	// step 2 : update the graph information, generate ids for new patterns.
 	// I don't know how to implement these in parallel. It seems 'omp critical' is not useful.
 	// ================================================================================================
-	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
-	std::vector<uint32_t>().swap(m_vVertexOrder);
-	std::vector<uint32_t>().swap(m_vCompId);
-	
 
-    // generate new vBookmark
+	// generate new vBookmark
     std::vector<uint32_t>().swap(vBookmark);
-    // total_pattern_number means the number of patterns after projection.
     uint32_t total_pattern_number = 0;
+
     for(comp_id = 0; comp_id < m_comp_cnt; comp_id++)
     {
         vBookmark.push_back(total_pattern_number);
         total_pattern_number += Component_Pattern_list[comp_id].size();
     }
 
-    
-    std::vector<uint32_t>().swap(new2ori);
-    new2ori.resize(total_pattern_number);
+    // push total_pattern_number  into vBookmark to help generate new graph information
     vBookmark.push_back(total_pattern_number);
+
+    std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+    std::vector<uint32_t>().swap(m_vVertexOrder);
+    std::vector<uint32_t>().swap(m_vCompId);
+    std::vector<uint32_t>().swap(new2ori);
+
     uint32_t pattern_number = 0;
+    // used as pivot 
     comp_id = 0;
 	for (uint32_t itVec = 0; itVec < SplitMapping.size(); itVec++)
 	{
@@ -1270,16 +1271,17 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 		{
 			Component_Pattern_list[comp_id][*itsplit]->pattern_id(pattern_number);
 			m_db->vPatternBbox.push_back(Component_Pattern_list[comp_id][*itsplit]);
-			// update the mapping relationship, which will be used in step 3.
+			// update the mapping relationship in SplitMapping, which will be used in step 3.
 			*itsplit = pattern_number;
 			// map new patterns back to original patterns 
-			new2ori[pattern_number] = itVec;
+			new2ori.push_back(itVec);
 			m_vVertexOrder.push_back(pattern_number);
             if(pattern_number >= vBookmark[comp_id + 1]) comp_id++;
-            m_vCompId[pattern_number] = comp_id;
+            m_vCompId.push_back(comp_id);
 			pattern_number++;
 		}
 	}
+    // pop total_pattern_number added just now from vBookmark
     vBookmark.pop_back();
 
 	// ==============================================================================================
@@ -1299,7 +1301,7 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 // The relevant information should also be modified.
 // itBgn : component begin node in the vector
 // itEnd : component end node in the vector
-void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, std::vector<rectangle_pointer_type>& new_PatternVec)
+void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, std::vector<rectangle_type>& new_PatternVec)
 {
 	// ===================================================================
 	// traverse all the vertices in the layout graph
@@ -1309,19 +1311,19 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 	for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
 	{
 		// ===================================================================
-		// step 1 : capture the interaction parts with its neighbours.
+		// step 1 : capture the interaction parts with its neighbors.
 		// ===================================================================
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
 		bool isHor = whetherHorizontal(pPattern);
-		// vInterRect stores the intersection parts of pPattern and its neighbours.
+		// vInterRect stores the intersection parts of pPattern and its neighbors.
 		std::vector<rectangle_type> vInterRect;
 		vInterRect.clear();
 		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
         vInterRect.resize(vAdjVertex.size());
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-		for (uint32_t nei = 0; nei != vAdjVertex.size(); nei ++)
+//#ifdef _OPENMP
+//#pragma omp parallel for
+//#endif
+		for (uint32_t nei = 0; nei < vAdjVertex.size(); nei ++)
 		{
 			rectangle_type extendPattern(*m_db->vPatternBbox[vAdjVertex[nei]]);
 			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
@@ -1332,7 +1334,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 #else
 			vInterRect[nei] = interSectionRect(extendPattern, *pPattern);
 #endif
-		} // for nei. Traverse all the intersections with its neighbours.
+		} // for nei, Traverse all the intersections with its neighbors.
 
 		  // ===================================================================
 		  // step 2 : generate all the candidate stitches for this pattern.
@@ -1353,7 +1355,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 			upper = gtl::yh(*tempRect);
 		}
 		// Generate stitch points, based on Bei Yu's method.
-		BYUstitchGenerateTPL_Points(tempRect, vInterRect, vstitches, lower, upper);
+		GenerateStitchPosition(tempRect, vInterRect, vstitches, lower, upper);
 
 #ifdef DEBUG
 		// ===================================================================
@@ -1379,10 +1381,10 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		// ===============================================================================================
 		// step 4 : split the patterns according to the stitches
 		//			new_PatternVec	: stores the newly-generated patterns
-		//			SplitMapping	: mapping relationships between original patterns and splited patterns
+		//			SplitMapping	: mapping relationships between original patterns and split patterns
 		// ===============================================================================================
-		std::vector<rectangle_pointer_type>().swap(new_PatternVec);
-        // If this pattern hasn't been splited,
+		std::vector<rectangle_type>().swap(new_PatternVec);
+        // If this pattern hasn't been split
 		if (vstitches.size() <= 0)
 		{
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
@@ -1411,7 +1413,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					new_Pattern->pattern_id(pattern_count);
 					// for precolored patterns
 					new_Pattern->color(pPattern->color());
-					new_PatternVec.push_back(new_Pattern);
+					new_PatternVec.push_back(*new_Pattern);
 					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 					pattern_count++;
 				}
@@ -1432,7 +1434,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					new_Pattern->pattern_id(pattern_count);
 					// for precolored patterns
 					new_Pattern->color(pPattern->color());
-					new_PatternVec.push_back(new_Pattern);
+					new_PatternVec.push_back(*new_Pattern);
 					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 					pattern_count++;
 				}
@@ -1445,9 +1447,9 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 
 void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVertex)
 {
-#ifdef _OPENMP
-#pragma omp parallel for 
-#endif
+//#ifdef _OPENMP
+//#pragma omp parallel for 
+//#endif
 	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
 	{
 		uint32_t parentId = new2ori[newPattern];
@@ -1460,9 +1462,9 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVe
 			{
 				coordinate_difference distance = m_db->euclidean_distance(*m_db->vPatternBbox[*it], *m_db->vPatternBbox[newPattern]);
 				if (distance < m_db->coloring_distance)
-#ifdef _OPENMP
-#pragma omp critical
-#endif
+//#ifdef _OPENMP
+//#pragma omp critical
+//#endif
                 {
                     new_mAdjVertex[newPattern].push_back(*it);
 				}
