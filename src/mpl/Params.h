@@ -72,7 +72,7 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(simplify_level, rhs.simplify_level);
     std::swap(thread_num, rhs.thread_num);
     std::swap(verbose, rhs.verbose);
-    std::swap(stitch, rhs.stitch)
+    std::swap(stitch, rhs.stitch);
     std::swap(dbg_comp_id, rhs.dbg_comp_id);
     std::swap(input_gds, rhs.input_gds);
     std::swap(output_gds, rhs.output_gds);

@@ -60,6 +60,7 @@ void SimpleMPL::run(int argc, char** argv)
 	this->report();
 	this->write_gds();
 }
+/*
 void SimpleMPL::produce_graph_run(int32_t argc, char **argv)
 {
     this->reset(false);
@@ -75,6 +76,7 @@ void SimpleMPL::produce_graph_run(int32_t argc, char **argv)
     this->solve(m_db->output_gds().c_str());
 
 }
+*/
 void SimpleMPL::reset(bool init)
 {
     // release memory and set to initial value 
@@ -194,8 +196,10 @@ void SimpleMPL::solve()
 #endif
 
     if(m_db->stitch())
-        runProjection(vBookmark);
-
+    {
+		std::cout << "==== Stitch Insertion ====" << std::endl;
+		runProjection(vBookmark);
+	}
 
 #ifdef DEBUG
     std::cout << "============== After runProjection.. ==============" << std::endl;
@@ -1248,7 +1252,7 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
     std::vector<uint32_t>().swap(vBookmark);
     uint32_t total_pattern_number = 0;
 
-    for(comp_id = 0; comp_id < m_comp_cnt; comp_id++)
+    for(uint32_t comp_id = 0; comp_id < m_comp_cnt; comp_id++)
     {
         vBookmark.push_back(total_pattern_number);
         total_pattern_number += Component_Pattern_list[comp_id].size();
@@ -1264,13 +1268,13 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 
     uint32_t pattern_number = 0;
     // used as pivot 
-    comp_id = 0;
+    uint32_t comp_id = 0;
 	for (uint32_t itVec = 0; itVec < SplitMapping.size(); itVec++)
 	{
 		for (std::vector<uint32_t>::iterator itsplit = SplitMapping[itVec].begin(); itsplit != SplitMapping[itVec].end(); itsplit++)
 		{
-			Component_Pattern_list[comp_id][*itsplit]->pattern_id(pattern_number);
-			m_db->vPatternBbox.push_back(Component_Pattern_list[comp_id][*itsplit]);
+			Component_Pattern_list[comp_id][*itsplit].pattern_id(pattern_number);
+			m_db->vPatternBbox.push_back(&Component_Pattern_list[comp_id][*itsplit]);
 			// update the mapping relationship in SplitMapping, which will be used in step 3.
 			*itsplit = pattern_number;
 			// map new patterns back to original patterns 
@@ -1390,7 +1394,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
 			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
 			new_Pattern->pattern_id(pattern_count);
-			new_PatternVec.push_back(new_Pattern);
+			new_PatternVec.push_back(*new_Pattern);
 			SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 			pattern_count++;
 		}

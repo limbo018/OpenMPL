@@ -19,18 +19,19 @@
 #  -dbg_comp_id (4294967295)    debug component id
 # ========================================================================
 
-
+#-uncolor_layer  100  \
+#-uncolor_layer 201  \
+#-uncolor_layer 202  \
+#-uncolor_layer 203 \
 # if the benchmark contains polygon shapes, -shape must be set to POLYGON;
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
-    -shape RECTANGLE \
-    -in bench/via2_local_precolor.gds  \
-    -out out.gds  \
-    -coloring_distance 130 \
-    -uncolor_layer  100  \
-    -uncolor_layer 201  \
-    -uncolor_layer 202  \
-    -uncolor_layer 203 \
+    -shape POLYGON \
+    -in bench/total_c1.gds  \
+    -out benchout/total_c1_out.gds  \
+    -coloring_distance 120 \
+	-uncolor_layer 1 \
+	-uncolor_layer 101 \
     -color_num 3 \
     -algo SDP \
     -thread_num 8

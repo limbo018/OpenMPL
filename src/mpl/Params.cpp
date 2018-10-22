@@ -32,7 +32,7 @@ bool CmdParser::operator()(int argc, char** argv)
         .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK|LP|SDP >").default_value(std::string(defaultParms.algo)))
         .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
         .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controlling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
-        .add_option(value<bool>("-stitch",  &parms.stitch,  "toggle controlling stitch insertion, default is false").toggle(true).default_value(defaultParms.stitch).toggle_value(true))
+        .add_option(Value<bool>("-stitch",  &parms.stitch,  "toggle controlling stitch insertion, default is false").toggle(true).default_value(defaultParms.stitch).toggle_value(true))
         .add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
         ;
     try
