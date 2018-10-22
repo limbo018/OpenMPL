@@ -193,7 +193,7 @@ void SimpleMPL::solve(std::string simplified_graph)
     }
 #endif
 
-    runProjection(vBookmark);
+	runProjection(vBookmark);
 
 
 #ifdef DEBUG
@@ -211,15 +211,16 @@ void SimpleMPL::solve(std::string simplified_graph)
 #endif 
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
+		std::cout << "solve each component!" << std::endl;
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
         
-        // this->store_component(itBgn, itEnd, comp_id);
         // solve component
         // pass iterators to save memory
+        //this->store_component(itBgn, itEnd, comp_id);
         // Here we only want to store the components instead of solving them. If you want to solve them, please uncomment the next line.
-        this->solve_component(itBgn, itEnd, comp_id, simplified_graph);
+        this->solve_component(itBgn, itEnd, comp_id);
 	}
 
 #ifdef DEBUG_NONINTEGERS
@@ -540,7 +541,7 @@ void SimpleMPL::connected_component()
 
 void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& order_id)
 {
-    std::cout<<"In SimpleMPL::depth_first_search() begin"<<std::endl;
+    //std::cout<<"In SimpleMPL::depth_first_search() begin"<<std::endl;
     std::stack<uint32_t> vStack; 
 	vStack.push(source);
 
@@ -561,7 +562,7 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 			}
 		}
 	}
-    std::cout<<"In SimpleMPL::depth_first_search() end"<<std::endl;
+    //std::cout<<"In SimpleMPL::depth_first_search() end"<<std::endl;
 }
 
 ///// helper functions for SimpleMPL::solve_component
@@ -768,7 +769,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 	
 }
 
-uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph)
+uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
 	if (itBgn == itEnd) return 0;
 #ifdef DEBUG
@@ -783,7 +784,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     uint32_t acc_obj_value = std::numeric_limits<uint32_t>::max();
     // if current pattern does not contain uncolored patterns, directly calculate conflicts 
     if (check_uncolored(itBgn, itEnd)) 
-        acc_obj_value = coloring_component(itBgn, itEnd, comp_id, simplified_graph);
+        acc_obj_value = coloring_component(itBgn, itEnd, comp_id);
 
 	// update global color density map 
 	// if parallelization is enabled, there will be uncertainty in the density map 
@@ -1041,30 +1042,35 @@ void SimpleMPL::BYUstitchGenerateTPL_Points(const rectangle_pointer_type pRect,
 	// step 1 : generate candidate stitches' positions according to the intersections
 	// ================================================================================
 	bool isHor = whetherHorizontal(pRect);
-	std::vector<coordinate_type> tempPos;
+	std::set<coordinate_type> tempSet;
+	tempSet.insert(lower);
+	tempSet.insert(upper);
 	for (std::vector<rectangle_type>::const_iterator it = vinterRect.begin(); it != vinterRect.end(); it++)
 	{
 		if (isHor)
 		{
-			tempPos.push_back(gtl::xl(*it));
-			tempPos.push_back(gtl::xh(*it));
+			tempSet.insert(gtl::xl(*it));
+			tempSet.insert(gtl::xh(*it));
 		}
 		else
 		{
-			tempPos.push_back(gtl::yl(*it));
-			tempPos.push_back(gtl::yh(*it));
+			tempSet.insert(gtl::yl(*it));
+			tempSet.insert(gtl::yh(*it));
 		}
 	}
+	std::vector<coordinate_type> tempVec;
+	for(std::set<coordinate_type>::iterator itr = tempSet.begin(); itr != tempSet.end(); itr++)
+		tempVec.push_back(*itr);
 	// sort all the positions
-	sort(tempPos.begin(), tempPos.end());
+	sort(tempVec.begin(), tempVec.end());
 	
 	// ================================================================================
 	// step 2 : generate stages according to the stitch positions
 	//			that is each pairwise of neighboring positions generates a stage.
 	// ================================================================================
 	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> > vStages;
-	for (uint32_t i = 1; i < tempPos.size(); i++)
-		vStages.push_back(std::make_pair(std::make_pair(tempPos[i - 1], tempPos[i]), 0));
+	for (uint32_t i = 1; i < tempVec.size(); i++)
+		vStages.push_back(std::make_pair(std::make_pair(tempVec[i - 1], tempVec[i]), 0));
 	// calculate the times every stage covered by all the intersections.
 	for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t> >::iterator it = vStages.begin();
 		it != vStages.end(); it++)

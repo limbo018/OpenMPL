@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <stack>
+#include <set>
 #include <string>
 #include <deque>
 #include <assert.h>
@@ -111,7 +112,7 @@ class SimpleMPL
         void depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& pattern_id);
         /// solve a single component 
         /// it wraps up solve_graph_coloring()
-        uint32_t solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::string simplified_graph);
+        uint32_t solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
         /// Created by Qi Sun
         /// Store every component (this function was implemented long long ago, for other uses)
         void store_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
