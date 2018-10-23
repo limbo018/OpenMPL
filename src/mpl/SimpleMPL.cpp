@@ -1029,6 +1029,10 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	// sort all the positions
 	sort(tempVec.begin(), tempVec.end());
 #ifdef QDEBUG
+	// ouput tempSet
+	std::cout << "==== tempSet ====" << std::endl; 
+	for(std::set<coordinate_type>::iterator itr = tempSet.begin(); itr != tempSet.end(); itr++)
+		std::cout << *itr << std::endl;
 	// output tempvec
 	std::cout << "==== tempVec ====" << std::endl;
 	for(uint32_t i = 0; i < tempVec.size(); i ++)
@@ -1065,7 +1069,7 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 				overlapping_count++;
 			}
 		}
-		it->first.second = overlapping_count;
+		it->second = overlapping_count;
 	}
 
 	// ================================================================================
@@ -1196,6 +1200,7 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	std::cout << "DEBUG| output the vstitches: " << std::endl;
 	std::cout << "lower = " << lower << std::endl;
 	std::cout << "upper = " << upper << std::endl;
+	std::cout << 
 	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		std::cout << *it << " ";
 	std::cout << std::endl;
@@ -1307,13 +1312,16 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		// step 1 : capture the interaction parts with its neighbors.
 		// ===================================================================
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
-		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
+		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[pPattern->pattern_id()];
         // If the pattern has no neighbors, then it won't be split.
-        if (vAdjVertex.size() <= 0)
+#ifdef QDEBUG
+		std::cout << "Pattern " << pPattern->pattern_id() << " has " << vAdjVertex.size() << " neighbors." << std::endl;
+#endif
+		if (vAdjVertex.size() <= 0)
         {
-            //rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
+            rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
             SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
-            pPattern->pattern_id(pattern_count);
+            new_Pattern->pattern_id(pattern_count);
             new_PatternVec.push_back(*new_Pattern);
             pattern_count++; 
             mplAssert(new_PatternVec.size() > 0);
@@ -1362,7 +1370,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         // Generate stitch points, based on Bei Yu's method.
         GenerateStitchPosition(tempRect, vInterRect, vstitches, lower, upper);
 
-#ifdef DEBUG
+#ifdef QDEBUG
 		// ===================================================================
 		// step 3 : check the positions' legalities
 		// ===================================================================
