@@ -25,10 +25,10 @@
     -shape POLYGON \
 	-in bench/total_c1.gds \
     -out benchout/total_c1_out.gds \
-	-coloring_distance 160 \
+	-coloring_distance 120 \
     -uncolor_layer 101 \
     -uncolor_layer 1 \
-	-color_num 4 \
-    -algo LP \
+	-color_num 3 \
+	-algo SDP \
     -thread_num 8 \
 	-simplify_level 3

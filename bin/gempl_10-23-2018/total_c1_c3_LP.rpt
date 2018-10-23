@@ -1,0 +1,93 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_c1.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 2093
+(I) Total patterns # = 1124
+(I) Shape mode = POLYGON
+(I) Coloring distance = 120 db ( 120 nm )
+(I) Color num = 3
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = LP_GUROBI
+(I) reading input files takes 0.170000 seconds CPU, 0.184530 seconds real
+(I) Constructing graph for 1124 patterns...
+(I) 1124 vertices, 2146 edges
+(I) Computing connected components...
+(I) Solving 4 independent components...
+===================  Component  0 ====================
+Component 0 has 8 componetns.
+====** Sub_Component 0_0  **====
+	pattern number : 34
+	conflict number : 5
+	0.020000000s user + 0.000000000s system = 0.020000000s (66.8%)
+====** Sub_Component 0_1  **====
+	pattern number : 39
+	conflict number : 5
+	0.030000000s user + 0.000000000s system = 0.030000000s (93.8%)
+====** Sub_Component 0_2  **====
+	pattern number : 26
+	conflict number : 2
+	0.020000000s user + 0.010000000s system = 0.030000000s (153.7%)
+====** Sub_Component 0_3  **====
+	pattern number : 39
+	conflict number : 7
+	0.030000000s user + 0.000000000s system = 0.030000000s (99.3%)
+====** Sub_Component 0_4  **====
+	pattern number : 33
+	conflict number : 7
+	0.020000000s user + 0.000000000s system = 0.020000000s (71.8%)
+====** Sub_Component 0_5  **====
+	pattern number : 44
+	conflict number : 10
+	0.050000000s user + 0.000000000s system = 0.050000000s (109.2%)
+====** Sub_Component 0_6  **====
+	pattern number : 46
+	conflict number : 8
+	0.040000000s user + 0.010000000s system = 0.050000000s (112.5%)
+====** Sub_Component 0_7  **====
+	pattern number : 32
+	conflict number : 4
+	0.020000000s user + 0.000000000s system = 0.020000000s (80.4%)
+component_conflict_num = 48	acc_obj_value = 48
+**** total time : 2.100000000s user + 0.020000000s system = 2.120000000s (98.9%)
+===================  Component  1 ====================
+Component 1 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 2.200000 seconds CPU, 2.222063 seconds real
+(I) Conflict number = 48
+(I) Color 0 density = 447
+(I) Color 1 density = 433
+(I) Color 2 density = 244
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_c1_out.gds
+(I) writing output file takes 0.010000 seconds CPU, 0.076659 seconds real
+(I) program takes 2.380000 seconds CPU, 2.483969 seconds real
+
+real	0m2.499s
+user	0m2.370s
+sys	0m0.023s

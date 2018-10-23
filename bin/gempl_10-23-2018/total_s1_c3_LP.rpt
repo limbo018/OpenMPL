@@ -1,0 +1,149 @@
+
+
+=======================================================================
+                      OpenMPL - Version 1.1                        
+                                by                                   
+                   Yibo Lin, Bei Yu, and  David Z. Pan               
+               ECE Department, University of Texas at Austin         
+                         Copyright (c) 2015                          
+            Contact Authors:  {yibolin,bei,dpan}@cerc.utexas.edu     
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+****OPENMP not defined !****
+(I) Reading input file /research/byu2/qsun/project/ISCAS_bench/ISCAS_total/total_s1.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 7906
+(I) Total patterns # = 4586
+(I) Shape mode = POLYGON
+(I) Coloring distance = 120 db ( 120 nm )
+(I) Color num = 3
+(I) Simplification level = 3
+(I) Thread num = 8
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = LP_GUROBI
+(I) reading input files takes 0.750000 seconds CPU, 0.785162 seconds real
+(I) Constructing graph for 4586 patterns...
+(I) 4586 vertices, 10063 edges
+(I) Computing connected components...
+(I) Solving 8 independent components...
+===================  Component  0 ====================
+Component 0 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  1 ====================
+Component 1 has 18 componetns.
+====** Sub_Component 1_0  **====
+	pattern number : 112
+	conflict number : 37
+	0.270000000s user + 0.010000000s system = 0.280000000s (102.5%)
+====** Sub_Component 1_1  **====
+	pattern number : 117
+	conflict number : 38
+	0.280000000s user + 0.000000000s system = 0.280000000s (92.5%)
+====** Sub_Component 1_2  **====
+	pattern number : 115
+	conflict number : 30
+	0.250000000s user + 0.000000000s system = 0.250000000s (99.5%)
+====** Sub_Component 1_3  **====
+	pattern number : 109
+	conflict number : 33
+	0.220000000s user + 0.010000000s system = 0.230000000s (100.2%)
+====** Sub_Component 1_4  **====
+	pattern number : 111
+	conflict number : 37
+	0.190000000s user + 0.000000000s system = 0.190000000s (94.3%)
+====** Sub_Component 1_5  **====
+	pattern number : 113
+	conflict number : 35
+	0.280000000s user + 0.000000000s system = 0.280000000s (100.1%)
+====** Sub_Component 1_6  **====
+	pattern number : 117
+	conflict number : 36
+	0.210000000s user + 0.010000000s system = 0.220000000s (101.5%)
+====** Sub_Component 1_7  **====
+	pattern number : 118
+	conflict number : 38
+	0.300000000s user + 0.000000000s system = 0.300000000s (98.0%)
+====** Sub_Component 1_8  **====
+	pattern number : 110
+	conflict number : 34
+	0.310000000s user + 0.000000000s system = 0.310000000s (98.1%)
+====** Sub_Component 1_9  **====
+	pattern number : 116
+	conflict number : 38
+	0.300000000s user + 0.010000000s system = 0.310000000s (100.7%)
+====** Sub_Component 1_10  **====
+	pattern number : 130
+	conflict number : 41
+	0.340000000s user + 0.000000000s system = 0.340000000s (98.8%)
+====** Sub_Component 1_11  **====
+	pattern number : 102
+	conflict number : 31
+	0.170000000s user + 0.000000000s system = 0.170000000s (91.7%)
+====** Sub_Component 1_12  **====
+	pattern number : 105
+	conflict number : 35
+	0.250000000s user + 0.010000000s system = 0.260000000s (101.6%)
+====** Sub_Component 1_13  **====
+	pattern number : 113
+	conflict number : 34
+	0.250000000s user + 0.000000000s system = 0.250000000s (95.4%)
+====** Sub_Component 1_14  **====
+	pattern number : 128
+	conflict number : 39
+	0.310000000s user + 0.000000000s system = 0.310000000s (101.1%)
+====** Sub_Component 1_15  **====
+	pattern number : 108
+	conflict number : 34
+	0.330000000s user + 0.010000000s system = 0.340000000s (98.2%)
+====** Sub_Component 1_16  **====
+	pattern number : 106
+	conflict number : 34
+	0.320000000s user + 0.000000000s system = 0.320000000s (100.6%)
+====** Sub_Component 1_17  **====
+	pattern number : 102
+	conflict number : 31
+	0.160000000s user + 0.000000000s system = 0.160000000s (88.5%)
+component_conflict_num = 635	acc_obj_value = 635
+**** total time : 43.690000000s user + 0.080000000s system = 43.770000000s (98.8%)
+===================  Component  2 ====================
+Component 2 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  3 ====================
+Component 3 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  4 ====================
+Component 4 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  5 ====================
+Component 5 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  6 ====================
+Component 6 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+===================  Component  7 ====================
+Component 7 has 0 componetns.
+component_conflict_num = 0	acc_obj_value = 0
+**** total time : 0.000000000s user + 0.000000000s system = 0.000000000s (n/a%)
+(I) coloring takes 44.130000 seconds CPU, 44.685861 seconds real
+(I) Conflict number = 635
+(I) Color 0 density = 1405
+(I) Color 1 density = 1430
+(I) Color 2 density = 1751
+(I) Write output gds file: /research/byu2/qsun/project/gempl/bin/benchout/total_s1_out.gds
+(I) writing output file takes 0.040000 seconds CPU, 0.078718 seconds real
+(I) program takes 44.930000 seconds CPU, 45.551838 seconds real
+
+real	0m45.565s
+user	0m44.859s
+sys	0m0.085s
