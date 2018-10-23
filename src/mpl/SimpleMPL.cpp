@@ -763,8 +763,9 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 
     uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
     // only valid under no stitch 
-    if (acc_obj_value != std::numeric_limits<uint32_t>::max())
-        mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
+    if(!m_db->stitch())
+		if (acc_obj_value != std::numeric_limits<uint32_t>::max())
+			 mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
 
     if (m_db->verbose())
         mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
@@ -1200,7 +1201,6 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 	std::cout << "DEBUG| output the vstitches: " << std::endl;
 	std::cout << "lower = " << lower << std::endl;
 	std::cout << "upper = " << upper << std::endl;
-	std::cout << 
 	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		std::cout << *it << " ";
 	std::cout << std::endl;
@@ -1259,7 +1259,7 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     //          we also need to store the set of neighbors corresponding to each stage,
     //          but not the number of neighbors.
     // ================================================================================
-    std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t>> > vStages;
+    std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t> > > vStages;
     std::set<uint32_t> t;
     for (uint32_t i = 1; i < tempVec.size(); i++)
         vStages.push_back(std::make_pair(std::make_pair(tempVec[i - 1], tempVec[i]), t));
@@ -1269,20 +1269,20 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     {
         coordinate_type left = it->first.first;
         coordinate_type right = it->first.second;
-        for (uint32_t itInt = 0; itInt < vInterRect.size(); itInt++)
+        for (uint32_t itInt = 0; itInt < vinterRect.size(); itInt++)
         {
             if (isHor)
             {
-                if (left < gtl::xl(vInterRect[itInt])) continue;
-                if (right > gtl::xh(vInterRect[itInt])) continue;
+                if (left < gtl::xl(vinterRect[itInt])) continue;
+                if (right > gtl::xh(vinterRect[itInt])) continue;
             }
             else
             {
-                if (left < gtl::yl(vInterRect[itInt])) continue;
-                if (right > gtl::yh(vInterRect[itInt])) continue;
+                if (left < gtl::yl(vinterRect[itInt])) continue;
+                if (right > gtl::yh(vinterRect[itInt])) continue;
             }
+			it->second.insert(vAdjVertex[itInt]);
         }
-        it->second.insert(vAdjVertex[itInt]);
     }
 
     // ================================================================================
@@ -1294,17 +1294,18 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
         std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second.size() << std::endl << "nei_set : \t";
         for(std::set<uint32_t>::iterator it = vStages[i].second.begin(); it != vStages[i].second.end(); it ++)
             std::cout << " " << *it;
-        std::endl;
+        std::cout << std::endl;
 #endif
         // compute the left side 
         std::set<uint32_t> twosideset;
         for(uint32_t j = 0; j <= i; j++)
             twosideset.insert(vStages[j].second.begin(), vStages[j].second.end());
-        if(twosideset.size() >= vAdjVertex.size() || twosideset.size() == 0)
+        if(twosideset.size() >= vAdjVertex.size())
             continue;
+		std::set<uint32_t>().swap(twosideset);
         for(uint32_t j = i; j < vStages.size(); j++)
             twosideset.insert(vStages[j].second.begin(), vStages[j].second.end());
-        if(twosideset.size() >= vAdjVertex.size() || twosideset.size() == 0)
+        if(twosideset.size() >= vAdjVertex.size())
             continue;
 #ifdef RESTRICT_STITCH
         // This is used to add more constraints on stitch positions.
@@ -1312,6 +1313,12 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
         vstitches.push_back((vStages[i].first.first + vStages[i].first.second) / 2);
     }
     sort(vstitches.begin(), vstitches.end());
+#ifdef QDEBUG
+	std::cout << "vstitches : " << vstitches.size() <<std::endl;
+	for(std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
+		std::cout << *it << " ";
+	std::cout << std::endl;
+#endif
     return;
 }
 
@@ -1394,7 +1401,7 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	//			For the patterns in one original pattern, all the relationships will be measured 
 	//			during the component solving process.
 	// ==============================================================================================
-	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+	std::vector<std::vector<uint32_t> > new_mAdjVertex(total_pattern_number);
 	adj4NewPatterns(new_mAdjVertex);
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex = new_mAdjVertex;
@@ -1430,6 +1437,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
             rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
             SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
             new_Pattern->pattern_id(pattern_count);
+			// new_Pattern->color(-1);
+			// new_Pattern->color(pPattern->color());
             new_PatternVec.push_back(*new_Pattern);
             pattern_count++; 
             continue;
@@ -1475,13 +1484,14 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
             upper = gtl::yh(*tempRect);
         }
         // Generate stitch points, based on Bei Yu's method.
-        // GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
-        GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
+        GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
+        // GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
 
 #ifdef QDEBUG
 		// ===================================================================
 		// step 3 : check the positions' legalities
 		// ===================================================================
+		std::cout << "check legalities." <<std::endl;
 		if (isHor) {
 			// If pPattern is horizontal, all the stitches' positions should be in (xl, xh)
 			for (uint32_t j = 0; j < vstitches.size(); j++)
@@ -1498,6 +1508,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 				assert(pos > gtl::yl(*pPattern) && pos < gtl::yh(*pPattern));
 			}
 		}
+		std::cout << "check legalities done ." <<std::endl;
 #endif
 		// ===============================================================================================
 		// step 4 : split the patterns according to the stitches
@@ -1508,16 +1519,23 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         // If this pattern hasn't been split
         if (vstitches.size() <= 0)
 		{
+			std::cout << "vstitches.size() <= 0" << std::endl;
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
 			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
 			new_Pattern->pattern_id(pattern_count);
+			// new_Pattern->color(-1);
+			// new_Pattern->color(pPattern->color());
 			new_PatternVec.push_back(*new_Pattern);
 			SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 			pattern_count++;
+			std::cout << "<=0 done "<< std::endl;
 		}
 		// This pattern has been splited.
 		else
 		{
+#ifdef QDEBUG
+			std::cout << "This pattern has been split!" << std::endl;
+#endif
 			if (isHor)
 			{
 				// vstitches : position order, from left to right
@@ -1533,7 +1551,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					gtl::yh(*new_Pattern, gtl::yh(*pPattern));
 					new_Pattern->pattern_id(pattern_count);
 					// for precolored patterns
-					new_Pattern->color(pPattern->color());
+					// new_Pattern->color(-1);
+					// new_Pattern->color(pPattern->color());
 					new_PatternVec.push_back(*new_Pattern);
 					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 					pattern_count++;
@@ -1554,13 +1573,14 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					gtl::yh(*new_Pattern, vstitches[j + 1]);
 					new_Pattern->pattern_id(pattern_count);
 					// for precolored patterns
-					new_Pattern->color(pPattern->color());
+					// new_Pattern->color(-1);
+					// new_Pattern->color(pPattern->color());
 					new_PatternVec.push_back(*new_Pattern);
 					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 					pattern_count++;
 				}
 			}
-		//}
+		}
 		mplAssert(new_PatternVec.size() > 0);
 	}
 	return;
