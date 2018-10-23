@@ -1300,6 +1300,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 	// ===================================================================
     // pattern_count : used to regenerate pattern ids for all patterns in this component
     uint32_t pattern_count = 0;
+    std::vector<rectangle_type>().swap(new_PatternVec);
 	for (std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
 	{
 		// ===================================================================
@@ -1307,8 +1308,17 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		// ===================================================================
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
 		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[m_db->vPatternBbox[*it]->pattern_id()];
-		if(vAdjVertex.size()<=0)
-			continue;
+        // If the pattern has no neighbors, then it won't be split.
+        if (vAdjVertex.size() <= 0)
+        {
+            //rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
+            SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
+            pPattern->pattern_id(pattern_count);
+            new_PatternVec.push_back(*new_Pattern);
+            pattern_count++; 
+            mplAssert(new_PatternVec.size() > 0);
+            continue;  
+        }
 		bool isHor = whetherHorizontal(pPattern);
 		// vInterRect stores the intersection parts of pPattern and its neighbors.
 		std::vector<rectangle_type> vInterRect;
@@ -1334,23 +1344,23 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		  // step 2 : generate all the candidate stitches for this pattern.
 		  // ===================================================================
 		std::vector<coordinate_type> vstitches;
-		rectangle_pointer_type tempRect = new rectangle_type(*pPattern);
-		//rectangle_pointer_type tempRect = new rectangle_type(gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
-		// the lower bound and upper bound of the stitch position.
-		// If the pattern is horizontal, the stitches will be horizontal.
-		// If the pattern is vertical, the stitches will be vertical.
-		coordinate_type lower = 0, upper = 0;
-		if (isHor) {
-			lower = gtl::xl(*tempRect);
-			upper = gtl::xh(*tempRect);
-		}
-		else
-		{
-			lower = gtl::yl(*tempRect);
-			upper = gtl::yh(*tempRect);
-		}
-		// Generate stitch points, based on Bei Yu's method.
-		GenerateStitchPosition(tempRect, vInterRect, vstitches, lower, upper);
+        rectangle_pointer_type tempRect = new rectangle_type(*pPattern);
+        //rectangle_pointer_type tempRect = new rectangle_type(gtl::xl(*pPattern), gtl::yl(*pPattern), gtl::xh(*pPattern), gtl::yh(*pPattern));
+        // the lower bound and upper bound of the stitch position.
+        // If the pattern is horizontal, the stitches will be horizontal.
+        // If the pattern is vertical, the stitches will be vertical.
+        coordinate_type lower = 0, upper = 0;
+        if (isHor) {
+            lower = gtl::xl(*tempRect);
+            upper = gtl::xh(*tempRect);
+        }
+        else
+        {
+            lower = gtl::yl(*tempRect);
+            upper = gtl::yh(*tempRect);
+        }
+        // Generate stitch points, based on Bei Yu's method.
+        GenerateStitchPosition(tempRect, vInterRect, vstitches, lower, upper);
 
 #ifdef DEBUG
 		// ===================================================================
@@ -1378,9 +1388,10 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		//			new_PatternVec	: stores the newly-generated patterns
 		//			SplitMapping	: mapping relationships between original patterns and split patterns
 		// ===============================================================================================
-		std::vector<rectangle_type>().swap(new_PatternVec);
+		
         // If this pattern hasn't been split
-		if (vstitches.size() <= 0)
+		/*
+        if (vstitches.size() <= 0)
 		{
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
 			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
@@ -1391,7 +1402,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		}
 		// This pattern has been splited.
 		else
-		{
+		{*/
 			if (isHor)
 			{
 				// vstitches : position order, from left to right
@@ -1434,7 +1445,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					pattern_count++;
 				}
 			}
-		}
+		//}
 		mplAssert(new_PatternVec.size() > 0);
 	}
 	return;
