@@ -995,7 +995,7 @@ bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)
     return (xh - xl) > (yh - yl);
 }
 
-void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
+void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 	const std::vector<rectangle_type> vinterRect,
 	std::vector <coordinate_type> vstitches, const coordinate_type lower,
 	const coordinate_type upper)
@@ -1208,6 +1208,113 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_pointer_type pRect,
 	return;
 }
 
+void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
+    const std::vector<rectangle_type> vinterRect, std::vector<uint32_t> & vAdjVertex,
+    std::vector <coordinate_type> vstitches, const coordinate_type lower,
+    const coordinate_type upper)
+{
+#ifdef QDEBUG
+    std::cout << "pattern id : " << pRect->pattern_id() << "\tlower : " << lower << "\t upper : " << upper << std::endl;
+#endif
+    // ================================================================================
+    // step 1 : generate candidate stitches' positions according to the intersections
+    // ================================================================================
+    bool isHor = whetherHorizontal(pRect);
+    std::set<coordinate_type> tempSet;
+    tempSet.insert(lower);
+    tempSet.insert(upper);
+    for (std::vector<rectangle_type>::const_iterator it = vinterRect.begin(); it != vinterRect.end(); it++)
+    {
+        if (isHor)
+        {
+            tempSet.insert(gtl::xl(*it));
+            tempSet.insert(gtl::xh(*it));
+        }
+        else
+        {
+            tempSet.insert(gtl::yl(*it));
+            tempSet.insert(gtl::yh(*it));
+        }
+    }
+    std::vector<coordinate_type> tempVec;
+    for(std::set<coordinate_type>::iterator itr = tempSet.begin(); itr != tempSet.end(); itr++)
+        tempVec.push_back(*itr);
+    // sort all the positions
+    sort(tempVec.begin(), tempVec.end());
+#ifdef QDEBUG
+    // ouput tempSet
+    std::cout << "==== tempSet ====" << std::endl; 
+    for(std::set<coordinate_type>::iterator itr = tempSet.begin(); itr != tempSet.end(); itr++)
+        std::cout << *itr << std::endl;
+    // output tempvec
+    std::cout << "==== tempVec ====" << std::endl;
+    for(uint32_t i = 0; i < tempVec.size(); i ++)
+    {
+        std::cout << i << " : \t" << tempVec[i] << std::endl; 
+    }
+#endif
+    // ================================================================================
+    // step 2 : generate stages according to the stitch positions;
+    //          that is each pairwise of neighboring positions generates a stage;
+    //          we also need to store the set of neighbors corresponding to each stage,
+    //          but not the number of neighbors.
+    // ================================================================================
+    std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t>> > vStages;
+    std::set<uint32_t> t;
+    for (uint32_t i = 1; i < tempVec.size(); i++)
+        vStages.push_back(std::make_pair(std::make_pair(tempVec[i - 1], tempVec[i]), t));
+    // calculate the times every stage covered by all the intersections.
+    for (std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t> > >::iterator it = vStages.begin();
+        it != vStages.end(); it++)
+    {
+        coordinate_type left = it->first.first;
+        coordinate_type right = it->first.second;
+        for (uint32_t itInt = 0; itInt < vInterRect.size(); itInt++)
+        {
+            if (isHor)
+            {
+                if (left < gtl::xl(vInterRect[itInt])) continue;
+                if (right > gtl::xh(vInterRect[itInt])) continue;
+            }
+            else
+            {
+                if (left < gtl::yl(vInterRect[itInt])) continue;
+                if (right > gtl::yh(vInterRect[itInt])) continue;
+            }
+        }
+        it->second.insert(vAdjVertex[itInt]);
+    }
+
+    // ================================================================================
+    // step 3 : traverse all the stages to find the legal candidate stitches
+    // ================================================================================
+    for(uint32_t i = 0; i < vStages.size(); i++)
+    {
+#ifdef QDEBUG
+        std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second.size() << std::endl << "nei_set : \t";
+        for(std::set<uint32_t>::iterator it = vStages[i].second.begin(); it != vStages[i].second.end(); it ++)
+            std::cout << " " << *it;
+        std::endl;
+#endif
+        // compute the left side 
+        std::set<uint32_t> twosideset;
+        for(uint32_t j = 0; j <= i; j++)
+            twosideset.insert(vStages[j].second.begin(), vStages[j].second.end());
+        if(twosideset.size() >= vAdjVertex.size() || twosideset.size() == 0)
+            continue;
+        for(uint32_t j = i; j < vStages.size(); j++)
+            twosideset.insert(vStages[j].second.begin(), vStages[j].second.end());
+        if(twosideset.size() >= vAdjVertex.size() || twosideset.size() == 0)
+            continue;
+#ifdef RESTRICT_STITCH
+        // This is used to add more constraints on stitch positions.
+#endif
+        vstitches.push_back((vStages[i].first.first + vStages[i].first.second) / 2);
+    }
+    sort(vstitches.begin(), vstitches.end());
+    return;
+}
+
 void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 {
 	// In order to execute the projection operations in parallel, I think it's needed to take up more 
@@ -1317,6 +1424,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 #ifdef QDEBUG
 		std::cout << "Pattern " << pPattern->pattern_id() << " has " << vAdjVertex.size() << " neighbors." << std::endl;
 #endif
+        // if vAdjVertex.size() <= 0, then obviously this pattern doesn't need to be split.
 		if (vAdjVertex.size() <= 0)
         {
             rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
@@ -1324,8 +1432,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
             new_Pattern->pattern_id(pattern_count);
             new_PatternVec.push_back(*new_Pattern);
             pattern_count++; 
-            mplAssert(new_PatternVec.size() > 0);
-            continue;  
+            continue;
         }
 		bool isHor = whetherHorizontal(pPattern);
 		// vInterRect stores the intersection parts of pPattern and its neighbors.
@@ -1368,7 +1475,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
             upper = gtl::yh(*tempRect);
         }
         // Generate stitch points, based on Bei Yu's method.
-        GenerateStitchPosition(tempRect, vInterRect, vstitches, lower, upper);
+        // GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
+        GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
 
 #ifdef QDEBUG
 		// ===================================================================
@@ -1398,7 +1506,6 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		// ===============================================================================================
 		
         // If this pattern hasn't been split
-		/*
         if (vstitches.size() <= 0)
 		{
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
@@ -1410,7 +1517,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		}
 		// This pattern has been splited.
 		else
-		{*/
+		{
 			if (isHor)
 			{
 				// vstitches : position order, from left to right
