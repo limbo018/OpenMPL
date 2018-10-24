@@ -1002,7 +1002,7 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 	const coordinate_type upper)
 {
 #ifdef QDEBUG
-	std::cout << "pattern id : " << pRect->pattern_id() << "\tlower : " << lower << "\tupper : " << upper << std::endl;
+	//std::cout << "pattern id : " << pRect->pattern_id() << "\tlower : " << lower << "\tupper : " << upper << std::endl;
 #endif
 	// ================================================================================
 	// step 1 : generate candidate stitches' positions according to the intersections
@@ -1031,6 +1031,7 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 	sort(tempVec.begin(), tempVec.end());
 #ifdef QDEBUG
 	// ouput tempSet
+	/*
 	std::cout << "==== tempSet ====" << std::endl; 
 	for(std::set<coordinate_type>::iterator itr = tempSet.begin(); itr != tempSet.end(); itr++)
 		std::cout << *itr << std::endl;
@@ -1040,6 +1041,7 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 	{
 		std::cout << i << " : \t" << tempVec[i] << std::endl; 
 	}
+	*/
 #endif
 	// ================================================================================
 	// step 2 : generate stages according to the stitch positions
@@ -1100,19 +1102,21 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 	for (uint32_t i = 0; i < vStages.size(); i++)
 	{
 #ifdef QDEBUG
-		std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second << std::endl;
+	//	std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second << std::endl;
 #endif
 		if (vStages[i].second > 0) continue;
 		vZeroIds.push_back(i);
 	}
 #ifdef QDEBUG
 	// output vZeroIds
+	/*
 	std::cout << "Zero stages : " << std::endl;
 	for (uint32_t i = 0; i < vZeroIds.size(); i++ )
 	{
 		std::cout << i << " : " << "vStages[" << vZeroIds[i] << "] " << vStages[vZeroIds[i]].first.first << " -- " << vStages[vZeroIds[i]].first.second << std::endl;
 	}
 	std::cout << "==== Choose stitches ==== " << std::endl << "vStages.size() :  " << vStages.size() << std::endl;
+*/
 #endif
 	// ================================================================================
 	// step 5: choose stitches from vZeroIds
@@ -1124,7 +1128,7 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 		uint32_t pos1 = vZeroIds[i];
 		uint32_t pos2 = vZeroIds[i + 1];
 #ifdef QDEBUG
-		std::cout << "i = " << i << " \t" << "pos1 = " << pos1 << " \t" << "pos2 = " << pos2 << std::endl;
+	//	std::cout << "i = " << i << " \t" << "pos1 = " << pos1 << " \t" << "pos2 = " << pos2 << std::endl;
 #endif
 		// since ((lower, lower), 0) has been added into vStages, so pos1 must be 0.
 		if (i == 0) mplAssertMsg(0 == pos1, "pos1 %d doesn't equal to 0", pos1);
@@ -1198,12 +1202,14 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 #endif
 
 #ifdef QDEBUG
+	/*
 	std::cout << "DEBUG| output the vstitches: " << std::endl;
 	std::cout << "lower = " << lower << std::endl;
 	std::cout << "upper = " << upper << std::endl;
 	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		std::cout << *it << " ";
 	std::cout << std::endl;
+	*/
 #endif
 	return;
 }
@@ -1214,7 +1220,7 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     const coordinate_type upper)
 {
 #ifdef QDEBUG
-    std::cout << "pattern id : " << pRect->pattern_id() << "\tlower : " << lower << "\t upper : " << upper << std::endl;
+   // std::cout << "pattern id : " << pRect->pattern_id() << "\tlower : " << lower << "\t upper : " << upper << std::endl;
 #endif
     // ================================================================================
     // step 1 : generate candidate stitches' positions according to the intersections
@@ -1243,7 +1249,8 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     sort(tempVec.begin(), tempVec.end());
 #ifdef QDEBUG
     // ouput tempSet
-    std::cout << "==== tempSet ====" << std::endl; 
+    /*
+	std::cout << "==== tempSet ====" << std::endl; 
     for(std::set<coordinate_type>::iterator itr = tempSet.begin(); itr != tempSet.end(); itr++)
         std::cout << *itr << std::endl;
     // output tempvec
@@ -1252,6 +1259,7 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     {
         std::cout << i << " : \t" << tempVec[i] << std::endl; 
     }
+	*/
 #endif
     // ================================================================================
     // step 2 : generate stages according to the stitch positions;
@@ -1291,10 +1299,12 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     for(uint32_t i = 0; i < vStages.size(); i++)
     {
 #ifdef QDEBUG
-        std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second.size() << std::endl << "nei_set : \t";
+       /*
+		std::cout << "vStages[" << i <<  "] \t" << vStages[i].first.first << " -- " << vStages[i].first.second << "\t count = " << vStages[i].second.size() << std::endl << "nei_set : \t";
         for(std::set<uint32_t>::iterator it = vStages[i].second.begin(); it != vStages[i].second.end(); it ++)
             std::cout << " " << *it;
         std::cout << std::endl;
+		*/
 #endif
         // compute the left side 
         std::set<uint32_t> twosideset;
@@ -1314,10 +1324,12 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     }
     sort(vstitches.begin(), vstitches.end());
 #ifdef QDEBUG
+	/*
 	std::cout << "vstitches : " << vstitches.size() <<std::endl;
 	for(std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		std::cout << *it << " ";
 	std::cout << std::endl;
+	*/
 #endif
     return;
 }
@@ -1429,7 +1441,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		std::vector<uint32_t>& vAdjVertex = m_mAdjVertex[pPattern->pattern_id()];
         // If the pattern has no neighbors, then it won't be split.
 #ifdef QDEBUG
-		std::cout << "Pattern " << pPattern->pattern_id() << " has " << vAdjVertex.size() << " neighbors." << std::endl;
+	//	std::cout << "Pattern " << pPattern->pattern_id() << " has " << vAdjVertex.size() << " neighbors." << std::endl;
 #endif
         // if vAdjVertex.size() <= 0, then obviously this pattern doesn't need to be split.
 		if (vAdjVertex.size() <= 0)
@@ -1484,13 +1496,14 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
             upper = gtl::yh(*tempRect);
         }
         // Generate stitch points, based on Bei Yu's method.
-        GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
-        // GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
+        // GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
+        GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
 
 #ifdef QDEBUG
 		// ===================================================================
 		// step 3 : check the positions' legalities
 		// ===================================================================
+	/*
 		std::cout << "check legalities." <<std::endl;
 		if (isHor) {
 			// If pPattern is horizontal, all the stitches' positions should be in (xl, xh)
@@ -1509,6 +1522,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 			}
 		}
 		std::cout << "check legalities done ." <<std::endl;
+	*/
 #endif
 		// ===============================================================================================
 		// step 4 : split the patterns according to the stitches
@@ -1534,7 +1548,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		else
 		{
 #ifdef QDEBUG
-			std::cout << "This pattern has been split!" << std::endl;
+	//		std::cout << "This pattern has been split!" << std::endl;
 #endif
 			if (isHor)
 			{
