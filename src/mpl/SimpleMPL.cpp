@@ -190,6 +190,16 @@ void SimpleMPL::solve()
     {
         std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
     }
+	std::cout << "AdjList : " << std::endl;
+	for (uint32_t i = 0; i < m_mAdjVertex.size(); i++)
+	{
+		std::cout << i << "\t: ";
+		for (std::vector<uint32_t>::iterator it = m_mAdjVertex[i].begin(); it != m_mAdjVertex[i].end(); it++)
+		{
+			std::cout << *it << " ";
+		}
+		std::cout << std::endl;
+	}
 #endif
 
     if(m_db->stitch())
@@ -1269,6 +1279,7 @@ void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,
     // ================================================================================
     std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t> > > vStages;
     std::set<uint32_t> t;
+	std::cout << "tempVec(stage locations).size() : " << tempVec.size() << std::endl;
     for (uint32_t i = 1; i < tempVec.size(); i++)
         vStages.push_back(std::make_pair(std::make_pair(tempVec[i - 1], tempVec[i]), t));
     // calculate the times every stage covered by all the intersections.
@@ -1446,6 +1457,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         // if vAdjVertex.size() <= 0, then obviously this pattern doesn't need to be split.
 		if (vAdjVertex.size() <= 0)
         {
+			std::cout << "Pattern " << pPattern->pattern_id() << "has no neighbors! New pattern id is " << pattern_count << std::endl;
             rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
             SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
             new_Pattern->pattern_id(pattern_count);
@@ -1472,7 +1484,9 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 #ifdef BOOST_REG_INTERSECTION
 			vInterRect[nei] = interSectionRectBoost(extendPattern, *pPattern);
 #else
-			vInterRect[nei] = interSectionRect(extendPattern, *pPattern);
+			rectangle_type temp = interSectionRect(extendPattern, *pPattern);
+			std::cout << pPattern->pattern_id() << " -- " << gtl::xl(temp) << ", " << gtl::yl(temp) << ", " << gtl::xh(temp) << ", " << gtl::yh(temp) << std::endl;
+			vInterRect[nei] = temp;
 #endif
 		} // for nei, Traverse all the intersections with its neighbors.
 
@@ -1497,6 +1511,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         }
         // Generate stitch points, based on Bei Yu's method.
         // GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
+		assert(vInterRect.size() != 0);
         GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
 
 #ifdef QDEBUG
