@@ -184,8 +184,15 @@ void SimpleMPL::solve()
         if (i == 0 || m_vCompId[m_vVertexOrder[i-1]] != m_vCompId[m_vVertexOrder[i]])
             vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
     }
+
+
 #ifdef QDEBUG
-    std::cout << "============== Before runProjection.. =============="<< std::endl;
+ 	std::cout << "=======pattern and its corresponding color ====== "<< std::endl;
+	for(uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		std::cout << m_vVertexOrder[i] << " : " << m_vCompId[m_vVertexOrder[i]]  << "   "  << m_db->vPatternBbox[m_vVertexOrder[i]]->color() << std::endl;
+	}
+   std::cout << "============== Before runProjection.. =============="<< std::endl;
     for(uint32_t i = 0; i < vBookmark.size(); i++)
     {
         std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
@@ -206,6 +213,7 @@ void SimpleMPL::solve()
     {
 		std::cout << "==== Stitch Insertion ====" << std::endl;
 		runProjection(vBookmark);
+		std::cout << "==== Stitch Insertion done ====" << std::endl;
 	}
 
 #ifdef QDEBUG
@@ -214,6 +222,12 @@ void SimpleMPL::solve()
     {
         std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
     }
+	std::cout << "=======pattern and its corresponding color ====== "<< std::endl;
+	for(uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		std::cout << m_vVertexOrder[i] << " : " << m_vCompId[m_vVertexOrder[i]]  << "   "  << m_db->vPatternBbox[m_vVertexOrder[i]]->color() << std::endl;
+	}
+
 #endif
 
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
@@ -708,12 +722,16 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
         SimpleMPL::graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor) const
 {
+	std::cout << "===============================" << std::endl;
+	std::cout << "In construct component_graph : " << std::endl;
+	std::cout << "pattern_cnt : " << pattern_cnt << std::endl;
     // precolored patterns 
     for (uint32_t i = 0; i != pattern_cnt; ++i)
     {
         uint32_t const& v = *(itBgn+i);
         vColor[i] = m_db->vPatternBbox[v]->color();
         mGlobal2Local[v] = i;
+		std::cout << "global " << v << " -- local " << i << "  -- color " << m_db->vPatternBbox[v]->color() << std::endl;
     }
 
     // edges 
@@ -889,12 +907,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     // construct decomposition graph for component 
     construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
 
-	std::cout << "after construct component Global to local: " << std::endl;
-	for(uint32_t i = 0; i < mGlobal2Local.size(); i++)
-	{
-		std::cout<< i << " - " << mGlobal2Local[i]<<std::endl;
-	}
-
+	std::cout << "construct component graph done." << std::endl;
     // for debug, it does not affect normal run 
     // if (comp_id == m_db->dbg_comp_id())
     //    write_graph(dg, "graph_init");
@@ -1654,7 +1667,7 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVe
 	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
 	{
 		uint32_t parentId = new2ori[newPattern];	
-		std::cout <<"====" << newPattern << " -- " << parentId << std::endl;
+		std::cout <<"==== new " << newPattern << " -- ori " << parentId << std::endl;
 		// traverse parent's neighbor list
 		std::cout << "parNei : " << std::endl;
 		for (uint32_t parNei = 0; parNei < m_mAdjVertex[parentId].size(); parNei++)
