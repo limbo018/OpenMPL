@@ -1088,12 +1088,12 @@ void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,
 		}
 		it->second = overlapping_count;
 	}
-	/*
+	
 	for (uint32_t i = 0; i < vStages.size(); i++)
 	{
 		std::cout <<"Stage " << i << " " << vStages[i].first.first << " -- " << vStages[i].first.second << " >>>> olp number  : " << vStages[i].second << std::endl;
 	}
-	*/
+	
 	// ================================================================================
 	// step 3 : add default terminal zeros
 	//			This will be used in the next step.
