@@ -34,5 +34,4 @@
 	-uncolor_layer 101 \
     -color_num 3 \
     -algo ILP \
-    -thread_num 8 \
-	-stitch
+    -thread_num 8 

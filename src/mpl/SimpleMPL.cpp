@@ -751,7 +751,8 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
-    if (itBgn == itEnd) return 0;
+	std::cout << "======= color_num "
+	if (itBgn == itEnd) return 0;
 #ifdef DEBUG
     // check order 
     for (std::vector<uint32_t>::const_iterator it = itBgn+1; it != itEnd; ++it)
