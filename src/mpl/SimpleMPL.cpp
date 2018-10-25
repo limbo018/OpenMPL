@@ -207,6 +207,7 @@ void SimpleMPL::solve()
 	}
 
 #ifdef QDEBUG
+    /*
     std::cout << "============== After runProjection.. ==============" << std::endl;
     for(uint32_t i = 0; i < vBookmark.size(); i++)
     {
@@ -217,7 +218,7 @@ void SimpleMPL::solve()
 	{
 		std::cout << m_vVertexOrder[i] << "  component_id " << m_vCompId[m_vVertexOrder[i]]  << "  color  "  << +unsigned(m_db->vPatternBbox[m_vVertexOrder[i]]->color()) << std::endl;
 	}
-
+    */
 #endif
 
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
@@ -230,9 +231,13 @@ void SimpleMPL::solve()
         // construct a component 
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+vBookmark[comp_id+1] : m_vVertexOrder.end();
+        std::cout << "\n \n \n \n ========================= Component " << comp_id << " starts ======================== \n \n \n \n" ;
+        std::cout << "*itBgn : " << *itBgn << std::endl;
+        std::cout << "*itEnd : " << *itEnd << std::endl;
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
+        std::cout << "\n \n \n \n ========================= Component " << comp_id << " Ends ======================== \n \n \n \n" ;
     }
 
 #ifdef DEBUG_NONINTEGERS
@@ -673,7 +678,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
         // 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
         double obj_value2 = std::numeric_limits<double>::max();
 #ifndef DEBUG_NONINTEGERS
-        // very restrict condition to determin whether perform MERGE_SUBK4 or not 
+        // very restrict condition to determine whether perform MERGE_SUBK4 or not 
         if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
                 && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
             obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
@@ -712,16 +717,20 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt, 
         SimpleMPL::graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor) const
 {
-	std::cout << "===============================" << std::endl;
+#ifdef QDEBUG
+	std::cout << "\n\n===============================" << std::endl;
 	std::cout << "In construct component_graph : " << std::endl;
 	std::cout << "pattern_cnt : " << pattern_cnt << std::endl;
+#endif
     // precolored patterns 
     for (uint32_t i = 0; i != pattern_cnt; ++i)
     {
         uint32_t const& v = *(itBgn+i);
         vColor[i] = m_db->vPatternBbox[v]->color();
         mGlobal2Local[v] = i;
-		std::cout << "global " << v << " -- local " << i << "  -- color " << + unsigned(m_db->vPatternBbox[v]->color()) << std::endl;
+#ifdef QDEBUG
+        std::cout << "global " << v << " -- local " << i << "  -- color " << + unsigned(m_db->vPatternBbox[v]->color()) << std::endl;
+#endif
     }
 
     // edges 
@@ -751,7 +760,6 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
-	std::cout << "======= color_num "
 	if (itBgn == itEnd) return 0;
 #ifdef DEBUG
     // check order 
@@ -794,6 +802,16 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     if (m_db->verbose())
         mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
+#ifdef QDEBUG
+    uint32_t pattern_cnt = itBgn - itEnd;
+    for (uint32_t i = 0; i != pattern_cnt; ++i)
+    {
+        uint32_t const& v = *(itBgn+i);
+        std::cout << "pattern " << v << " has color " << + unsigned(m_db->vPatternBbox[v]->color()) << std::endl;
+
+    }
+    std::cout << "comp_id : " << comp_id << " solved. " << std::endl;
+#endif
     return component_conflict_num;
 }
 /*
@@ -898,7 +916,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     // construct decomposition graph for component 
     construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
 
-	std::cout << "construct component graph done." << std::endl;
+	std::cout << "construct component graph done.\n\n" << std::endl;
     // for debug, it does not affect normal run 
     // if (comp_id == m_db->dbg_comp_id())
     //    write_graph(dg, "graph_init");
