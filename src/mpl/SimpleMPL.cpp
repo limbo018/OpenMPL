@@ -190,23 +190,13 @@ void SimpleMPL::solve()
  	std::cout << "=======pattern and its corresponding color ====== "<< std::endl;
 	for(uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
 	{
-		std::cout << m_vVertexOrder[i] << " : " << m_vCompId[m_vVertexOrder[i]]  << "   "  << m_db->vPatternBbox[m_vVertexOrder[i]]->color() << std::endl;
+		std::cout << m_vVertexOrder[i] << " : " << m_vCompId[m_vVertexOrder[i]]  << "   "  << +unsigned(m_db->vPatternBbox[m_vVertexOrder[i]]->color()) << std::endl;
 	}
    std::cout << "============== Before runProjection.. =============="<< std::endl;
     for(uint32_t i = 0; i < vBookmark.size(); i++)
     {
         std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
     }
-	std::cout << "AdjList : " << std::endl;
-	for (uint32_t i = 0; i < m_mAdjVertex.size(); i++)
-	{
-		std::cout << i << "\t: ";
-		for (std::vector<uint32_t>::iterator it = m_mAdjVertex[i].begin(); it != m_mAdjVertex[i].end(); it++)
-		{
-			std::cout << *it << " ";
-		}
-		std::cout << std::endl;
-	}
 #endif
 
     if(m_db->stitch())
@@ -222,10 +212,10 @@ void SimpleMPL::solve()
     {
         std::cout << "Component " << i << " starts at : " << vBookmark[i] << std::endl;
     }
-	std::cout << "=======pattern and its corresponding color ====== "<< std::endl;
+	std::cout << "======= pattern and its corresponding color ====== "<< std::endl;
 	for(uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
 	{
-		std::cout << m_vVertexOrder[i] << " : " << m_vCompId[m_vVertexOrder[i]]  << "   "  << m_db->vPatternBbox[m_vVertexOrder[i]]->color() << std::endl;
+		std::cout << m_vVertexOrder[i] << "  component_id " << m_vCompId[m_vVertexOrder[i]]  << "  color  "  << +unsigned(m_db->vPatternBbox[m_vVertexOrder[i]]->color()) << std::endl;
 	}
 
 #endif
@@ -731,7 +721,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
         uint32_t const& v = *(itBgn+i);
         vColor[i] = m_db->vPatternBbox[v]->color();
         mGlobal2Local[v] = i;
-		std::cout << "global " << v << " -- local " << i << "  -- color " << m_db->vPatternBbox[v]->color() << std::endl;
+		std::cout << "global " << v << " -- local " << i << "  -- color " << + unsigned(m_db->vPatternBbox[v]->color()) << std::endl;
     }
 
     // edges 
@@ -1588,13 +1578,14 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         // If this pattern hasn't been split
         if (vstitches.size() <= 0)
 		{
-			std::cout << "vstitches.size() <= 0, pattern_count : " << pattern_count  << std::endl;
+			std::cout << "vstitches.size() <= 0, pattern_count : " << pattern_count  << "  ";
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
 			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
 			new_Pattern->pattern_id(pattern_count);
 			// new_Pattern->color(-1);
 			// new_Pattern->color(pPattern->color());
 			new_PatternVec.push_back(*new_Pattern);
+			std::cout << "color " <<  +unsigned(new_Pattern->color()) << std::endl;
 			SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 			pattern_count++;
 		// 	std::cout << "<=0 done "<< std::endl;
@@ -1603,7 +1594,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 		else
 		{
 			total_number_of_split++;
-			std::cout << "vstitches.size () >= 0 " <<std::endl;
+			std::cout << "vstitches.size () >= 0 " << std::endl;
 #ifdef QDEBUG
 	//		std::cout << "This pattern has been split!" << std::endl;
 #endif
@@ -1623,7 +1614,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					new_Pattern->pattern_id(pattern_count);
 					// for precolored patterns
 					// new_Pattern->color(-1);
-					// new_Pattern->color(pPattern->color());
+					new_Pattern->color(pPattern->color());
+					std::cout << "new_id : " << pattern_count << "  color : " << +unsigned(new_Pattern->color())  << "   ori-color : " << +unsigned(pPattern->color()) << std::endl;
 					new_PatternVec.push_back(*new_Pattern);
 					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 					pattern_count++;
@@ -1645,7 +1637,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
 					new_Pattern->pattern_id(pattern_count);
 					// for precolored patterns
 					// new_Pattern->color(-1);
-					// new_Pattern->color(pPattern->color());
+					new_Pattern->color(pPattern->color());
+					std::cout << "new_id : " << pattern_count << "  color : " << +unsigned(new_Pattern->color())  << "   ori-color : " << +unsigned(pPattern->color()) << std::endl;
 					new_PatternVec.push_back(*new_Pattern);
 					SplitMapping[pPattern->pattern_id()].push_back(pattern_count);
 					pattern_count++;
@@ -1664,25 +1657,6 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVe
 //#ifdef _OPENMP
 //#pragma omp parallel for 
 //#endif
-	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
-	{
-		uint32_t parentId = new2ori[newPattern];	
-		std::cout <<"==== new " << newPattern << " -- ori " << parentId << std::endl;
-		// traverse parent's neighbor list
-		std::cout << "parNei : " << std::endl;
-		for (uint32_t parNei = 0; parNei < m_mAdjVertex[parentId].size(); parNei++)
-		{
-			std::cout << m_mAdjVertex[parentId][parNei] << " " ;
-			
-			uint32_t parNeiId = m_mAdjVertex[parentId][parNei];
-			std::vector<uint32_t> possNeiVec = SplitMapping[parNeiId];
-			for (std::vector<uint32_t>::iterator it = possNeiVec.begin(); it != possNeiVec.end(); it++)
-				std::cout << *it << " ";
-			std::cout << std::endl;
-		}
-		std::cout << "========================" << std::endl;
-	}
-
 	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
 	{
 		uint32_t parentId = new2ori[newPattern];
