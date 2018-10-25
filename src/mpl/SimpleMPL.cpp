@@ -237,6 +237,16 @@ void SimpleMPL::solve()
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
+#ifdef QDEBUG
+        std::cout << "\n\nafter coloring : \n" << std::endl;
+        uint32_t pattern_cnt = itBgn - itEnd;
+        for (uint32_t i = 0; i != pattern_cnt; ++i)
+        {
+            uint32_t const& v = *(itBgn+i);
+            std::cout << "pattern " << v << " has color " << + unsigned(m_db->vPatternBbox[v]->color()) << std::endl;
+
+        }
+#endif
         std::cout << "\n \n \n \n ========================= Component " << comp_id << " Ends ======================== \n \n \n \n" ;
     }
 
@@ -802,16 +812,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     if (m_db->verbose())
         mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
-#ifdef QDEBUG
-    uint32_t pattern_cnt = itBgn - itEnd;
-    for (uint32_t i = 0; i != pattern_cnt; ++i)
-    {
-        uint32_t const& v = *(itBgn+i);
-        std::cout << "pattern " << v << " has color " << + unsigned(m_db->vPatternBbox[v]->color()) << std::endl;
 
-    }
-    std::cout << "comp_id : " << comp_id << " solved. " << std::endl;
-#endif
     return component_conflict_num;
 }
 /*
