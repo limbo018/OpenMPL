@@ -1420,26 +1420,35 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
     // push total_pattern_number  into vBookmark to help generate new graph information
     vBookmark.push_back(total_pattern_number);
 
+	std::cout << "========= color before new m_db->vPatternBbox ========" << std::endl;
+	for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
+		std::cout << m_db->vPatternBbox[i]->pattern_id() << " " << +unsigned(m_db->vPatternBbox[i]->color()) << std::endl;
+
+
     std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
     std::vector<uint32_t>().swap(m_vVertexOrder);
     std::vector<uint32_t>().swap(m_vCompId);
     std::vector<uint32_t>().swap(new2ori);
 
+
     uint32_t pattern_number = 0;
     // used as pivot 
     uint32_t comp_id = 0;
+
+	std::cout << "========== now generate new vPatternBbox =======" << std::endl;
 	for (uint32_t itVec = 0; itVec < SplitMapping.size(); itVec++)
 	{
 		for (std::vector<uint32_t>::iterator itsplit = SplitMapping[itVec].begin(); itsplit != SplitMapping[itVec].end(); itsplit++)
 		{
+            if(pattern_number >= vBookmark[comp_id + 1]) comp_id++;
+			std::cout << "comp " << comp_id << "  " << +unsigned( Component_Pattern_list[comp_id][*itsplit].color()) << "  "; 
 			Component_Pattern_list[comp_id][*itsplit].pattern_id(pattern_number);
 			m_db->vPatternBbox.push_back(&Component_Pattern_list[comp_id][*itsplit]);
+			std::cout <<"new_pattern id " << m_db->vPatternBbox.back()->pattern_id() << " color " << +unsigned(m_db->vPatternBbox.back()->color()) << std::endl;
 			// update the mapping relationship in SplitMapping, which will be used in step 3.
-			*itsplit = pattern_number;
 			// map new patterns back to original patterns 
 			new2ori.push_back(itVec);
 			m_vVertexOrder.push_back(pattern_number);
-            if(pattern_number >= vBookmark[comp_id + 1]) comp_id++;
             m_vCompId.push_back(comp_id);
 			pattern_number++;
 		}
@@ -1447,6 +1456,9 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
     // pop total_pattern_number added just now from vBookmark
     vBookmark.pop_back();
 
+	std::cout << "========= color before adj4 ==========" <<std::endl;
+	for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
+		std::cout << m_db->vPatternBbox[i]->pattern_id() << " " << +unsigned(m_db->vPatternBbox[i]->color()) << std::endl;
 	// ==============================================================================================
 	// step 3 : compute the adjacency matrix.
 	//			Now only consider the conflicts between 
@@ -1578,7 +1590,7 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         // If this pattern hasn't been split
         if (vstitches.size() <= 0)
 		{
-			std::cout << "vstitches.size() <= 0, pattern_count : " << pattern_count  << "  ";
+			std::cout << "vstitches.size() <= 0, origin id : " <<pPattern->pattern_id() << "  pattern_count : " << pattern_count  << "  ";
             // shouldn't change pPattern, because vPatternBbox will be used in the following steps.
 			rectangle_pointer_type new_Pattern = new rectangle_type(*pPattern);
 			new_Pattern->pattern_id(pattern_count);
@@ -1657,6 +1669,8 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVe
 //#ifdef _OPENMP
 //#pragma omp parallel for 
 //#endif
+
+
 	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
 	{
 		uint32_t parentId = new2ori[newPattern];
