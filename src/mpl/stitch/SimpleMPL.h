@@ -189,9 +189,15 @@ class SimpleMPL
         bool whetherHorizontal (rectangle_pointer_type tmp);
 
         // Generate Stitch Insertion Points based on Bei Yu's method
-        void GenerateStitchPositionBei(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector <coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);	
+        void GenerateStitchPositionBei(const rectangle_pointer_type pRect, 
+            const std::vector<rectangle_type> vinterRect, 
+            std::vector <coordinate_type> vstitches, 
+            const coordinate_type lower, const coordinate_type upper);	
         // Generate Stitch Insertion Points based on Jian Kuang's method, DAC 2013.
-        void GenerateStitchPositionJian(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect, std::vector<uint32_t> & vAdjVertex, std::vector<coordinate_type> vstitches, const coordinate_type lower, const coordinate_type upper);
+        void GenerateStitchPositionJian(const rectangle_pointer_type pRect, 
+            const std::vector<rectangle_type> vinterRect, 
+            std::vector<uint32_t> & vAdjVertex, std::vector<coordinate_type> vstitches, 
+            const coordinate_type lower, const coordinate_type upper);
 		std::vector<uint32_t>	new2ori;	// store the mapping relationships from new patterns back to original patterns.
 		std::vector<std::vector<uint32_t> > SplitMapping; // stores the mapping relationships between original patterns and newly - generated patterns.
 
