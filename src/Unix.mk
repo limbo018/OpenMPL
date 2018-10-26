@@ -20,7 +20,7 @@ endif
 
 CXX = g++ -std=gnu++11 -DQDEBUG
 CXXFLAGS_BASIC =  -fmax-errors=1 -W -Wall -Wextra -Wreturn-type -ansi -m64 -Wno-deprecated -Wno-unused-local-typedefs
-CXXFLAGS_DEBUG = -g $(CXXFLAGS_BASIC) 
+CXXFLAGS_DEBUG = -g -rdynamic $(CXXFLAGS_BASIC) 
 CXXFLAGS_RELEASE = -O3 $(CXXFLAGS_BASIC) 
 # -fopenmp 
 ARFLAGS = rvs

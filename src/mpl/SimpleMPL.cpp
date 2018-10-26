@@ -149,6 +149,15 @@ void SimpleMPL::write_gds()
 
 void SimpleMPL::solve()
 {
+#ifdef QDEBUG
+	std::cout <<"=========== color at the very beginning ===========" << std::endl;
+	for(uint32_t v = 0; v < m_db->vPatternBbox.size(); v++)
+	{
+		rectangle_pointer_type const& pPattern = m_db->vPatternBbox[v];
+		std::cout << "id " << pPattern->pattern_id() << " color : " << +unsigned(pPattern->color()) << std::endl;
+	}
+	std::cout <<"=========== color at the very beginning DONE DONE ===========" << std::endl;
+#endif
     // skip if no uncolored layer 
     if (m_db->parms.sUncolorLayer.empty())
         return;
@@ -203,6 +212,15 @@ void SimpleMPL::solve()
     {
 		std::cout << "==== Stitch Insertion ====" << std::endl;
 		runProjection(vBookmark);
+		m_vConflict.clear();
+		m_mAdjVertex.clear();
+		write_gds();
+		std::cout << "===================== VertexOrder and Pattern Id ====================" << std::endl;
+		for(uint32_t i = 0; i < m_vVertexOrder.size(); i++)
+		{
+			int id = m_vVertexOrder[i] ;
+			std::cout << id << " ---- " <<m_db->vPatternBbox[id] << std::endl;
+		}
 		std::cout << "==== Stitch Insertion done ====" << std::endl;
 	}
 
@@ -1496,10 +1514,12 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	//			For the patterns in one original pattern, all the relationships will be measured 
 	//			during the component solving process.
 	// ==============================================================================================
-	std::vector<std::vector<uint32_t> > new_mAdjVertex(total_pattern_number);
-	adj4NewPatterns(new_mAdjVertex);
-	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
-	m_mAdjVertex = new_mAdjVertex;
+//	std::vector<std::vector<uint32_t> > new_mAdjVertex(total_pattern_number);
+//	adj4NewPatterns(new_mAdjVertex);
+//	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+//	m_mAdjVertex = new_mAdjVertex;
+#ifdef QDEBUG
+	/*
 	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)
 	{
 		std::cout << "pattern " << i << " nei : " ;
@@ -1509,7 +1529,8 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 		}
 		std::cout << std::endl;
 	}
-
+	*/
+#endif
 	return;
 }
 
@@ -1594,8 +1615,8 @@ void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vec
         }
         // Generate stitch points, based on Bei Yu's method.
 		assert(vInterRect.size() != 0);
-       // GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
-      //  GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
+      // GenerateStitchPositionBei(tempRect, vInterRect, vstitches, lower, upper);
+      GenerateStitchPositionJian(tempRect, vInterRect, vAdjVertex, vstitches, lower, upper);
 
 #ifdef QDEBUG
 		// ===================================================================
