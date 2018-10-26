@@ -14,7 +14,7 @@ BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:Algorithm
 BOOST_REG_INTERSECTION	Makefile	/^BOOST_REG_INTERSECTION = 0$/;"	m
 CSDP	Makefile	/^CSDP = 1$/;"	m
 CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
-CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_RELEASE) #-DDEBUG_NONINTEGERS #-DDEBUG_NOANCHOR$/;"	m
+CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_RELEASE) -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter

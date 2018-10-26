@@ -57,7 +57,7 @@ void SimpleMPL::run(int argc, char** argv)
     this->read_gds();
     this->solve();
     this->report();
-    this->write_gds();
+    //this->write_gds();
 }
 /*
 void SimpleMPL::produce_graph_run(int32_t argc, char **argv)
@@ -237,6 +237,7 @@ void SimpleMPL::solve()
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
+/*
 #ifdef QDEBUG
         std::cout << "\n\nafter coloring : \n" << std::endl;
         uint32_t pattern_cnt = itBgn - itEnd;
@@ -247,7 +248,8 @@ void SimpleMPL::solve()
 
         }
 #endif
-        std::cout << "\n \n \n \n ========================= Component " << comp_id << " Ends ======================== \n \n \n \n" ;
+*/  
+		std::cout << "\n \n \n \n ========================= Component " << comp_id << " Ends ======================== \n \n \n \n" ;
     }
 
 #ifdef DEBUG_NONINTEGERS
@@ -812,7 +814,6 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
     if (m_db->verbose())
         mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd-itBgn), component_conflict_num);
 
-
     return component_conflict_num;
 }
 /*
@@ -907,6 +908,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     if (m_db->verbose())
         mplPrint(kDEBUG, "Component %u has %u patterns...\n", comp_id, pattern_cnt);
 
+	std::cout << "*itBgn : " << *itBgn << "\n*itEnd : " << *itEnd << std::endl;
 	std::cout << "pattern_cnt : " << pattern_cnt << std::endl;
 	// decomposition graph 
     // must allocate memory here 
@@ -922,7 +924,16 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     // if (comp_id == m_db->dbg_comp_id())
     //    write_graph(dg, "graph_init");
 
-    // graph simplification 
+#ifdef QDEBUG
+	std::cout << "colors before coloring : " << std::endl;
+	 for (uint32_t i = 0; i != pattern_cnt; ++i)
+    {
+        uint32_t const& v = *(itBgn+i);
+		rectangle_pointer_type pPattern = m_db->vPatternBbox[v];
+		std::cout << "pattern " << pPattern->pattern_id() << " has color  " << +unsigned(pPattern->color()) << std::endl;
+    }
+#endif
+	// graph simplification 
     typedef lac::GraphSimplification<graph_type> graph_simplification_type;
     uint32_t simplify_strategy = graph_simplification_type::NONE;
     // keep the order of simplification 
@@ -1489,6 +1500,16 @@ void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)
 	adj4NewPatterns(new_mAdjVertex);
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex = new_mAdjVertex;
+	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)
+	{
+		std::cout << "pattern " << i << " nei : " ;
+		for(uint32_t j = 0; j < m_mAdjVertex[i].size(); j ++ )
+		{
+			std::cout << m_mAdjVertex[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
 	return;
 }
 
