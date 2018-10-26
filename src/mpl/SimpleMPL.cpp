@@ -8,6 +8,7 @@
 #include "SimpleMPL.h"
 #include "LayoutDBRect.h"
 #include "LayoutDBPolygon.h"
+#include "RecoverHiddenVertex.h"
 
 #include <stack>
 #include <boost/graph/graphviz.hpp>
@@ -816,6 +817,7 @@ void SimpleMPL::runProjection()
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
+		std::cout << split.size() << std::endl;
 		num_new_pattern += split.size();
 	}
 
@@ -830,6 +832,9 @@ void SimpleMPL::runProjection()
 			pattern_id ++;
 		}
 	}
+	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
+	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	return;
 }
 
@@ -960,19 +965,25 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 			vStages[i].second.insert(vInterSect[j].pattern_id());
 		}
 	}
-
+#ifdef QDEBUG
+	for(uint32_t i = 0;i < vStages.size(); i++)
+	{
+		std::cout << vStages[i].first.first << " -- " << vStages[i].first.second << "  :  " << vStages[i].second.size()<< std::endl;
+	}
+#endif
 	for (uint32_t i = 0; i < vStages.size(); i++)
 	{
 		std::set<uint32_t> twosideSet;
 		for (uint32_t j = 0; j <= i; j++)
 			twosideSet.insert(vStages[j].second.begin(), vStages[j].second.end());
-		if (twosideSet.size() >= nei_num)
+		if (twosideSet.size() >= 5 )// >= nei_num)
 			continue;
 		std::set<uint32_t>().swap(twosideSet);
 		for (uint32_t j = i; j < vStages.size(); j++)
 			twosideSet.insert(vStages[i].second.begin(), vStages[i].second.end());
-		if (twosideSet.size() >= nei_num)
+		if (twosideSet.size() >= 5)// nei_num)
 			continue;
+		std::cout << "Insert one stitch" << std::endl;
 		vstitches.push_back((vStages[i].first.first + vStages[i].first.second) / 2);
 	}
 	sort(vstitches.begin(), vstitches.end());
