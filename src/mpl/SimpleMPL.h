@@ -120,16 +120,25 @@ protected:
 	// the main function to run the projection operation
 	// after generating stitches, store all the components into a new output gds file
 	void runProjection();
-	// conduct projection operation on a certain component
-	void projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, 
-		std::vector<rectangle_type> & new_PatternVec);
+	// conduct projection operation on a certain pattern
+	void projection(const rectangle_type pRect, std::vector<rectangle_type>& split, std::vector<uint32_t> nei_Vec);
 
 	// judge whether the rectangle is horizontal
-	bool whetherHorizontal(rectangle_pointer_type tmp);
+	bool whetherHorizontal(rectangle_type temp);
 
 	// generate stitch insertion points based on Bei Yu's method
-	void GenerateStitchPositionBei(rectangle_pointer_type pRect, std::vector<rectangle_type> vinterRect,
-		std::vector<coordinate_type> vstitches,)
+	/*
+	void GenerateStitchPositionBei(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect,
+		std::vector<coordinate_type> & vstitches, const coordinate_type lower, const coordinate_type upper);
+	*/
+	// generate stitch insertion points based on Jian Kuang's method, DAC 2013
+	void GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> vstitches, uint32_t nei_num);
+	//void GeneraetStitchPositionJian(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect,
+	//	const std::vector<uint32_t> vAdjVertex, std::vector<coordinate_type> & vstitches, const coordinate_type lower, const coordinate_type upper);
+
+	// I failed to use BOOST_GEOMETRY_REGISTER_BOX to register rectangle<coordinate_type> type. 
+	// So I define this function.
+	LayoutDB::rectangle_type interSectionRect(rectangle_type rect1, rectangle_type rect2);
 
 };
 
