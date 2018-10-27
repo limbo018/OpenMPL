@@ -36,7 +36,8 @@ GdsReader	GdsiiIO.h	/^struct GdsReader : GdsParser::GdsDataBaseKernel$/;"	s
 GdsWriter	GdsiiIO.h	/^struct GdsWriter$/;"	s
 GenerateStitchPositionBei	stitch/SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,$/;"	f	class:SimpleMPL
 GenerateStitchPositionJian	stitch/SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,$/;"	f	class:SimpleMPL
-GenerateStitchPosition_Jian	SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches)$/;"	f	class:SimpleMPL
+GenerateStitchPosition_Bei	SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches,$/;"	f	class:SimpleMPL
+GenerateStitchPosition_Jian	SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, $/;"	f	class:SimpleMPL
 ILP_CBC	Enums.h	/^        ILP_CBC = 2,      \/\/ only valid when cbc is available$/;"	e	enum:AlgorithmTypeEnum::EnumType
 ILP_GURBOI	Enums.h	/^		ILP_GURBOI = 1,   \/\/ only valid when gurobi is available$/;"	e	enum:AlgorithmTypeEnum::EnumType
 INCLUDE	Makefile	/^INCLUDE = \\$/;"	m
