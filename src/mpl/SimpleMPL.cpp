@@ -790,15 +790,15 @@ void SimpleMPL::runProjection()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
-#ifdef QDEBUG
+//#ifdef QDEBUG
 	std::cout << "============= All original patterns ============" << std::endl;
-	for(std::vector<rectangle_pointer_type>::iterator it = m_db->vPatternBbox.begin(); it != m_db->vPatternBbox.end(); it ++)
+	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
-
-		std::cout << (*it).pattern_id() << " -- " << gtl::xl(*it) << "  " << gtl::yl(*it) << "  " << gtl::xh(*it) << "  " << gtl::yh(*it) <<std::endl;
+		rectangle_pointer_type temp = m_db->vPatternBbox[i];
+		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
 	std::cout << "================================================\n\n\n " << std::endl;
-#endif
+//#endif
 
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
@@ -843,10 +843,10 @@ void SimpleMPL::runProjection()
 	}
 #ifdef QDEBUG
 	std::cout << "============= All new patterns ============" << std::endl;
-	for(std::vector<rectangle_pointer_type>::iterator it = m_db->vPatternBbox.begin(); it != m_db->vPatternBbox.end(); it ++)
+	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
-
-		std::cout << it->pattern_id() << " -- " << gtl::xl(*it) << "  " << gtl::yl(*it) << "  " << gtl::xh(*it) << "  " << gtl::yh(*it) <<std::endl;
+		rectangle_pointer_type temp = m_db->vPatternBbox[i];
+		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
 #endif
 	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
