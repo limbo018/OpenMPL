@@ -790,7 +790,15 @@ void SimpleMPL::runProjection()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
+#ifdef QDEBUG
+	std::cout << "============= All original patterns ============" << std::endl;
+	for(std::vector<rectangle_pointer_type>::iterator it = m_db->vPatternBbox.begin(); it != m_db->vPatternBbox.end(); it ++)
+	{
 
+		std::cout << (*it).pattern_id() << " -- " << gtl::xl(*it) << "  " << gtl::yl(*it) << "  " << gtl::xh(*it) << "  " << gtl::yh(*it) <<std::endl;
+	}
+	std::cout << "================================================\n\n\n " << std::endl;
+#endif
 
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
@@ -833,6 +841,14 @@ void SimpleMPL::runProjection()
 			pattern_id ++;
 		}
 	}
+#ifdef QDEBUG
+	std::cout << "============= All new patterns ============" << std::endl;
+	for(std::vector<rectangle_pointer_type>::iterator it = m_db->vPatternBbox.begin(); it != m_db->vPatternBbox.end(); it ++)
+	{
+
+		std::cout << it->pattern_id() << " -- " << gtl::xl(*it) << "  " << gtl::yl(*it) << "  " << gtl::xh(*it) << "  " << gtl::yh(*it) <<std::endl;
+	}
+#endif
 	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
 	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
@@ -935,6 +951,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	}
 	mplAssert(split.size() > 0);
 
+
 	return;
 
 }
@@ -977,14 +994,15 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 		std::set<uint32_t> twosideSet;
 		for (uint32_t j = 0; j <= i; j++)
 			twosideSet.insert(vStages[j].second.begin(), vStages[j].second.end());
-		if (twosideSet.size() >= 5 )// >= nei_num)
+		if (twosideSet.size() >= 3 )// >= nei_num)
 			continue;
 		std::set<uint32_t>().swap(twosideSet);
 		for (uint32_t j = i; j < vStages.size(); j++)
 			twosideSet.insert(vStages[i].second.begin(), vStages[i].second.end());
-		if (twosideSet.size() >= 5)// nei_num)
+		if (twosideSet.size() >= 3)// nei_num)
 			continue;
-		std::cout << "Insert one stitch" << std::endl;
+
+		//std::cout << "Insert one stitch" << std::endl;
 		vstitches.push_back((vStages[i].first.first + vStages[i].first.second) / 2);
 	}
 	sort(vstitches.begin(), vstitches.end());
