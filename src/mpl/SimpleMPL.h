@@ -136,6 +136,9 @@ protected:
 	// So I define this function.
 	LayoutDB::rectangle_type interSectionRect(rectangle_type rect1, rectangle_type rect2);
 
+	// generate new vAdjVertex for the newly-generated patterns
+	void adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex);
+
 	std::vector<uint32_t> new2ori;		// store the mapping relationships from new patterns back to original patterns.
 	std::vector<std::vector<uint32_t> > SplitMapping;	// stores the mapping relationships between original patterns and newly-generated patterns.
 

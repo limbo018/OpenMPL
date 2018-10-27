@@ -851,7 +851,7 @@ void SimpleMPL::runProjection()
 			new2ori.push_back(v);
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
 			std::cout << m_db->vPatternBbox.size() << " & ";
-			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
+			// m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			std::cout << m_mSplitPatternBbox[v][j]->pattern_id() << "?=" << m_db->vPatternBbox.back()->pattern_id() << " ; ";
 			pattern_id++;
 		}
@@ -869,7 +869,14 @@ void SimpleMPL::runProjection()
 #endif
 	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
 	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+	
+	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+
+	adj4NewPatterns(m_mSplitPatternBbox, new_mAdjVertex);
+
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+	m_mAdjVertex = new_mAdjVertex;
+	
 	return;
 }
 
@@ -1162,6 +1169,36 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 		}
 	}
 	sort(vstitches.begin(), vstitches.end());
+	return;
+}
+
+void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex)
+{
+	for (uint32_t i = 0; i < m_mSplitPatternBbox.size(); i++)
+	{
+
+	}
+	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
+	{
+		uint32_t parentId = new2ori[newPattern];
+		// traverse parent's neighbor list
+		for (uint32_t parNei = 0; parNei < m_mAdjVertex[parentId].size(); parNei++)
+		{
+			uint32_t parNeiId = m_mAdjVertex[parentId][parNei];
+			std::vector<uint32_t> possNeiVec = SplitMapping[parNeiId];
+			for (std::vector<uint32_t>::iterator it = possNeiVec.begin(); it != possNeiVec.end(); it++)
+			{
+				coordinate_difference distance = gtl::euclidean_distance(*m_db->vPatternBbox[*it], *m_db->vPatternBbox[newPattern]);
+				if (distance < m_db->coloring_distance)
+					//#ifdef _OPENMP
+					//#pragma omp critical
+					//#endif
+				{
+					new_mAdjVertex[newPattern].push_back(*it);
+				}
+			}
+		}
+	}
 	return;
 }
 
