@@ -796,6 +796,7 @@ void SimpleMPL::runProjection()
 	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
 		rectangle_pointer_type temp = m_db->vPatternBbox[i];
+		std::cout << i <<"\t" ; 
 		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
 	std::cout << "================================================\n\n\n " << std::endl;
@@ -825,6 +826,8 @@ void SimpleMPL::runProjection()
 		std::vector<uint32_t> nei_Vec = m_mAdjVertex[v];
 		// the generated split patterns
 		std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[v];
+		
+		std::cout << "v : " << v << "\t" << rect.pattern_id() << " \t" << pPattern->pattern_id() << std::endl;
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
@@ -841,11 +844,14 @@ void SimpleMPL::runProjection()
 		std::cout << "original number  : "  << v  << " \t " ;
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{
-			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			if(pattern_id==2246)
+				m_mSplitPatternBbox[v][j]->pattern_id(5000);
+			else
+				m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
 			std::cout << m_db->vPatternBbox.size() << " & ";
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id ++;
-			std::cout << m_db->vPatternBbox.back()->pattern_id() << " ; ";
+			std::cout << m_mSplitPatternBbox[v][j]->pattern_id() << "?=" << m_db->vPatternBbox.back()->pattern_id() << " ; ";
 		}
 		std::cout << std::endl;
 	}
@@ -937,7 +943,9 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 
 	if (vstitches.size() <= 0)
 	{
-		split.push_back(&pRect);
+		rectangle_pointer_type new_Pattern = new rectangle_type(pRect);
+		new_Pattern->color(pRect.color());
+		split.push_back(new_Pattern);
 	}
 	else
 	{
