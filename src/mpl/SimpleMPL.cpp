@@ -59,14 +59,14 @@ void SimpleMPL::run(int32_t argc, char** argv)
 	if (m_db->stitch())
 	{
 		this->runProjection();
-		this->write_gds();
-		return;
+		//this->write_gds();
+		//return;
 	}
-	else {
+	//else {
 		this->solve();
 		this->report();
 		this->write_gds();
-	}
+	//}
 	return;
 }
 
@@ -539,7 +539,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		// 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
 		double obj_value2 = std::numeric_limits<double>::max();
 #ifndef DEBUG_NONINTEGERS
-		// very restrict condition to determin whether perform MERGE_SUBK4 or not 
+		// very restrict condition to determine whether perform MERGE_SUBK4 or not 
 		if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
 			&& (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
 			obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
@@ -614,6 +614,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
 	if (itBgn == itEnd) return 0;
+
 #ifdef DEBUG
 	// check order
 	for (std::vector<uint32_t>::const_iterator it = itBgn + 1; it != itEnd; it++)
@@ -837,9 +838,10 @@ void SimpleMPL::runProjection()
 
 	std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
 
-	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+	// std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
 	std::vector<uint32_t>().swap(new2ori);
 	SplitMapping.resize(vertex_num);
+	new2ori.resize(num_new_pattern);
 
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < vertex_num; v++)
@@ -848,34 +850,43 @@ void SimpleMPL::runProjection()
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{
 			SplitMapping[v].push_back(pattern_id);
-			new2ori.push_back(v);
+			new2ori[pattern_id] = v;
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
-			std::cout << m_db->vPatternBbox.size() << " & ";
+			// std::cout << m_db->vPatternBbox.size() << " & ";
 			// m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
-			std::cout << m_mSplitPatternBbox[v][j]->pattern_id() << "?=" << m_db->vPatternBbox.back()->pattern_id() << " ; ";
 			pattern_id++;
 		}
 		std::cout << std::endl;
 	}
 #ifdef QDEBUG
-	std::cout << "============= All new patterns ============" << std::endl;
-	std::cout << "total patterns : " << m_db->vPatternBbox.size() <<std::endl;
-	std::cout << "27 : " << m_db->vPatternBbox[27]->pattern_id() << std::endl;
+	// std::cout << "============= All new patterns ============" << std::endl;
+	//std::cout << "total patterns : " << num_new_pattern <<std::endl;
+	/*
 	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
 		rectangle_pointer_type temp = m_db->vPatternBbox[i];
 		std::cout << i << " : " <<  temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
+	*/
 #endif
-	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
+	mplPrint(kINFO, "Now it has %u new patterns.\n", num_new_pattern);
 	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
 	
 	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+	new_mAdjVertex.resize(pattern_id);
 
 	adj4NewPatterns(m_mSplitPatternBbox, new_mAdjVertex);
 
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
-	m_mAdjVertex = new_mAdjVertex;
+	m_mAdjVertex.resize(new_mAdjVertex.size());
+	std::copy(m_mAdjVertex.begin(), m_mAdjVertex.end(), new_mAdjVertex.begin());
+
+	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+	for (uint32_t v = 0; v < vertex_num; v++)
+	{
+		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
+			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
+	}
 	
 	return;
 }
@@ -1176,25 +1187,20 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> 
 {
 	for (uint32_t i = 0; i < m_mSplitPatternBbox.size(); i++)
 	{
-
-	}
-	for (uint32_t newPattern = 0; newPattern < new2ori.size(); newPattern++)
-	{
-		uint32_t parentId = new2ori[newPattern];
-		// traverse parent's neighbor list
-		for (uint32_t parNei = 0; parNei < m_mAdjVertex[parentId].size(); parNei++)
+		std::vector<rectangle_pointer_type> box_vec = m_mSplitPatternBbox[i];
+		std::vector<uint32_t> original_nel_vec = m_mAdjVertex[i];
+		for(std::vector<rectangle_pointer_type> new_Pattern = box_vec.begin(); new_Pattern < box_vec.end(); new_Pattern++)
 		{
-			uint32_t parNeiId = m_mAdjVertex[parentId][parNei];
-			std::vector<uint32_t> possNeiVec = SplitMapping[parNeiId];
-			for (std::vector<uint32_t>::iterator it = possNeiVec.begin(); it != possNeiVec.end(); it++)
+			for(std::vector<uint32_t>::iterator original_nei = original_nel_vec.begin(); original_nei != original_nel_vec.end(); original_nei++)
 			{
-				coordinate_difference distance = gtl::euclidean_distance(*m_db->vPatternBbox[*it], *m_db->vPatternBbox[newPattern]);
-				if (distance < m_db->coloring_distance)
-					//#ifdef _OPENMP
-					//#pragma omp critical
-					//#endif
+				std::vector<rectangle_pointer_type> ori_nei_children_vec = m_mSplitPatternBbox[*original_nei];
+				for(std::vector<rectangle_pointer_type>::iterator child = ori_nei_children_vec.begin(); child!=ori_nei_children_vec.end(); child++)
 				{
-					new_mAdjVertex[newPattern].push_back(*it);
+					coordinate_difference distance = gtl::euclidean_distance(*new_Pattern, *child);
+					if(distance < m_db->coloring_distance)
+					{
+						new_mAdjVertex[new_Pattern->pattern_id()].push_back(child->pattern_id());
+					}
 				}
 			}
 		}
