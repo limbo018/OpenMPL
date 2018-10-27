@@ -791,7 +791,8 @@ void SimpleMPL::runProjection()
 		return;
 	}
 
-	std::vector<std::vector<rectangle_type> > m_mSplitPatternBbox;
+
+	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 	m_mAdjVertex.resize(vertex_num);
 	m_mSplitPatternBbox.resize(vertex_num);
@@ -813,7 +814,7 @@ void SimpleMPL::runProjection()
 		// the original pattern's neighbor list
 		std::vector<uint32_t> nei_Vec = m_mAdjVertex[v];
 		// the generated split patterns
-		std::vector<rectangle_type>& split = m_mSplitPatternBbox[v];
+		std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[v];
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
@@ -827,8 +828,8 @@ void SimpleMPL::runProjection()
 	{
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{
-			m_mSplitPatternBbox[v][j].pattern_id(pattern_id);
-			m_db->vPatternBbox.push_back(&m_mSplitPatternBbox[v][j]);
+			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id ++;
 		}
 	}
@@ -857,7 +858,7 @@ LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1, recta
 	return *output;
 }
 
-void SimpleMPL::projection(const rectangle_type pRect, std::vector<rectangle_type>& split, std::vector<uint32_t> nei_Vec)
+void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<uint32_t> nei_Vec)
 {
 	bool hor = whetherHorizontal(pRect);
 	std::set<coordinate_type> vset;
@@ -903,7 +904,7 @@ void SimpleMPL::projection(const rectangle_type pRect, std::vector<rectangle_typ
 
 	if (vstitches.size() <= 0)
 	{
-		split.push_back(pRect);
+		split.push_back(&pRect);
 	}
 	else
 	{
@@ -916,7 +917,7 @@ void SimpleMPL::projection(const rectangle_type pRect, std::vector<rectangle_typ
 				rectangle_pointer_type new_Pattern = new rectangle_type(
 					vstitches[j], gtl::yl(pRect), vstitches[j+1], gtl::yh(pRect));
 				new_Pattern->color(pRect.color());
-				split.push_back(*new_Pattern);
+				split.push_back(new_Pattern);
 			}
 		}
 		else
@@ -928,7 +929,7 @@ void SimpleMPL::projection(const rectangle_type pRect, std::vector<rectangle_typ
 				rectangle_pointer_type new_Pattern = new rectangle_type(
 					gtl::xl(pRect), vstitches[j], gtl::xh(pRect), vstitches[j + 1]);
 				new_Pattern->color(pRect.color());
-				split.push_back(*new_Pattern);
+				split.push_back(new_Pattern);
 			}
 		}	
 	}

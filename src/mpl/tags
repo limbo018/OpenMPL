@@ -19,7 +19,7 @@ CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
 ControlParameter	Params.h	/^struct ControlParameter$/;"	s
-DBG	Makefile	/^DBG = 0$/;"	m
+DBG	Makefile	/^DBG = 1$/;"	m
 DEPS	Makefile	/^DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source$/;"	m
 ENUM2STR	Enums.cpp	13;"	d	file:
 EXE	Makefile	/^EXE	= $(EXEDIR)\/OpenMPL$/;"	m
@@ -424,7 +424,7 @@ print	Shapes.h	/^        void print(std::ostream& os) const $/;"	f	class:Rectang
 print	Shapes.h	/^        void print(std::ostream& os) const$/;"	f	class:Polygon
 print_welcome	SimpleMPL.cpp	/^void SimpleMPL::print_welcome() const$/;"	f	class:SimpleMPL
 print_welcome	stitch/SimpleMPL.cpp	/^void SimpleMPL::print_welcome() const$/;"	f	class:SimpleMPL
-projection	SimpleMPL.cpp	/^void SimpleMPL::projection(const rectangle_type pRect, std::vector<rectangle_type>& split, std::vector<uint32_t> nei_Vec)$/;"	f	class:SimpleMPL
+projection	SimpleMPL.cpp	/^void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<uint32_t> nei_Vec)$/;"	f	class:SimpleMPL
 projection	stitch/SimpleMPL.cpp	/^void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, std::vector<rectangle_type>& new_PatternVec)$/;"	f	class:SimpleMPL
 projection	stitch/StitchProc.cpp	/^void StitchProc::projection()$/;"	f	class:StitchProc
 read_cmd	SimpleMPL.cpp	/^void SimpleMPL::read_cmd(int32_t argc, char** argv)$/;"	f	class:SimpleMPL

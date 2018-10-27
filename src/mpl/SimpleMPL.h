@@ -121,7 +121,7 @@ protected:
 	// after generating stitches, store all the components into a new output gds file
 	void runProjection();
 	// conduct projection operation on a certain pattern
-	void projection(const rectangle_type pRect, std::vector<rectangle_type>& split, std::vector<uint32_t> nei_Vec);
+	void projection(rectangle_type &  pRect, std::vector<rectangle_pointer_type>& split, std::vector<uint32_t> nei_Vec);
 
 	// judge whether the rectangle is horizontal
 	bool whetherHorizontal(rectangle_type temp);
