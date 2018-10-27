@@ -790,7 +790,7 @@ void SimpleMPL::runProjection()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
-//#ifdef QDEBUG
+#ifdef QDEBUG
 	std::cout << "============= All original patterns ============" << std::endl;
 	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
@@ -798,7 +798,7 @@ void SimpleMPL::runProjection()
 		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
 	std::cout << "================================================\n\n\n " << std::endl;
-//#endif
+#endif
 
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
@@ -878,7 +878,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 {
 	bool hor = whetherHorizontal(pRect);
 	std::set<coordinate_type> vset;
-	std::vector<coordinate_type> vstitches;
+	std::vector<coordinate_type> vPossibleStitches;
 	if (hor)
 	{
 		vset.insert(gtl::xl(pRect));
@@ -910,13 +910,20 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vset.insert(gtl::yh(temp));
 		}
 	}
+	std::cout << "vset : ";
 	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
-		vstitches.push_back(*it);
-	std::sort(vstitches.begin(), vstitches.end());
+	{
+		std::cout << *it << " ";
+		vPossibleStitches.push_back(*it);
+	}
+	std::cout << std::endl;
+	std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
 
 	uint32_t nei_num = nei_Vec.size();
 
-	GenerateStitchPosition_Jian(pRect, vInterSect, vstitches, nei_num);
+	std::vector<coordinate_type> vstitches;
+
+	GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
 
 	if (vstitches.size() <= 0)
 	{
@@ -951,18 +958,17 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	}
 	mplAssert(split.size() > 0);
 
-
 	return;
 
 }
 
-void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> vstitches, uint32_t nei_num)
+void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches)
 {
 	bool ishor = whetherHorizontal(pRect);
 	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t> > > vStages;
 	std::set<uint32_t> temp;
-	for (uint32_t i = 1; i < vstitches.size(); i++)
-		vStages.push_back(std::make_pair(std::make_pair(vstitches[i - 1], vstitches[i]), temp));
+	for (uint32_t i = 1; i < vPossibleStitches.size(); i++)
+		vStages.push_back(std::make_pair(std::make_pair(vPossibleStitches[i - 1], vPossibleStitches[i]), temp));
 	// calculate the times every stage covered by all the intersections.
 	for (uint32_t i = 0; i < vStages.size(); i++)
 	{

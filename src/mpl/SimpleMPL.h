@@ -132,7 +132,7 @@ protected:
 		std::vector<coordinate_type> & vstitches, const coordinate_type lower, const coordinate_type upper);
 	*/
 	// generate stitch insertion points based on Jian Kuang's method, DAC 2013
-	void GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> vstitches, uint32_t nei_num);
+	void GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches);
 	//void GeneraetStitchPositionJian(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect,
 	//	const std::vector<uint32_t> vAdjVertex, std::vector<coordinate_type> & vstitches, const coordinate_type lower, const coordinate_type upper);
 
