@@ -127,14 +127,10 @@ protected:
 	bool whetherHorizontal(rectangle_type temp);
 
 	// generate stitch insertion points based on Bei Yu's method
-	/*
-	void GenerateStitchPositionBei(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect,
-		std::vector<coordinate_type> & vstitches, const coordinate_type lower, const coordinate_type upper);
-	*/
+	void GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches);
+	
 	// generate stitch insertion points based on Jian Kuang's method, DAC 2013
 	void GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches);
-	//void GeneraetStitchPositionJian(const rectangle_pointer_type pRect, const std::vector<rectangle_type> vinterRect,
-	//	const std::vector<uint32_t> vAdjVertex, std::vector<coordinate_type> & vstitches, const coordinate_type lower, const coordinate_type upper);
 
 	// I failed to use BOOST_GEOMETRY_REGISTER_BOX to register rectangle<coordinate_type> type. 
 	// So I define this function.

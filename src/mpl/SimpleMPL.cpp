@@ -155,7 +155,6 @@ void SimpleMPL::solve()
 		return;
 	}
 
-	std::cout << "vertex_num : " << m_db->vPatternBbox.size() << std::endl;
 	this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
@@ -938,8 +937,9 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	uint32_t nei_num = nei_Vec.size();
 
 	std::vector<coordinate_type> vstitches;
-
-	GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
+	
+	GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
+	//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
 
 	if (vstitches.size() <= 0)
 	{
@@ -980,7 +980,8 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 
 }
 
-void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches)
+void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, 
+	uint32_t nei_num, std::vector<coordinate_type> & vstitches)
 {
 	bool ishor = whetherHorizontal(pRect);
 	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, std::set<uint32_t> > > vStages;
@@ -1036,6 +1037,128 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 		std::cout << vstitches[i] << " ";
 	std::cout << std::endl;
 #endif
+	return;
+}
+
+void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches,
+	uint32_t nei_num, std::vector<coordinate_type> & vstitches)
+{
+	bool ishor = whetherHorizontal(pRect);
+	coordinate_type lower, upper;
+	if (ishor) {
+		lower = gtl::xl(pRect);
+		upper = gtl::xh(pRect);
+	}
+	else {
+		lower = gtl::yl(pRect);
+		upper = gtl::yh(pRect);
+	}
+	std::vector<std::pair<std::pair<coordinate_type, coordinate_type>, uint32_t > > vStages;
+	for (uint32_t i = 1; i < vPossibleStitches.size(); i++)
+		vStages.push_back(std::make_pair(std::make_pair(vPossibleStitches[i - 1], vPossibleStitches[i]), 0));
+	// calculate the times every stage covered by all the intersections.
+	for (uint32_t i = 0; i < vStages.size(); i++)
+	{
+		coordinate_type left = vStages[i].first.first;
+		coordinate_type right = vStages[i].first.second;
+		for (uint32_t j = 0; j < vInterSect.size(); j++)
+		{
+			if (ishor)
+			{
+				if (left < gtl::xl(vInterSect[j])) continue;
+				if (right > gtl::xh(vInterSect[j])) continue;
+			}
+			else
+			{
+				if (left < gtl::yl(vInterSect[j])) continue;
+				if (right > gtl::yh(vInterSect[j])) continue;
+			}
+			vStages[i].second++;
+		}
+	}
+	
+	if (vStages.size() <= 0) return;
+	if (vStages[0].second != 0)
+		vStages.insert(vStages.begin(), std::make_pair(std::make_pair(lower, lower), 0));
+	if (vStages[vStages.size() - 1].second != 0)
+		vStages.push_back(std::make_pair(std::make_pair(upper, upper), 0));
+
+	std::vector<uint32_t> vZeroIds;
+	for (uint32_t i = 0; i < vStages.size(); i++)
+	{
+		if (vStages[i].second > 0) continue;
+		vZeroIds.push_back(i);
+	}
+
+	std::vector<coordinate_type>().swap(vstitches);
+	for (uint32_t i = 0; i < vZeroIds.size() - 1; i++)
+	{
+		uint32_t pos1 = vZeroIds[i];
+		uint32_t pos2 = vZeroIds[i + 1];
+#ifdef QDEBUG
+		//	std::cout << "i = " << i << " \t" << "pos1 = " << pos1 << " \t" << "pos2 = " << pos2 << std::endl;
+#endif
+		// since ((lower, lower), 0) has been added into vStages, so pos1 must be 0.
+		if (i == 0) mplAssertMsg(0 == pos1, "pos1 %d doesn't equal to 0", pos1);
+		// remove the useless stitches
+		else if (pos1 == 2)
+		{
+			bool find = false;
+			if (vStages.size() < 5) find = true;
+			else if (i != 1) find = true;
+			else if (1 != vStages[1].second) find = true;
+			else if (1 != vStages[3].second) find = true;
+			else if (0 != vStages[4].second) find = true;
+			if (find == false)
+				continue;
+			coordinate_type position = (vStages[2].first.first + vStages[2].first.second) / 2;
+			vstitches.push_back(position);
+		}
+		else if (pos1 == vStages.size() - 3)
+		{
+			std::cout << "i = " << i << "\t" << " vZeroIds.size() = " << vZeroIds.size() << std::endl;
+			mplAssert(i == vZeroIds.size() - 2);
+			bool find = false;
+			uint32_t zsize = vZeroIds.size();
+			if (vStages.size() < 5) find = true;
+			else if (i != zsize - 2) find = true;
+			else if (1 != vStages[pos1 + 1].second) find = true;
+			else if (1 != vStages[pos1 - 1].second) find = true;
+			else if (0 != vStages[pos1 - 2].second) find = true;
+			if (find == false) continue;
+			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
+			vstitches.push_back(position);
+		}
+		else
+		{
+			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
+			vstitches.push_back(position);
+		}
+
+		// search lost stitch in vStages[pos1 --> pos2]
+		double maxValue = 0.9;
+		uint32_t posLost = pos1 + 2;
+		if (pos2 - pos1 < 4) continue;
+		for (uint32_t i = pos1 + 2; i < pos2 - 1; i++)
+		{
+			if (vStages[i - 1].second <= vStages[i].second) continue;
+			if (vStages[i + 1].second <= vStages[i].second) continue;
+			uint32_t mind = std::min(vStages[i - 1].second - vStages[i].second, vStages[i + 1].second - vStages[i].second);
+			uint32_t diff = std::abs(static_cast<int>(vStages[i + 1].second - vStages[i - 1].second));
+			double value = (double)mind + (double)diff * 0.1;
+			if (value > maxValue)
+			{
+				maxValue = value;
+				posLost = i;
+			}
+		}
+		if (maxValue > 0.9)
+		{
+			uint32_t position = (vStages[posLost].first.first + vStages[posLost].first.second) / 2;
+			vstitches.push_back(position);
+		}
+	}
+	sort(vstitches.begin(), vstitches.end());
 	return;
 }
 
