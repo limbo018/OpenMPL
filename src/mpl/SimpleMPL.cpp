@@ -155,6 +155,7 @@ void SimpleMPL::solve()
 		return;
 	}
 
+	std::cout << "vertex_num : " << m_db->vPatternBbox.size() << std::endl;
 	this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
@@ -802,6 +803,7 @@ void SimpleMPL::runProjection()
 
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
+	std::cout << "vertex_num  : " << vertex_num << std::endl;
 	m_mAdjVertex.resize(vertex_num);
 	m_mSplitPatternBbox.resize(vertex_num);
 	uint32_t edge_num = construct_graph_from_distance(vertex_num);
@@ -826,27 +828,35 @@ void SimpleMPL::runProjection()
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
-		std::cout << split.size() << std::endl;
+		std::cout << "split.size() : " << split.size() << std::endl;
 		num_new_pattern += split.size();
 	}
+
+	std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
 
 	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
+		std::cout << "original number  : "  << v  << " \t " ;
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			std::cout << m_db->vPatternBbox.size() << " & ";
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id ++;
+			std::cout << m_db->vPatternBbox.back()->pattern_id() << " ; ";
 		}
+		std::cout << std::endl;
 	}
 #ifdef QDEBUG
 	std::cout << "============= All new patterns ============" << std::endl;
+	std::cout << "total patterns : " << m_db->vPatternBbox.size() <<std::endl;
+	std::cout << "27 : " << m_db->vPatternBbox[27]->pattern_id() << std::endl;
 	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
 		rectangle_pointer_type temp = m_db->vPatternBbox[i];
-		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
+		std::cout << i << " : " <<  temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
 #endif
 	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
@@ -1012,6 +1022,12 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 		vstitches.push_back((vStages[i].first.first + vStages[i].first.second) / 2);
 	}
 	sort(vstitches.begin(), vstitches.end());
+#ifdef QDEBUG
+	std::cout << "stitch position : " << std::endl;
+	for(uint32_t i = 0; i < vstitches.size(); i++)
+		std::cout << vstitches[i] << " ";
+	std::cout << std::endl;
+#endif
 	return;
 }
 

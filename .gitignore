@@ -4,7 +4,6 @@ obj
 *.pdf
 *.lp
 *.ilp
-*.gds
 *tags
 *.bk
 lib/*
@@ -14,7 +13,6 @@ bin/SimpleMPL
 bin/.log
 bin/*.gds
 bin/bench/*.ascii
-log*
 rpt_*
 *.sdpa
 *.sol
