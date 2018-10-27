@@ -1189,17 +1189,17 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> 
 	{
 		std::vector<rectangle_pointer_type> box_vec = m_mSplitPatternBbox[i];
 		std::vector<uint32_t> original_nel_vec = m_mAdjVertex[i];
-		for(std::vector<rectangle_pointer_type> new_Pattern = box_vec.begin(); new_Pattern < box_vec.end(); new_Pattern++)
+		for(std::vector<rectangle_pointer_type>::iterator new_Pattern = box_vec.begin(); new_Pattern < box_vec.end(); new_Pattern++)
 		{
 			for(std::vector<uint32_t>::iterator original_nei = original_nel_vec.begin(); original_nei != original_nel_vec.end(); original_nei++)
 			{
 				std::vector<rectangle_pointer_type> ori_nei_children_vec = m_mSplitPatternBbox[*original_nei];
 				for(std::vector<rectangle_pointer_type>::iterator child = ori_nei_children_vec.begin(); child!=ori_nei_children_vec.end(); child++)
 				{
-					coordinate_difference distance = gtl::euclidean_distance(*new_Pattern, *child);
+					coordinate_difference distance = m_db->euclidean_distance(**new_Pattern, **child);
 					if(distance < m_db->coloring_distance)
 					{
-						new_mAdjVertex[new_Pattern->pattern_id()].push_back(child->pattern_id());
+						new_mAdjVertex[(*new_Pattern)->pattern_id()].push_back((*child)->pattern_id());
 					}
 				}
 			}
