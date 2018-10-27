@@ -136,6 +136,16 @@ void SimpleMPL::write_gds()
 	}
 	// write output gds file 
 	GdsWriter writer;
+#ifdef QDEBUG
+	/*
+	std::cout << "\n\n\n\n\n ========================= write gds =========================" <<std::endl;
+	for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
+	{
+		rectangle_pointer_type temp = m_db->vPatternBbox[i];
+		std::cout << temp->pattern_id()  << " : " << gtl::xl(*temp) << " " << gtl::yl(*temp)  << " " << gtl::xh(*temp) << " " << gtl::yh(*temp) << std::endl;
+	}
+	*/
+#endif
 	mplPrint(kINFO, "Write output gds file: %s\n", m_db->output_gds().c_str());
 	writer(m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 }
@@ -156,6 +166,9 @@ void SimpleMPL::solve()
 	}
 
 	std::cout << "vertex_num : " << m_db->vPatternBbox.size() << std::endl;
+	for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
+		std::cout << "pattern " << m_db->vPatternBbox[i]->pattern_id() << " color " << +unsigned(m_db->vPatternBbox[i]->color()) << std::endl;
+
 	this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
@@ -793,18 +806,20 @@ void SimpleMPL::runProjection()
 	}
 #ifdef QDEBUG
 	std::cout << "============= All original patterns ============" << std::endl;
+	std::cout << "vertex_num  : " << m_db->vPatternBbox.size() << std::endl;
 	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
 		rectangle_pointer_type temp = m_db->vPatternBbox[i];
 		std::cout << i <<"\t" ; 
-		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
+		std::cout << temp->pattern_id() << " -- " << +unsigned(temp->color()) << std::endl;
+		//std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
-	std::cout << "================================================\n\n\n " << std::endl;
+	std::cout << "final : " << +unsigned(-1) <<std::endl;
+	std::cout << "================================================ " << std::endl;
 #endif
 
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
-	std::cout << "vertex_num  : " << vertex_num << std::endl;
 	m_mAdjVertex.resize(vertex_num);
 	m_mSplitPatternBbox.resize(vertex_num);
 	uint32_t edge_num = construct_graph_from_distance(vertex_num);
@@ -827,43 +842,42 @@ void SimpleMPL::runProjection()
 		// the generated split patterns
 		std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[v];
 		
-		std::cout << "v : " << v << "\t" << rect.pattern_id() << " \t" << pPattern->pattern_id() << std::endl;
+		//std::cout << "v : " << v << "\t" << rect.pattern_id() << " \t" << pPattern->pattern_id() << std::endl;
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
-		std::cout << "split.size() : " << split.size() << std::endl;
+		//std::cout << "split.size() : " << split.size() << std::endl;
 		num_new_pattern += split.size();
 	}
 
-	std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
+	//std::cout << "vertex_num now : " << vertex_num << std::endl;
 
 	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
-		std::cout << "original number  : "  << v  << " \t " ;
+	//	std::cout << "original number  : "  << v  << " \t " ;
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{
-			if(pattern_id==2246)
-				m_mSplitPatternBbox[v][j]->pattern_id(5000);
-			else
-				m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
-			std::cout << m_db->vPatternBbox.size() << " & ";
+			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			m_mSplitPatternBbox[v][j]->color(pattern_id%3);
+			std::cout << pattern_id <<  "  final color : " << +unsigned(m_mSplitPatternBbox[v][j]->color()) << std::endl;
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id ++;
-			std::cout << m_mSplitPatternBbox[v][j]->pattern_id() << "?=" << m_db->vPatternBbox.back()->pattern_id() << " ; ";
+	//		std::cout << m_mSplitPatternBbox[v][j]->pattern_id() << "?=" << m_db->vPatternBbox.back()->pattern_id() << " ; ";
 		}
-		std::cout << std::endl;
+//		std::cout << std::endl;
 	}
 #ifdef QDEBUG
 	std::cout << "============= All new patterns ============" << std::endl;
 	std::cout << "total patterns : " << m_db->vPatternBbox.size() <<std::endl;
-	std::cout << "27 : " << m_db->vPatternBbox[27]->pattern_id() << std::endl;
+	/*
 	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
 		rectangle_pointer_type temp = m_db->vPatternBbox[i];
 		std::cout << i << " : " <<  temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
 	}
+	*/
 #endif
 	mplPrint(kINFO, "Now it has %u patterns.\n", num_new_pattern);
 	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
@@ -926,13 +940,13 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vset.insert(gtl::yh(temp));
 		}
 	}
-	std::cout << "vset : ";
+	//std::cout << "vset : ";
 	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
 	{
-		std::cout << *it << " ";
+	//	std::cout << *it << " ";
 		vPossibleStitches.push_back(*it);
 	}
-	std::cout << std::endl;
+	//std::cout << std::endl;
 	std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
 
 	uint32_t nei_num = nei_Vec.size();
@@ -944,7 +958,8 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	if (vstitches.size() <= 0)
 	{
 		rectangle_pointer_type new_Pattern = new rectangle_type(pRect);
-		new_Pattern->color(pRect.color());
+		//new_Pattern->color(pRect.color());
+		std::cout << "color : "<< +unsigned( new_Pattern->color())<<std::endl;
 		split.push_back(new_Pattern);
 	}
 	else
@@ -956,8 +971,9 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			for (uint32_t j = 0; j < vstitches.size() - 1; j++)
 			{
 				rectangle_pointer_type new_Pattern = new rectangle_type(
-					vstitches[j], gtl::yl(pRect), vstitches[j+1]-1, gtl::yh(pRect));
-				new_Pattern->color(pRect.color());
+					vstitches[j], gtl::yl(pRect), vstitches[j+1], gtl::yh(pRect));
+		//		new_Pattern->color(pRect.color());
+//				std::cout << "color : "<< +unsigned( new_Pattern->color())<<std::endl;
 				split.push_back(new_Pattern);
 			}
 		}
@@ -968,8 +984,9 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			for (uint32_t j = 0; j < vstitches.size() - 1; j++)
 			{
 				rectangle_pointer_type new_Pattern = new rectangle_type(
-					gtl::xl(pRect), vstitches[j], gtl::xh(pRect), vstitches[j + 1]-1);
-				new_Pattern->color(pRect.color());
+					gtl::xl(pRect), vstitches[j], gtl::xh(pRect), vstitches[j + 1]);
+		//		new_Pattern->color(pRect.color());
+		//		std::cout << "color : "<< +unsigned( new_Pattern->color())<<std::endl;
 				split.push_back(new_Pattern);
 			}
 		}	
@@ -1008,22 +1025,28 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 		}
 	}
 #ifdef QDEBUG
+	/*
+	std::cout << "===== pRect " << pRect.pattern_id() << " ======= " << std::endl;
+	std::cout << "It has " << vStages.size() << " stages." << std::endl;
 	for(uint32_t i = 0;i < vStages.size(); i++)
 	{
-		std::cout << vStages[i].first.first << " -- " << vStages[i].first.second << "  :  " << vStages[i].second.size()<< std::endl;
+		std::cout << vStages[i].first.first << " -- " << vStages[i].first.second << "  :  " << vStages[i].second.size() << "  nei_num : " << nei_num << std::endl;
 	}
+	*/
 #endif
 	for (uint32_t i = 0; i < vStages.size(); i++)
 	{
 		std::set<uint32_t> twosideSet;
 		for (uint32_t j = 0; j <= i; j++)
 			twosideSet.insert(vStages[j].second.begin(), vStages[j].second.end());
-		if (twosideSet.size() >= 3 )// >= nei_num)
+		//std::cout << "left : " <<  twosideSet.size() << " =?= " << nei_num << std::endl;
+		if (twosideSet.size() >= nei_num)
 			continue;
 		std::set<uint32_t>().swap(twosideSet);
 		for (uint32_t j = i; j < vStages.size(); j++)
 			twosideSet.insert(vStages[i].second.begin(), vStages[i].second.end());
-		if (twosideSet.size() >= 3)// nei_num)
+		//std::cout << "right : " <<  twosideSet.size() << " =?= " << nei_num << std::endl;
+		if (twosideSet.size() >= nei_num)
 			continue;
 
 		//std::cout << "Insert one stitch" << std::endl;
@@ -1031,10 +1054,12 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 	}
 	sort(vstitches.begin(), vstitches.end());
 #ifdef QDEBUG
+	/*
 	std::cout << "stitch position : " << std::endl;
 	for(uint32_t i = 0; i < vstitches.size(); i++)
 		std::cout << vstitches[i] << " ";
 	std::cout << std::endl;
+	*/
 #endif
 	return;
 }

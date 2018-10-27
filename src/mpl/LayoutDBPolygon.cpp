@@ -106,7 +106,7 @@ void LayoutDBPolygon::set_color(uint32_t pattern_id, int8_t color)
 {
     rectangle_pointer_type pPattern = vPatternBbox[pattern_id];
 #ifdef QDEBUG
-	std::cout << "set_color : " <<  pPattern->pattern_id()  << " has color " << +unsigned(pPattern->color()) << " and new color is " << +unsigned(color)<< std::endl;
+//	std::cout << "set_color : " <<  pPattern->pattern_id()  << " has color " << +unsigned(pPattern->color()) << " and new color is " << +unsigned(color)<< std::endl;
 #endif
 	if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
         mplAssert(pPattern->color() == color);
