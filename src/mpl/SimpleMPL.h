@@ -136,6 +136,9 @@ protected:
 	// So I define this function.
 	LayoutDB::rectangle_type interSectionRect(rectangle_type rect1, rectangle_type rect2);
 
+	std::vector<uint32_t> new2ori;		// store the mapping relationships from new patterns back to original patterns.
+	std::vector<std::vector<uint32_t> > SplitMapping;	// stores the mapping relationships between original patterns and newly-generated patterns.
+
 };
 
 SIMPLEMPL_END_NAMESPACE

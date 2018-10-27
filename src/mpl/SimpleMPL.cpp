@@ -803,6 +803,7 @@ void SimpleMPL::runProjection()
 
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
+
 	std::cout << "vertex_num  : " << vertex_num << std::endl;
 	m_mAdjVertex.resize(vertex_num);
 	m_mSplitPatternBbox.resize(vertex_num);
@@ -837,20 +838,22 @@ void SimpleMPL::runProjection()
 	std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
 
 	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+	std::vector<uint32_t>().swap(new2ori);
+	SplitMapping.resize(vertex_num);
+
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
 		std::cout << "original number  : "  << v  << " \t " ;
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{
-			if(pattern_id==2246)
-				m_mSplitPatternBbox[v][j]->pattern_id(5000);
-			else
-				m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			SplitMapping[v].push_back(pattern_id);
+			new2ori.push_back(v);
+			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
 			std::cout << m_db->vPatternBbox.size() << " & ";
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
-			pattern_id ++;
 			std::cout << m_mSplitPatternBbox[v][j]->pattern_id() << "?=" << m_db->vPatternBbox.back()->pattern_id() << " ; ";
+			pattern_id++;
 		}
 		std::cout << std::endl;
 	}
