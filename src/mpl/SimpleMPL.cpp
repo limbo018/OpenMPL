@@ -154,8 +154,8 @@ void SimpleMPL::solve()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
-
-	this->construct_graph();
+	if(!m_db->stitch())
+		this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
 	else
@@ -805,11 +805,12 @@ void SimpleMPL::runProjection()
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 
-	std::cout << "vertex_num  : " << vertex_num << std::endl;
+	// std::cout << "vertex_num  : " << vertex_num << std::endl;
 	m_mAdjVertex.resize(vertex_num);
 	m_mSplitPatternBbox.resize(vertex_num);
 	uint32_t edge_num = construct_graph_from_distance(vertex_num);
 	edge_num = edge_num >> 1;
+
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 
 	uint32_t num_new_pattern;
@@ -824,39 +825,38 @@ void SimpleMPL::runProjection()
 		// the original pattern passed into stitch generation function as a parameter
 		rectangle_type rect(*pPattern);
 		// the original pattern's neighbor list
-		std::vector<uint32_t> nei_Vec = m_mAdjVertex[v];
+		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[v];
 		// the generated split patterns
 		std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[v];
 		
-		std::cout << "v : " << v << "\t" << rect.pattern_id() << " \t" << pPattern->pattern_id() << std::endl;
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
-		std::cout << "split.size() : " << split.size() << std::endl;
+	//		assert(946 == 947);
 		num_new_pattern += split.size();
 	}
 
-	std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
+	// std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
 
 	// std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
 	std::vector<uint32_t>().swap(new2ori);
 	SplitMapping.resize(vertex_num);
 	new2ori.resize(num_new_pattern);
+	std::vector<uint32_t>().swap(m_vVertexOrder);
 
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
-		std::cout << "original number  : "  << v  << " \t " ;
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
-		{
+		{	
 			SplitMapping[v].push_back(pattern_id);
 			new2ori[pattern_id] = v;
+			m_vVertexOrder.push_back(pattern_id);
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
 			// std::cout << m_db->vPatternBbox.size() << " & ";
 			// m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id++;
 		}
-		std::cout << std::endl;
 	}
 #ifdef QDEBUG
 	// std::cout << "============= All new patterns ============" << std::endl;
@@ -887,7 +887,12 @@ void SimpleMPL::runProjection()
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 	}
-	
+	std::cout << "end of runprojection!"<<std::endl;
+
+	m_vCompId.resize(m_db->vPatternBbox.size(), std::numeric_limits<uint32_t>::max());
+	m_vColorDensity.assign(m_db->color_num(), 0);
+	m_vConflict.clear();
+
 	return;
 }
 
@@ -946,13 +951,12 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vset.insert(gtl::yh(temp));
 		}
 	}
-	std::cout << "vset : ";
+	// std::cout << "vset : ";
 	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
 	{
-		std::cout << *it << " ";
+	//	std::cout << *it << " ";
 		vPossibleStitches.push_back(*it);
 	}
-	std::cout << std::endl;
 	std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
 
 	uint32_t nei_num = nei_Vec.size();
@@ -1030,6 +1034,7 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 		}
 	}
 #ifdef QDEBUG
+
 	for(uint32_t i = 0;i < vStages.size(); i++)
 	{
 		std::cout << vStages[i].first.first << " -- " << vStages[i].first.second << "  :  " << vStages[i].second.size()<< std::endl;
@@ -1053,10 +1058,12 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 	}
 	sort(vstitches.begin(), vstitches.end());
 #ifdef QDEBUG
+	/*
 	std::cout << "stitch position : " << std::endl;
 	for(uint32_t i = 0; i < vstitches.size(); i++)
 		std::cout << vstitches[i] << " ";
 	std::cout << std::endl;
+*/
 #endif
 	return;
 }
@@ -1137,7 +1144,7 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 		}
 		else if (pos1 == vStages.size() - 3)
 		{
-			std::cout << "i = " << i << "\t" << " vZeroIds.size() = " << vZeroIds.size() << std::endl;
+		//	std::cout << "i = " << i << "\t" << " vZeroIds.size() = " << vZeroIds.size() << std::endl;
 			mplAssert(i == vZeroIds.size() - 2);
 			bool find = false;
 			uint32_t zsize = vZeroIds.size();
@@ -1185,26 +1192,50 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 
 void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex)
 {
+	uint32_t edge_num = 0;
+	uint32_t vertex_num = 0;
+	std::cout <<"in adj4" << std::endl;
 	for (uint32_t i = 0; i < m_mSplitPatternBbox.size(); i++)
 	{
-		std::vector<rectangle_pointer_type> box_vec = m_mSplitPatternBbox[i];
-		std::vector<uint32_t> original_nel_vec = m_mAdjVertex[i];
+		std::vector<rectangle_pointer_type> &  box_vec = m_mSplitPatternBbox[i];
+		std::vector<uint32_t> & original_nel_vec = m_mAdjVertex[i];
+		/*
+		for(uint32_t j = 0; j < box_vec.size(); j++)
+			std::cout << box_vec[j]->pattern_id() << " ";
+		std::cout << std::endl;
+		for(uint32_t j = 0; j < original_nel_vec.size(); j++)
+			std::cout << "original nei : " << original_nel_vec[j] << std::endl;
+		*/
 		for(std::vector<rectangle_pointer_type>::iterator new_Pattern = box_vec.begin(); new_Pattern < box_vec.end(); new_Pattern++)
 		{
+			vertex_num ++;
+		//	std::cout << "===== child " << (*new_Pattern)->pattern_id() << " ====="<<std::endl;
 			for(std::vector<uint32_t>::iterator original_nei = original_nel_vec.begin(); original_nei != original_nel_vec.end(); original_nei++)
 			{
-				std::vector<rectangle_pointer_type> ori_nei_children_vec = m_mSplitPatternBbox[*original_nei];
+		//		std::cout << "now for its original nei " << *original_nei << "  total " << m_mSplitPatternBbox.size()<< std::endl;
+				std::vector<rectangle_pointer_type> & ori_nei_children_vec = m_mSplitPatternBbox[*original_nei];
 				for(std::vector<rectangle_pointer_type>::iterator child = ori_nei_children_vec.begin(); child!=ori_nei_children_vec.end(); child++)
 				{
-					coordinate_difference distance = m_db->euclidean_distance(**new_Pattern, **child);
+					/*
+					std::cout << (*new_Pattern)->pattern_id() ;
+					std::cout << " -- ori  " << *original_nei ;
+					std::cout << " -- child  " <<  (*child)->pattern_id() << std::endl;
+					std::cout << "new_Pattern " <<  gtl::xl(**new_Pattern) << " " << gtl::yl(**new_Pattern) << " " << gtl::xh(**new_Pattern) << " " << gtl::yh(**new_Pattern) << std::endl;
+					std::cout << "child : " << gtl::xl(**child) << " " << gtl::yl(**child) << " " << gtl::xh(**child) << " " << gtl::yh(**child) << std::endl;
+					*/
+					coordinate_difference distance = boost::geometry::distance(**new_Pattern, **child);
+					// std::cout << " distance " << distance <<std::endl;
 					if(distance < m_db->coloring_distance)
 					{
+						edge_num ++;
 						new_mAdjVertex[(*new_Pattern)->pattern_id()].push_back((*child)->pattern_id());
 					}
 				}
 			}
 		}
 	}
+	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
+	std::cout <<"end of  adj4" << std::endl;
 	return;
 }
 

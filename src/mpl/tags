@@ -117,6 +117,7 @@ SimpleMPL	SimpleMPL.cpp	/^SimpleMPL::SimpleMPL()$/;"	f	class:SimpleMPL
 SimpleMPL	SimpleMPL.h	/^class SimpleMPL$/;"	c
 SimpleMPL	stitch/SimpleMPL.cpp	/^SimpleMPL::SimpleMPL()$/;"	f	class:SimpleMPL
 SimpleMPL	stitch/SimpleMPL.h	/^class SimpleMPL$/;"	c
+SplitMapping	SimpleMPL.h	/^	std::vector<std::vector<uint32_t> > SplitMapping;	\/\/ stores the mapping relationships between original patterns and newly-generated patterns.$/;"	m	class:SimpleMPL
 SplitMapping	stitch/SimpleMPL.h	/^		std::vector<std::vector<uint32_t> > SplitMapping; \/\/ stores the mapping relationships between original patterns and newly - generated patterns.$/;"	m	class:SimpleMPL
 StitchGenerateDPL_Points	stitch/StitchProc.cpp	/^void StitchProc::StitchGenerateDPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_pointer_type> vinterRect, std::vector <coordinate_type> vstitches, coordinate_type left, coordinate_type right, bool vddstitch = false)$/;"	f	class:StitchProc
 StitchGenerateTPL_Points	stitch/StitchProc.cpp	/^void StitchProc::StitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_pointer_type> vinterRect, std::vector <coordinate_type> vstitches, coordinate_type left, coordinate_type right, bool vddstitch = false)$/;"	f	class:StitchProc
@@ -131,6 +132,7 @@ add	LayoutDB.cpp	/^void LayoutDB::add(int32_t layer, std::vector<point_type> con
 add_path	LayoutDB.cpp	/^void LayoutDB::add_path(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDB
 add_pattern	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDBPolygon
 add_pattern	LayoutDBRect.cpp	/^void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDBRect
+adj4NewPatterns	SimpleMPL.cpp	/^void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex)$/;"	f	class:SimpleMPL
 adj4NewPatterns	stitch/SimpleMPL.cpp	/^void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVertex)$/;"	f	class:SimpleMPL
 algo	LayoutDB.h	/^    inline AlgorithmType algo() const {return parms.algo;}$/;"	f	struct:LayoutDB
 algo	Params.h	/^	AlgorithmType algo;                        \/\/\/< control algorithms used to solve coloring problem $/;"	m	struct:ControlParameter
@@ -345,6 +347,7 @@ mplStaticAssert	Msg.h	/^    mplStaticAssert(const char* = NULL) {}$/;"	f	struct:
 mplStaticAssert	Msg.h	/^struct mplStaticAssert<true> $/;"	s
 mplVPrintStream	Msg.cpp	/^int mplVPrintStream(MessageType m, FILE* stream, const char* format, va_list args)$/;"	f
 mplVSPrint	Msg.cpp	/^int mplVSPrint(MessageType m, char* buf, const char* format, va_list args)$/;"	f
+new2ori	SimpleMPL.h	/^	std::vector<uint32_t> new2ori;		\/\/ store the mapping relationships from new patterns back to original patterns.$/;"	m	class:SimpleMPL
 new2ori	stitch/SimpleMPL.h	/^		std::vector<uint32_t>	new2ori;	\/\/ store the mapping relationships from new patterns back to original patterns.$/;"	m	class:SimpleMPL
 operator !=	Enums.h	/^		bool operator!=(EnumExt const& rhs) const {return m_value != rhs.m_value;}$/;"	f	class:EnumExt
 operator !=	Enums.h	/^		bool operator!=(enum_type const& rhs) const {return m_value != rhs;}$/;"	f	class:EnumExt

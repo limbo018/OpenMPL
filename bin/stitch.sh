@@ -27,7 +27,7 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape PLOYGON \
-    -in sim_c1.gds  \
+    -in bench/sim_c1.gds  \
     -out sim_c1_sti.gds  \
     -coloring_distance 120 \
 	-uncolor_layer 1 \

@@ -26,12 +26,11 @@
 # if the benchmark contains polygon shapes, -shape must be set to POLYGON;
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
-    -shape RECTAGNLE \
+    -shape POLYGON \
     -in sim_c1_sti.gds  \
     -out sim_c1_out.gds  \
     -coloring_distance 120 \
-	-uncolor_layer 1 \
-	-uncolor_layer 101 \
+	-uncolor_layer 99 \
     -color_num 3 \
     -algo ILP \
     -thread_num 8 
