@@ -38,6 +38,8 @@ struct LayoutDBRect : public LayoutDB
 	virtual void initialize_data();
     /// \return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPatternBbox;}
+	/// \return poly rect begin Id, onyl used in LayoutDBPolygon, but also need to be implemented in LayoutDBRect
+	virtual std::vector<uint32_t> const& polyrectBgnId() const { std::vector<uint32_t> m; return m; }
     /// set color for patterns 
     /// \param pattern_id is the index of vPatternBbox
     virtual void set_color(uint32_t pattern_id, int8_t color);
