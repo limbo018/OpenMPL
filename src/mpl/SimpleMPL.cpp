@@ -984,6 +984,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vset.insert(gtl::yl(temp));
 			vset.insert(gtl::yh(temp));
 		}
+
 	}
 
 	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
@@ -996,6 +997,33 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	
 	GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
 	//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
+
+
+	// check the stitch positions' legalities
+	// if the position is very colse to the rectangle's boundary, it's illegal.
+	coordinate_type lower_boundary;
+	coordinate_type upper_boundary;
+	if (hor)
+	{
+		lower_boundary = gtl::xl(pRect);
+		upper_boundary = gtl::xh(pRect);
+	}
+	else
+	{
+		lower_boundary = gtl::yl(pRect);
+		upper_boundary = gtl::yh(pRect);
+	}
+	coordinate_type threshold = 50;
+	std::vector<coordinate_type> temp;
+	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
+	{
+		coordinate_type dis_low = std::abs(*it - lower_boundary);
+		coordinate_type dis_up = std::abs(*it - upper_boundary);
+		if (dis_low >= threshold & dis_up >= threshold)
+			temp.push_back(*it);
+	}
+	std::vector<coordinate_type>().swap(vstitches);
+	vstitches.swap(temp);
 
 	if (vstitches.size() <= 0)
 	{
