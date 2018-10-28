@@ -153,14 +153,22 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     int32_t layer_offset = (db.parms.sPrecolorLayer.empty())? 100 : *db.parms.sPrecolorLayer.begin();
     // basic operation
     // will add more 
-    write_rectangles(gw, db.polyrect_patterns(), layer_offset);
-    write_conflicts(gw, db, vConflict,  layer_offset+db.color_num());   // conflict layer 
-    write_edges(gw, db, mAdjVertex, layer_offset+db.color_num()+1); // draw edges 
-    //(*this)(gw, db.hPath); // draw edges if there exits 
-
-    gw.gds_write_endstr();
+	if (db.gen_stitch())
+	{
+		write_rectangles(gw, db.vPatternBbox, layer_offset);
+	}
+	else
+	{
+		write_rectangles(gw, db.polyrect_patterns(), layer_offset);
+		write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
+		write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 1); // draw edges 
+																			//(*this)(gw, db.hPath); // draw edges if there exits 
+	}
+	
+	gw.gds_write_endstr();
     gw.gds_write_endlib(); 
 }
+
 void GdsWriter::write_rectangles(GdsParser::GdsWriter& gw, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
 {
     for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
@@ -176,6 +184,7 @@ void GdsWriter::write_rectangles(GdsParser::GdsWriter& gw, std::vector<GdsWriter
 #endif
     }
 }
+
 void GdsWriter::write_conflicts(GdsParser::GdsWriter& gw, GdsWriter::layoutdb_type const& db, 
         std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, const int32_t layer) const
 {

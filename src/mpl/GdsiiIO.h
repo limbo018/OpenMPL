@@ -97,6 +97,7 @@ struct GdsWriter
 	void write_paths(GdsParser::GdsWriter& gw, std::map<int32_t, std::vector<path_type> > const& hPath) const;
     /// write conflict edges 
 	void write_edges(GdsParser::GdsWriter& gw, layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const; 
+	
 
 };
 
