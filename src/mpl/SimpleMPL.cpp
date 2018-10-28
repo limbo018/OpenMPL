@@ -801,11 +801,10 @@ void SimpleMPL::runProjection()
 	std::cout << "================================================\n\n\n " << std::endl;
 #endif
 
-	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 
 	m_mAdjVertex.resize(vertex_num);
-	m_mSplitPatternBbox.resize(vertex_num);
+	
 	uint32_t edge_num = construct_graph_from_distance(vertex_num);
 	edge_num = edge_num >> 1;
 
@@ -819,29 +818,50 @@ void SimpleMPL::runProjection()
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
 	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
 	assert(poly_rect_begin.size() == vertex_num);
-	assert(10 == 11);
-	std::vector<uint32_t> poly_rect_end;
 
+	// generate poly_rect_end, which stores the end index when querying from parent polygon id
+	std::vector<uint32_t> poly_rect_end;
+	poly_rect_end.resize(vertex_num);
 	for (uint32_t i = 0; i < vertex_num - 1; i++)
 		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
-	poly_rect_end[vertex_num - 1] = vertex_num - 1;
+	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
 
+
+	// generate m_mSplitMappingBbox, which stores all the newly-generated rectangles corresponding to original rectangles
 	uint32_t rect_num = rect_vec.size();
+	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
+	m_mSplitPatternBbox.resize(rect_num);
+
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
+		// polygon v
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];
-
-		// the original pattern passed into stitch generation function as a parameter
-		rectangle_type rect(*pPattern);
-		// the original pattern's neighbor list
+		// polygon v's neighbor polygons
 		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[v];
-		// the generated split patterns
-		std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[v];
-		
-		projection(rect, split, nei_Vec);
 
-		split.swap(split);
-		num_new_pattern += split.size();
+		// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
+		std::vector<rectangle_pointer_type> poss_nei_vec;
+		for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
+		{
+			uint32_t s_idx = poly_rect_begin[*it];
+			uint32_t e_idx = poly_rect_end[*it];
+			for (uint32_t a = s_idx; a <= e_idx; a++)
+				poss_nei_vec.push_back(rect_vec[a]);
+		}
+
+		uint32_t start_idx = poly_rect_begin[v];
+		uint32_t end_idx = poly_rect_end[v];
+		
+		// traverse all the rectangles in polygon v, to generate the intersections
+		for (uint32_t j = start_idx; j <= end_idx; j++)
+		{
+			rectangle_type rect(*rect_vec[j]);
+			// the generated split patterns
+			std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[j];
+			projection(rect, split, poss_nei_vec);
+			split.swap(split);
+			num_new_pattern += split.size();
+		}
 	}
 
 	// std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
@@ -856,7 +876,7 @@ void SimpleMPL::runProjection()
 #endif
 
 	uint32_t pattern_id = 0;
-	for (uint32_t v = 0; v < vertex_num; v++)
+	for (uint32_t v = 0; v < rect_num; v++)
 	{
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{	
@@ -929,7 +949,7 @@ LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1, recta
 	return *output;
 }
 
-void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<uint32_t> nei_Vec)
+void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec)
 {
 	bool hor = whetherHorizontal(pRect);
 	std::set<coordinate_type> vset;
@@ -945,9 +965,9 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	}
 	std::vector<rectangle_type> vInterSect;
 	// generate intersections
-	for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
+	for (std::vector<rectangle_pointer_type>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
 	{
-		rectangle_type extendPattern(*m_db->vPatternBbox[*it]);
+		rectangle_type extendPattern(*(*it));
 		gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
 		gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
 
