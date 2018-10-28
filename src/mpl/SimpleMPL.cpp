@@ -816,6 +816,17 @@ void SimpleMPL::runProjection()
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:num_new_pattern)
 #endif
+	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
+	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
+	assert(poly_rect_begin.size() == vertex_num);
+	assert(10 == 11);
+	std::vector<uint32_t> poly_rect_end;
+
+	for (uint32_t i = 0; i < vertex_num - 1; i++)
+		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
+	poly_rect_end[vertex_num - 1] = vertex_num - 1;
+
+	uint32_t rect_num = rect_vec.size();
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];

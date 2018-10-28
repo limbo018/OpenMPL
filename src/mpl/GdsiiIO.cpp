@@ -174,7 +174,7 @@ void GdsWriter::write_rectangles(GdsParser::GdsWriter& gw, std::vector<GdsWriter
     for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
     {
         rectangle_type const& rect = **it;
-		std::cout << "now write " << rect.pattern_id() << "  color : " << +unsigned(rect.color()) << std::endl;
+		//std::cout << "now write " << rect.pattern_id() << "  color : " << +unsigned(rect.color()) << std::endl;
 
 		gw.write_box(layer_offset+rect.color(), 0, 
                 gtl::xl(rect), gtl::yl(rect), 
