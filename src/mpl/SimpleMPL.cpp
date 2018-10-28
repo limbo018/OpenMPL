@@ -56,11 +56,11 @@ void SimpleMPL::run(int32_t argc, char** argv)
 	this->reset(false);
 	this->read_cmd(argc, argv);
 	this->read_gds();
-	if (m_db->stitch())
+	if (m_db->gen_stitch())
 	{
 		this->runProjection();
-		//this->write_gds();
-		//return;
+		this->write_gds();
+		return;
 	}
 	//else {
 		this->solve();
@@ -154,8 +154,7 @@ void SimpleMPL::solve()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
-	if(!m_db->stitch())
-		this->construct_graph();
+	this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
 	else
@@ -805,7 +804,6 @@ void SimpleMPL::runProjection()
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 
-	// std::cout << "vertex_num  : " << vertex_num << std::endl;
 	m_mAdjVertex.resize(vertex_num);
 	m_mSplitPatternBbox.resize(vertex_num);
 	uint32_t edge_num = construct_graph_from_distance(vertex_num);
@@ -832,29 +830,30 @@ void SimpleMPL::runProjection()
 		projection(rect, split, nei_Vec);
 
 		split.swap(split);
-	//		assert(946 == 947);
 		num_new_pattern += split.size();
 	}
 
 	// std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
 
-	// std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+	
+#ifdef DEPRECATED
 	std::vector<uint32_t>().swap(new2ori);
 	SplitMapping.resize(vertex_num);
 	new2ori.resize(num_new_pattern);
 	std::vector<uint32_t>().swap(m_vVertexOrder);
+#endif
 
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{	
-			SplitMapping[v].push_back(pattern_id);
-			new2ori[pattern_id] = v;
-			m_vVertexOrder.push_back(pattern_id);
+			// SplitMapping[v].push_back(pattern_id);
+			// new2ori[pattern_id] = v;
+			// m_vVertexOrder.push_back(pattern_id);
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
-			// std::cout << m_db->vPatternBbox.size() << " & ";
-			// m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
+			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id++;
 		}
 	}
@@ -869,9 +868,13 @@ void SimpleMPL::runProjection()
 	}
 	*/
 #endif
+
 	mplPrint(kINFO, "Now it has %u new patterns.\n", num_new_pattern);
+	m_vConflict.clear();
+	m_mAdjVertex.clear();
+
+#ifdef DEPRECATD
 	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
-	
 	std::vector<std::vector<uint32_t> > new_mAdjVertex;
 	new_mAdjVertex.resize(pattern_id);
 
@@ -890,8 +893,8 @@ void SimpleMPL::runProjection()
 	std::cout << "end of runprojection!"<<std::endl;
 
 	m_vCompId.resize(m_db->vPatternBbox.size(), std::numeric_limits<uint32_t>::max());
-	m_vColorDensity.assign(m_db->color_num(), 0);
-	m_vConflict.clear();
+#endif
+	
 
 	return;
 }
@@ -951,12 +954,9 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vset.insert(gtl::yh(temp));
 		}
 	}
-	// std::cout << "vset : ";
+
 	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
-	{
-	//	std::cout << *it << " ";
 		vPossibleStitches.push_back(*it);
-	}
 	std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
 
 	uint32_t nei_num = nei_Vec.size();
