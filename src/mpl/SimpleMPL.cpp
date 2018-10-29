@@ -70,11 +70,10 @@ void SimpleMPL::run(int32_t argc, char** argv)
 		this->write_gds();
 		return;
 	}
-	//else {
-		this->solve();
-		this->report();
-		this->write_gds();
-	//}
+
+	this->solve();
+	this->report();
+	this->write_gds();
 	return;
 }
 
@@ -818,11 +817,6 @@ void SimpleMPL::runProjection()
 
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 
-	uint32_t num_new_pattern;
-
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:num_new_pattern)
-#endif
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
 	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
 	assert(poly_rect_begin.size() == vertex_num);
@@ -834,12 +828,16 @@ void SimpleMPL::runProjection()
 		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
 	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
 
-
 	// generate m_mSplitMappingBbox, which stores all the newly-generated rectangles corresponding to original rectangles
 	uint32_t rect_num = rect_vec.size();
 	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
 	m_mSplitPatternBbox.resize(rect_num);
 
+
+	uint32_t num_new_pattern = 0;
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:num_new_pattern)
+#endif
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
 		// polygon v
@@ -895,7 +893,7 @@ void SimpleMPL::runProjection()
 			// new2ori[pattern_id] = v;
 			// m_vVertexOrder.push_back(pattern_id);
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
-			// m_mSplitPatternBbox[v][j]->color(j % 10);
+			m_mSplitPatternBbox[v][j]->color(j % 10);
 			
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id++;
@@ -1020,8 +1018,8 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 
 	std::vector<coordinate_type> vstitches;
 	
-	//GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
-	GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
+	GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
+	//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
 
 
 	// check the stitch positions' legalities
@@ -1327,7 +1325,11 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> 
 // Now Polygon input is supported
 void SimpleMPL::stitch_solve()
 {
-	
+	// skip if no uncolored layer
+	if (m_db->parms.sUncolorLayer.empty())
+		return;
+
+	char buf[256];
 }
 
 void SimpleMPL::print_welcome() const
