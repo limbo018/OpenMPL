@@ -169,11 +169,12 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     gw.gds_write_endlib(); 
 }
 
-void GdsWriter::write_intermediate(std::string const& filename, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset, double unit) const
+void GdsWriter::write_intermediate(std::string const& filename, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset, std::string const& strname, double unit) const
 {
 	GdsParser::GdsWriter gw(filename.c_str());
 	gw.gds_create_lib("POLYGONS", unit /* um per bit */);
 	gw.gds_write_bgnstr();
+	gw.gds_write_strname(strname.c_str());
 
 	for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
 	{

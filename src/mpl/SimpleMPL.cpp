@@ -9,6 +9,7 @@
 #include "LayoutDBRect.h"
 #include "LayoutDBPolygon.h"
 #include "RecoverHiddenVertex.h"
+#include <sstream>
 
 #include <stack>
 #include <boost/graph/graphviz.hpp>
@@ -905,9 +906,12 @@ void SimpleMPL::runProjection()
 		pivot += m_mSplitPatternBbox[v].size();
 		// write output gds file 
 		GdsWriter writer;
-		mplPrint(kINFO, "Write output gds file: %s\n", std::to_string(v) + m_db->output_gds().c_str());
-		writer.write_intermediate(m_db->output_gds().c_str() + std::to_string(v)+".gds", intermediate, 1, m_db->unit*1e+6);
-		// writer(std::to_string(v) + m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+		std::stringstream ss;
+		ss << v;
+		std::string vs = ss.str();
+		mplPrint(kINFO, "Write output gds file: %s\n", (vs + m_db->output_gds()).c_str());
+		writer.write_intermediate((m_db->output_gds() + vs +".gds").c_str(), intermediate, 1, m_db->strname, m_db->unit*1e+6);
+		// writer( m_db->output_gds() + vs, *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
 #ifdef QDEBUG
 	// std::cout << "============= All new patterns ============" << std::endl;

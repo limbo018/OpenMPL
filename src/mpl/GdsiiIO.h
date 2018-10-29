@@ -98,7 +98,7 @@ struct GdsWriter
     /// write conflict edges 
 	void write_edges(GdsParser::GdsWriter& gw, layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const; 
 	
-	void GdsWriter::write_intermediate(std::string const& filename, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset, double unit) const;
+	void write_intermediate(std::string const& filename, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset, std::string const& strname="TOPCELL", double unit = 0.001) const;
 
 };
 

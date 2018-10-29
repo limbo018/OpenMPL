@@ -34,8 +34,6 @@ GUROBI	stitch/SimpleMPL.h	32;"	d
 GdsReader	GdsiiIO.h	/^	GdsReader(layoutdb_type& _db) : db(_db) {}$/;"	f	struct:GdsReader
 GdsReader	GdsiiIO.h	/^struct GdsReader : GdsParser::GdsDataBaseKernel$/;"	s
 GdsWriter	GdsiiIO.h	/^struct GdsWriter$/;"	s
-GenerateStitchPositionBei	stitch/SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPositionBei(const rectangle_pointer_type pRect,$/;"	f	class:SimpleMPL
-GenerateStitchPositionJian	stitch/SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPositionJian(const rectangle_pointer_type pRect,$/;"	f	class:SimpleMPL
 GenerateStitchPosition_Bei	SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches,$/;"	f	class:SimpleMPL
 GenerateStitchPosition_Jian	SimpleMPL.cpp	/^void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, $/;"	f	class:SimpleMPL
 ILP_CBC	Enums.h	/^        ILP_CBC = 2,      \/\/ only valid when cbc is available$/;"	e	enum:AlgorithmTypeEnum::EnumType
@@ -133,7 +131,6 @@ add_path	LayoutDB.cpp	/^void LayoutDB::add_path(int32_t layer, std::vector<point
 add_pattern	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDBPolygon
 add_pattern	LayoutDBRect.cpp	/^void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDBRect
 adj4NewPatterns	SimpleMPL.cpp	/^void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex)$/;"	f	class:SimpleMPL
-adj4NewPatterns	stitch/SimpleMPL.cpp	/^void SimpleMPL::adj4NewPatterns(std::vector<std::vector<uint32_t> > & new_mAdjVertex)$/;"	f	class:SimpleMPL
 algo	LayoutDB.h	/^    inline AlgorithmType algo() const {return parms.algo;}$/;"	f	struct:LayoutDB
 algo	Params.h	/^	AlgorithmType algo;                        \/\/\/< control algorithms used to solve coloring problem $/;"	m	struct:ControlParameter
 area_type	LayoutDB.h	/^	typedef gtl::coordinate_traits<coordinate_type>::manhattan_area_type area_type;$/;"	t	struct:LayoutDB
@@ -147,8 +144,8 @@ base_type	RecoverHiddenVertex.h	/^        typedef RecoverHiddenVertex base_type;
 base_type	Shapes.h	/^		typedef polygon_90_data<coordinate_type> base_type;$/;"	t	class:Polygon
 base_type	Shapes.h	/^		typedef rectangle_data<coordinate_type> base_type;$/;"	t	class:Rectangle
 begin_end_cbk	GdsiiIO.cpp	/^void GdsReader::begin_end_cbk(GdsParser::GdsRecords::EnumType record_type)$/;"	f	class:GdsReader
-begin_lib	LayoutDB.h	/^    virtual void begin_lib() {}$/;"	f	struct:LayoutDB
-begin_str	LayoutDB.h	/^    virtual void begin_str() {}$/;"	f	struct:LayoutDB
+begin_lib	LayoutDB.h	/^	virtual void begin_lib() {}$/;"	f	struct:LayoutDB
+begin_str	LayoutDB.h	/^	virtual void begin_str() {}$/;"	f	struct:LayoutDB
 bit_array_cbk	GdsiiIO.cpp	/^void GdsReader::bit_array_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vBitArray)$/;"	f	class:GdsReader
 boost	GeometryApi.h	/^namespace boost { namespace geometry { namespace index {$/;"	n
 boost	GeometryApi.h	/^namespace boost { namespace geometry { namespace traits {$/;"	n
@@ -159,14 +156,14 @@ check_uncolored	SimpleMPL.cpp	/^bool SimpleMPL::check_uncolored(std::vector<uint
 check_uncolored	stitch/SimpleMPL.cpp	/^bool SimpleMPL::check_uncolored(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd) const$/;"	f	class:SimpleMPL
 color	Shapes.h	/^		int8_t color() const {return m_color;}$/;"	f	class:Shape
 color	Shapes.h	/^		void color(int8_t c) {m_color = c;}$/;"	f	class:Shape
-color_num	LayoutDB.h	/^    inline int32_t color_num() const {return parms.color_num;}$/;"	f	struct:LayoutDB
+color_num	LayoutDB.h	/^	inline int32_t color_num() const { return parms.color_num; }$/;"	f	struct:LayoutDB
 color_num	Params.h	/^	int32_t color_num;                         \/\/\/< number of colors available, only support 3 or 4$/;"	m	struct:ControlParameter
 coloring_component	SimpleMPL.cpp	/^uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)$/;"	f	class:SimpleMPL
 coloring_component	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)$/;"	f	class:SimpleMPL
 coloring_distance	LayoutDB.h	/^	coordinate_difference coloring_distance;   \/\/\/< minimum coloring distance, set from coloring_distance_nm and unit$/;"	m	struct:LayoutDB
-coloring_distance_nm	LayoutDB.h	/^    inline double coloring_distance_nm() const {return parms.coloring_distance_nm;}$/;"	f	struct:LayoutDB
+coloring_distance_nm	LayoutDB.h	/^	inline double coloring_distance_nm() const { return parms.coloring_distance_nm; }$/;"	f	struct:LayoutDB
 coloring_distance_nm	Params.h	/^	double coloring_distance_nm;               \/\/\/< minimum coloring distance in nanometer, set from command line $/;"	m	struct:ControlParameter
-compare_rectangle_type	LayoutDB.h	/^	struct compare_rectangle_type $/;"	s	struct:LayoutDB
+compare_rectangle_type	LayoutDB.h	/^	struct compare_rectangle_type$/;"	s	struct:LayoutDB
 compute_parent_polygon_bboxes	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::compute_parent_polygon_bboxes(uint32_t num_polygons)$/;"	f	class:LayoutDBPolygon
 compute_parent_polygons	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::compute_parent_polygons()$/;"	f	class:LayoutDBPolygon
 conflict_num	SimpleMPL.cpp	/^uint32_t SimpleMPL::conflict_num() const$/;"	f	class:SimpleMPL
@@ -192,7 +189,7 @@ coordinate_difference	stitch/StitchProc.h	/^	typedef layoutdb_type::coordinate_d
 coordinate_type	GdsiiIO.h	/^	typedef layoutdb_type::coordinate_type coordinate_type;$/;"	t	struct:GdsReader
 coordinate_type	GdsiiIO.h	/^    typedef layoutdb_type::coordinate_type coordinate_type;$/;"	t	struct:GdsWriter
 coordinate_type	GeometryApi.h	/^	typedef T coordinate_type;$/;"	t	struct:limbo::geometry::rectangle_traits
-coordinate_type	LayoutDB.h	/^    typedef int32_t coordinate_type;$/;"	t	struct:LayoutDB
+coordinate_type	LayoutDB.h	/^	typedef int32_t coordinate_type;$/;"	t	struct:LayoutDB
 coordinate_type	LayoutDBPolygon.h	/^	typedef base_type::coordinate_type coordinate_type;$/;"	t	struct:LayoutDBPolygon
 coordinate_type	LayoutDBRect.h	/^	typedef base_type::coordinate_type coordinate_type;$/;"	t	struct:LayoutDBRect
 coordinate_type	RecoverHiddenVertex.h	/^        typedef layoutdb_type::coordinate_type coordinate_type;$/;"	t	class:RecoverHiddenVertex
@@ -214,13 +211,13 @@ depth_first_search	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::depth_first_searc
 depth_first_search	SimpleMPL.cpp	/^void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& order_id)$/;"	f	class:SimpleMPL
 depth_first_search	stitch/SimpleMPL.cpp	/^void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& order_id)$/;"	f	class:SimpleMPL
 dplstitch	stitch/StitchProc.h	/^	bool dplstitch				= true;		\/\/ whether use DPL method to generate stitch candidates, if false, then use TPL method.$/;"	m	class:StitchProc
-edge_descriptor	LayoutDB.h	/^    typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;$/;"	t	struct:LayoutDB
+edge_descriptor	LayoutDB.h	/^	typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;$/;"	t	struct:LayoutDB
 edge_descriptor	RecoverHiddenVertex.h	/^        typedef layoutdb_type::edge_descriptor         edge_descriptor;$/;"	t	class:RecoverHiddenVertex
 edge_descriptor	SimpleMPL.h	/^	typedef layoutdb_type::edge_descriptor         edge_descriptor;$/;"	t	class:SimpleMPL
 edge_descriptor	stitch/SimpleMPL.h	/^        typedef layoutdb_type::edge_descriptor         edge_descriptor;$/;"	t	class:SimpleMPL
 edge_descriptor	stitch/StitchProc.h	/^	typedef layoutdb_type::edge_descriptor         edge_descriptor;$/;"	t	class:StitchProc
-end_lib	LayoutDB.h	/^    virtual void end_lib() {}$/;"	f	struct:LayoutDB
-end_str	LayoutDB.h	/^    virtual void end_str() {}$/;"	f	struct:LayoutDB
+end_lib	LayoutDB.h	/^	virtual void end_lib() {}$/;"	f	struct:LayoutDB
+end_str	LayoutDB.h	/^	virtual void end_str() {}$/;"	f	struct:LayoutDB
 enum2Str	Enums.cpp	/^std::string AlgorithmType::enum2Str(AlgorithmType::enum_type const& e) const$/;"	f	class:AlgorithmType
 enum2Str	Enums.cpp	/^std::string ShapeMode::enum2Str(ShapeMode::enum_type const& e) const$/;"	f	class:ShapeMode
 enum_type	Enums.h	/^        typedef EnumType enum_type;$/;"	t	class:EnumExt
@@ -237,6 +234,8 @@ find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexDistance::fi
 find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexImageContrast::find_best_color(RecoverHiddenVertexImageContrast::vertex_descriptor \/*v*\/)$/;"	f	class:RecoverHiddenVertexImageContrast
 find_unused_colors	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 float_cbk	GdsiiIO.cpp	/^void GdsReader::float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vData)$/;"	f	class:GdsReader
+gen_stitch	LayoutDB.h	/^	inline bool gen_stitch() const { return parms.gen_stitch; }$/;"	f	struct:LayoutDB
+gen_stitch	Params.h	/^    bool gen_stitch;                           \/\/\/< control stitch generation$/;"	m	struct:ControlParameter
 generate_id	Shapes.h	/^		static long generate_id()$/;"	f	class:Shape
 geometry	GeometryApi.h	/^namespace boost { namespace geometry { namespace index {$/;"	n	namespace:boost
 geometry	GeometryApi.h	/^namespace boost { namespace geometry { namespace traits {$/;"	n	namespace:boost
@@ -252,7 +251,7 @@ getHeight	stitch/StitchProc.h	/^	coordinate_type getHeight(rectangle_pointer_typ
 getWidth	stitch/StitchProc.h	/^	coordinate_type getWidth(rectangle_pointer_type rect) { return gtl::xh(*rect) - gtl::xl(*rect); }$/;"	f	class:StitchProc
 get_point_closest_to_center	LayoutDBPolygon.cpp	/^LayoutDBPolygon::point_type LayoutDBPolygon::get_point_closest_to_center(uint32_t pattern_id) const$/;"	f	class:LayoutDBPolygon
 get_point_closest_to_center	LayoutDBRect.cpp	/^LayoutDBRect::point_type LayoutDBRect::get_point_closest_to_center(uint32_t pattern_id) const$/;"	f	class:LayoutDBRect
-graph_type	LayoutDB.h	/^                > graph_type;$/;"	t	struct:LayoutDB
+graph_type	LayoutDB.h	/^	> graph_type;$/;"	t	struct:LayoutDB
 graph_type	RecoverHiddenVertex.h	/^        typedef layoutdb_type::graph_type              graph_type;$/;"	t	class:RecoverHiddenVertex
 graph_type	SimpleMPL.h	/^	typedef layoutdb_type::graph_type              graph_type;$/;"	t	class:SimpleMPL
 graph_type	stitch/SimpleMPL.h	/^        typedef layoutdb_type::graph_type              graph_type;$/;"	t	class:SimpleMPL
@@ -273,7 +272,6 @@ integer_2_cbk	GdsiiIO.cpp	/^void GdsReader::integer_2_cbk(GdsParser::GdsRecords:
 integer_4_cbk	GdsiiIO.cpp	/^void GdsReader::integer_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<int> const& vInteger)$/;"	f	class:GdsReader
 integer_cbk	GdsiiIO.cpp	/^void GdsReader::integer_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType \/*data_type*\/, std::vector<int> const& vData)$/;"	f	class:GdsReader
 interSectionRect	SimpleMPL.cpp	/^LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1, rectangle_type rect2)$/;"	f	class:SimpleMPL
-interSectionRect	stitch/SimpleMPL.cpp	/^LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1,  rectangle_type rect2)$/;"	f	class:SimpleMPL
 interSectionRectBoost	stitch/SimpleMPL.h	/^	LayoutDB::rectangle_type interSectionRectBoost(LayoutDB::rectangle_type rect1, LayoutDB::rectangle_type QRectangle rect2)$/;"	f
 internal_id	Shapes.h	/^		long internal_id() {return m_internal_id;}$/;"	f	class:Shape
 intersect	GeometryApi.h	/^  intersect(SimpleMPL::Rectangle<T>& rectangle, const SimpleMPL::Rectangle<T>& b, bool consider_touch = true) {$/;"	f	namespace:boost::polygon
@@ -355,8 +353,8 @@ operator !=	Enums.h	/^		bool operator!=(std::string const& rhs) const {return *t
 operator ()	GdsiiIO.cpp	/^bool GdsReader::operator() (std::string const& filename)  $/;"	f	class:GdsReader
 operator ()	GdsiiIO.cpp	/^void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_type const& db, $/;"	f	class:GdsWriter
 operator ()	GeometryApi.h	/^    result_type operator()(V const& v) const { return *v; }$/;"	f	struct:boost::geometry::index::indexable
-operator ()	LayoutDB.h	/^		bool operator() (rectangle_pointer_type const& r1, rectangle_pointer_type const& r2) const $/;"	f	struct:LayoutDB::compare_rectangle_type
-operator ()	LayoutDB.h	/^		bool operator() (rectangle_type const& r1, rectangle_type const& r2) const $/;"	f	struct:LayoutDB::compare_rectangle_type
+operator ()	LayoutDB.h	/^		bool operator() (rectangle_pointer_type const& r1, rectangle_pointer_type const& r2) const$/;"	f	struct:LayoutDB::compare_rectangle_type
+operator ()	LayoutDB.h	/^		bool operator() (rectangle_type const& r1, rectangle_type const& r2) const$/;"	f	struct:LayoutDB::compare_rectangle_type
 operator ()	Params.cpp	/^bool CmdParser::operator()(int argc, char** argv)$/;"	f	class:CmdParser
 operator ()	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::operator()()$/;"	f	class:RecoverHiddenVertex
 operator <<	Enums.h	/^		friend std::ostream& operator<<(std::ostream& os, const EnumExt& rhs)$/;"	f	class:EnumExt
@@ -385,7 +383,7 @@ operator std::string	Shapes.h	/^        operator std::string() const $/;"	f	clas
 operator std::string	Shapes.h	/^        operator std::string() const $/;"	f	class:Rectangle
 output_gds	LayoutDB.h	/^    inline std::string const& output_gds() const {return parms.output_gds;}$/;"	f	class:LayoutDB::std
 output_gds	Params.h	/^	std::string   output_gds;                  \/\/\/< output gdsii filename $/;"	m	struct:ControlParameter
-parms	LayoutDB.h	/^    ControlParameter parms; \/\/\/< control parameters from command line$/;"	m	struct:LayoutDB
+parms	LayoutDB.h	/^	ControlParameter parms; \/\/\/< control parameters from command line$/;"	m	struct:LayoutDB
 parms	Params.h	/^	ControlParameter& parms;$/;"	m	struct:CmdParser
 path_type	GdsiiIO.h	/^	typedef layoutdb_type::path_type               path_type;$/;"	t	struct:GdsReader
 path_type	GdsiiIO.h	/^	typedef layoutdb_type::path_type path_type;$/;"	t	struct:GdsWriter
@@ -393,7 +391,7 @@ path_type	LayoutDB.h	/^	typedef segment_data<coordinate_type> path_type;$/;"	t	s
 path_type	SimpleMPL.h	/^	typedef layoutdb_type::path_type               path_type;$/;"	t	class:SimpleMPL
 path_type	stitch/SimpleMPL.h	/^        typedef layoutdb_type::path_type               path_type;$/;"	t	class:SimpleMPL
 path_type	stitch/StitchProc.h	/^	typedef layoutdb_type::path_type               path_type;$/;"	t	class:StitchProc
-pattern_bboxes	LayoutDB.h	/^    virtual std::vector<rectangle_pointer_type> const& pattern_bboxes() const {return vPatternBbox;}$/;"	f	class:LayoutDB::std
+pattern_bboxes	LayoutDB.h	/^	virtual std::vector<rectangle_pointer_type> const& pattern_bboxes() const { return vPatternBbox; }$/;"	f	class:LayoutDB::std
 pattern_id	Shapes.h	/^		uint32_t pattern_id() const {return m_pattern_id;}$/;"	f	class:Shape
 pattern_id	Shapes.h	/^		void pattern_id(uint32_t p) {m_pattern_id = p;}$/;"	f	class:Shape
 point_type	GdsiiIO.h	/^	typedef layoutdb_type::point_type              point_type;$/;"	t	struct:GdsReader
@@ -421,6 +419,8 @@ polygon_type	LayoutDB.h	/^	typedef Polygon<coordinate_type> polygon_type;$/;"	t	
 polygon_type	SimpleMPL.h	/^	typedef layoutdb_type::polygon_type            polygon_type;$/;"	t	class:SimpleMPL
 polygon_type	stitch/SimpleMPL.h	/^        typedef layoutdb_type::polygon_type            polygon_type;$/;"	t	class:SimpleMPL
 polygon_type	stitch/StitchProc.h	/^	typedef layoutdb_type::polygon_type            polygon_type;$/;"	t	class:StitchProc
+polyrectBgnId	LayoutDBPolygon.h	/^	virtual std::vector<uint32_t> const& polyrectBgnId() const { return vPolyRectBeginId; }$/;"	f	class:LayoutDBPolygon::std
+polyrectBgnId	LayoutDBRect.h	/^	virtual std::vector<uint32_t> const& polyrectBgnId() const { std::vector<uint32_t> m; return m; }$/;"	f	class:LayoutDBRect::std
 polyrect_patterns	LayoutDBPolygon.h	/^    virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPolyRectPattern;}$/;"	f	class:LayoutDBPolygon::std
 polyrect_patterns	LayoutDBRect.h	/^    virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPatternBbox;}$/;"	f	class:LayoutDBRect::std
 print	Enums.h	/^		virtual void print(std::ostream& os) const {os << this->enum2Str(m_value);}$/;"	f	class:EnumExt
@@ -428,8 +428,7 @@ print	Shapes.h	/^        void print(std::ostream& os) const $/;"	f	class:Rectang
 print	Shapes.h	/^        void print(std::ostream& os) const$/;"	f	class:Polygon
 print_welcome	SimpleMPL.cpp	/^void SimpleMPL::print_welcome() const$/;"	f	class:SimpleMPL
 print_welcome	stitch/SimpleMPL.cpp	/^void SimpleMPL::print_welcome() const$/;"	f	class:SimpleMPL
-projection	SimpleMPL.cpp	/^void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<uint32_t> nei_Vec)$/;"	f	class:SimpleMPL
-projection	stitch/SimpleMPL.cpp	/^void SimpleMPL::projection(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, std::vector<rectangle_type>& new_PatternVec)$/;"	f	class:SimpleMPL
+projection	SimpleMPL.cpp	/^void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec)$/;"	f	class:SimpleMPL
 projection	stitch/StitchProc.cpp	/^void StitchProc::projection()$/;"	f	class:StitchProc
 read_cmd	SimpleMPL.cpp	/^void SimpleMPL::read_cmd(int32_t argc, char** argv)$/;"	f	class:SimpleMPL
 read_cmd	stitch/SimpleMPL.cpp	/^void SimpleMPL::read_cmd(int argc, char** argv)$/;"	f	class:SimpleMPL
@@ -476,7 +475,6 @@ rtree_type	stitch/StitchProc.h	/^	typedef layoutdb_type::rtree_type             
 run	SimpleMPL.cpp	/^void SimpleMPL::run(int32_t argc, char** argv)$/;"	f	class:SimpleMPL
 run	stitch/SimpleMPL.cpp	/^void SimpleMPL::run(int argc, char** argv)$/;"	f	class:SimpleMPL
 runProjection	SimpleMPL.cpp	/^void SimpleMPL::runProjection()$/;"	f	class:SimpleMPL
-runProjection	stitch/SimpleMPL.cpp	/^void SimpleMPL::runProjection(std::vector<uint32_t> & vBookmark)$/;"	f	class:SimpleMPL
 sPathLayer	Params.h	/^	std::set<int32_t> sPathLayer;              \/\/\/< path layers that represent conflict edges $/;"	m	struct:ControlParameter
 sPrecolorLayer	Params.h	/^	std::set<int32_t> sPrecolorLayer;          \/\/\/< layers that represent precolored features, they should have the same number of colors $/;"	m	struct:ControlParameter
 sUncolorLayer	Params.h	/^	std::set<int32_t> sUncolorLayer;           \/\/\/< layers that represent uncolored patterns $/;"	m	struct:ControlParameter
@@ -487,7 +485,7 @@ shape_base_type	Shapes.h	/^        typedef Shape shape_base_type;$/;"	t	class:Po
 shape_base_type	Shapes.h	/^        typedef Shape shape_base_type;$/;"	t	class:Rectangle
 shape_mode	LayoutDB.h	/^    inline ShapeMode shape_mode() const {return parms.shape_mode;}$/;"	f	struct:LayoutDB
 shape_mode	Params.h	/^    ShapeMode shape_mode;                      \/\/\/< it determins the actual derived layout database type $/;"	m	struct:ControlParameter
-simplify_level	LayoutDB.h	/^    inline int32_t simplify_level() const {return parms.simplify_level;}$/;"	f	struct:LayoutDB
+simplify_level	LayoutDB.h	/^	inline int32_t simplify_level() const { return parms.simplify_level; }$/;"	f	struct:LayoutDB
 simplify_level	Params.h	/^	int32_t simplify_level;                    \/\/\/< simplification level 0|1|2|3, default is 3$/;"	m	struct:ControlParameter
 solve	SimpleMPL.cpp	/^void SimpleMPL::solve()$/;"	f	class:SimpleMPL
 solve	stitch/SimpleMPL.cpp	/^void SimpleMPL::solve()$/;"	f	class:SimpleMPL
@@ -496,8 +494,7 @@ solve_component	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_component(const
 solve_graph_coloring	SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg,$/;"	f	class:SimpleMPL
 solve_graph_coloring	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, $/;"	f	class:SimpleMPL
 status	GdsiiIO.h	/^    GdsParser::GdsRecords::EnumType status; $/;"	m	struct:GdsReader
-stitch	LayoutDB.h	/^    inline bool stitch() const {return parms.stitch;}$/;"	f	struct:LayoutDB
-stitch	Params.h	/^    bool stitch;                               \/\/\/< control stitch insertion$/;"	m	struct:ControlParameter
+stitch_solve	SimpleMPL.cpp	/^void SimpleMPL::stitch_solve()$/;"	f	class:SimpleMPL
 str2Enum	Enums.cpp	/^AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const$/;"	f	class:AlgorithmType
 str2Enum	Enums.cpp	/^ShapeMode::enum_type ShapeMode::str2Enum(std::string const& s) const$/;"	f	class:ShapeMode
 string_cbk	GdsiiIO.cpp	/^void GdsReader::string_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::string const& str) $/;"	f	class:GdsReader
@@ -505,7 +502,7 @@ strname	LayoutDB.h	/^	std::string strname;                            \/\/\/< TO
 swap	Params.h	/^inline void ControlParameter::swap(ControlParameter& rhs)$/;"	f	class:ControlParameter
 tPatternBbox	LayoutDB.h	/^	rtree_type tPatternBbox;                       \/\/\/< rtree for components that intersects the LayoutDB$/;"	m	struct:LayoutDB
 tag	GeometryApi.h	/^struct tag<SimpleMPL::Rectangle<CoordinateType> > : public tag<typename SimpleMPL::Rectangle<CoordinateType>::base_type>$/;"	s	namespace:boost::geometry::traits
-thread_num	LayoutDB.h	/^    inline int32_t thread_num() const {return parms.thread_num;}$/;"	f	struct:LayoutDB
+thread_num	LayoutDB.h	/^	inline int32_t thread_num() const { return parms.thread_num; }$/;"	f	struct:LayoutDB
 thread_num	Params.h	/^	int32_t thread_num;                        \/\/\/< number of maximum threads for parallel computation $/;"	m	struct:ControlParameter
 traits	GeometryApi.h	/^namespace boost { namespace geometry { namespace traits {$/;"	n	namespace:boost::geometry
 type	GeometryApi.h	/^	typedef rectangle_concept type;$/;"	t	struct:boost::polygon::geometry_concept
@@ -513,6 +510,8 @@ type	GeometryApi.h	/^    typedef typename SimpleMPL::Rectangle<CoordinateType>::
 unit	LayoutDB.h	/^	double unit;                               \/\/\/< keep output gdsii file has the same unit as input gdsii file $/;"	m	struct:LayoutDB
 update_bbox	LayoutDB.cpp	/^void LayoutDB::update_bbox(base_type const& bbox)$/;"	f	class:LayoutDB
 ur	stitch/SimpleMPL.h	/^		QiPoint ur;$/;"	m	struct:QiBox
+use_stitch	LayoutDB.h	/^	inline bool use_stitch() const { return parms.use_stitch; }$/;"	f	struct:LayoutDB
+use_stitch	Params.h	/^	bool use_stitch;						   \/\/\/< control whether stitches are used in coloring $/;"	m	struct:ControlParameter
 vLP1HalfInteger	SimpleMPL.cpp	/^std::vector<unsigned int> vLP1HalfInteger;$/;"	v
 vLP1HalfInteger	stitch/SimpleMPL.cpp	/^std::vector<unsigned int> vLP1HalfInteger; $/;"	v
 vLP1NonInteger	SimpleMPL.cpp	/^std::vector<unsigned int> vLP1NonInteger;$/;"	v
@@ -532,16 +531,15 @@ vPatternBbox	LayoutDB.h	/^	std::vector<rectangle_pointer_type> vPatternBbox;   \
 vPoint	GdsiiIO.h	/^    std::vector<point_type> vPoint;$/;"	m	struct:GdsReader
 vPolyRectBeginId	LayoutDBPolygon.h	/^    std::vector<uint32_t> vPolyRectBeginId; \/\/\/< begin index in vPolyRectPattern when querying from parent polygon id $/;"	m	struct:LayoutDBPolygon
 vPolyRectPattern	LayoutDBPolygon.h	/^    std::vector<rectangle_pointer_type> vPolyRectPattern; \/\/\/< initial patterns decomposed from input polygons $/;"	m	struct:LayoutDBPolygon
-verbose	LayoutDB.h	/^    inline bool verbose() const {return parms.verbose;}$/;"	f	struct:LayoutDB
+verbose	LayoutDB.h	/^	inline bool verbose() const { return parms.verbose; }$/;"	f	struct:LayoutDB
 verbose	Params.h	/^	bool verbose;                              \/\/\/< control screen message $/;"	m	struct:ControlParameter
-vertex_descriptor	LayoutDB.h	/^    typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor; $/;"	t	struct:LayoutDB
+vertex_descriptor	LayoutDB.h	/^	typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor;$/;"	t	struct:LayoutDB
 vertex_descriptor	RecoverHiddenVertex.h	/^        typedef layoutdb_type::vertex_descriptor       vertex_descriptor;$/;"	t	class:RecoverHiddenVertex
 vertex_descriptor	SimpleMPL.h	/^	typedef layoutdb_type::vertex_descriptor       vertex_descriptor;$/;"	t	class:SimpleMPL
 vertex_descriptor	stitch/SimpleMPL.h	/^        typedef layoutdb_type::vertex_descriptor       vertex_descriptor;$/;"	t	class:SimpleMPL
 vertex_descriptor	stitch/StitchProc.h	/^	typedef layoutdb_type::vertex_descriptor       vertex_descriptor;$/;"	t	class:StitchProc
 whetherHor	stitch/StitchProc.cpp	/^bool StitchProc::whetherHor(rectangle_pointer_type tmp)$/;"	f	class:StitchProc
 whetherHorizontal	SimpleMPL.cpp	/^bool SimpleMPL::whetherHorizontal(rectangle_type temp)$/;"	f	class:SimpleMPL
-whetherHorizontal	stitch/SimpleMPL.cpp	/^bool SimpleMPL::whetherHorizontal(rectangle_pointer_type tmp)$/;"	f	class:SimpleMPL
 write_conflicts	GdsiiIO.cpp	/^void GdsWriter::write_conflicts(GdsParser::GdsWriter& gw, GdsWriter::layoutdb_type const& db, $/;"	f	class:GdsWriter
 write_edges	GdsiiIO.cpp	/^void GdsWriter::write_edges(GdsParser::GdsWriter& gw, GdsWriter::layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const $/;"	f	class:GdsWriter
 write_gds	SimpleMPL.cpp	/^void SimpleMPL::write_gds()$/;"	f	class:SimpleMPL
@@ -549,6 +547,7 @@ write_gds	stitch/SimpleMPL.cpp	/^void SimpleMPL::write_gds()$/;"	f	class:SimpleM
 write_gds	stitch/StitchProc.cpp	/^void StitchProc::write_gds()$/;"	f	class:StitchProc
 write_graph	SimpleMPL.cpp	/^void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filename) const$/;"	f	class:SimpleMPL
 write_graph	stitch/SimpleMPL.cpp	/^void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filename) const$/;"	f	class:SimpleMPL
+write_intermediate	GdsiiIO.cpp	/^void GdsWriter::write_intermediate(std::string const& filename, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset, std::string const& strname, double unit) const$/;"	f	class:GdsWriter
 write_paths	GdsiiIO.cpp	/^void GdsWriter::write_paths(GdsParser::GdsWriter& gw, std::map<int32_t, std::vector<GdsWriter::path_type> > const& hPath) const $/;"	f	class:GdsWriter
 write_rectangles	GdsiiIO.cpp	/^void GdsWriter::write_rectangles(GdsParser::GdsWriter& gw, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset) const $/;"	f	class:GdsWriter
 x	stitch/SimpleMPL.h	/^		int x, y;$/;"	m	struct:QiPoint
