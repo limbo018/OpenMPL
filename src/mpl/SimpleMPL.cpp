@@ -62,6 +62,13 @@ void SimpleMPL::run(int32_t argc, char** argv)
 		this->write_gds();
 		return;
 	}
+	if (m_db->use_stitch())
+	{
+		this->stitch_solve();
+		this->report();
+		this->write_gds();
+		return;
+	}
 	//else {
 		this->solve();
 		this->report();
@@ -866,27 +873,41 @@ void SimpleMPL::runProjection()
 
 	// std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
 
+	std::vector<rectangle_pointer_type> intermediate(m_db->vPatternBbox);
 	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
 	
+	uint32_t pivot = 0;
 #ifdef DEPRECATED
 	std::vector<uint32_t>().swap(new2ori);
 	SplitMapping.resize(vertex_num);
 	new2ori.resize(num_new_pattern);
 	std::vector<uint32_t>().swap(m_vVertexOrder);
 #endif
-
+	m_vConflict.clear();
+	m_mAdjVertex.clear();
 	uint32_t pattern_id = 0;
 	for (uint32_t v = 0; v < rect_num; v++)
 	{
+		std::vector<rectangle_pointer_type> temp;
 		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
 		{	
 			// SplitMapping[v].push_back(pattern_id);
 			// new2ori[pattern_id] = v;
 			// m_vVertexOrder.push_back(pattern_id);
 			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			m_mSplitPatternBbox[v][j]->color(j % 10);
+			temp.push_back(m_mSplitPatternBbox[v][j]);
 			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
 			pattern_id++;
 		}
+		intermediate.erase(intermediate.begin() + pivot);
+		intermediate.insert(intermediate.begin() + pivot, temp.begin(), temp.end());
+		pivot += m_mSplitPatternBbox[v].size();
+		// write output gds file 
+		GdsWriter writer;
+		mplPrint(kINFO, "Write output gds file: %s\n", std::to_string(v) + m_db->output_gds().c_str());
+		writer.write_intermediate(m_db->output_gds().c_str() + std::to_string(v)+".gds", intermediate, 1, m_db->unit*1e+6);
+		// writer(std::to_string(v) + m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
 #ifdef QDEBUG
 	// std::cout << "============= All new patterns ============" << std::endl;
@@ -901,8 +922,7 @@ void SimpleMPL::runProjection()
 #endif
 
 	mplPrint(kINFO, "Now it has %u new patterns.\n", num_new_pattern);
-	m_vConflict.clear();
-	m_mAdjVertex.clear();
+
 
 #ifdef DEPRECATD
 	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
@@ -1296,6 +1316,13 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> 
 	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 	std::cout <<"end of  adj4" << std::endl;
 	return;
+}
+
+// this method can solve the circuit with stitches
+// Now Polygon input is supported
+void SimpleMPL::stitch_solve()
+{
+	
 }
 
 void SimpleMPL::print_welcome() const

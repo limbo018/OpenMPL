@@ -169,6 +169,26 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     gw.gds_write_endlib(); 
 }
 
+void GdsWriter::write_intermediate(std::string const& filename, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset, double unit) const
+{
+	GdsParser::GdsWriter gw(filename.c_str());
+	gw.gds_create_lib("POLYGONS", unit /* um per bit */);
+	gw.gds_write_bgnstr();
+
+	for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
+	{
+		rectangle_type const& rect = **it;
+		//std::cout << "now write " << rect.pattern_id() << "  color : " << +unsigned(rect.color()) << std::endl;
+
+		gw.write_box(layer_offset + rect.color(), 0,
+			gtl::xl(rect), gtl::yl(rect),
+			gtl::xh(rect), gtl::yh(rect));
+	}
+
+	gw.gds_write_endstr();
+	gw.gds_write_endlib();
+}
+
 void GdsWriter::write_rectangles(GdsParser::GdsWriter& gw, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
 {
     for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
