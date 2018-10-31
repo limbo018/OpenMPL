@@ -19,7 +19,7 @@ CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
 ControlParameter	Params.h	/^struct ControlParameter$/;"	s
-DBG	Makefile	/^DBG = 1$/;"	m
+DBG	Makefile	/^DBG = 0$/;"	m
 DEPS	Makefile	/^DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source$/;"	m
 ENUM2STR	Enums.cpp	13;"	d	file:
 EXE	Makefile	/^EXE	= $(EXEDIR)\/OpenMPL$/;"	m
