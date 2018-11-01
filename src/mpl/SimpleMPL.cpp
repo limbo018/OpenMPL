@@ -59,18 +59,10 @@ void SimpleMPL::run(int32_t argc, char** argv)
 	this->read_gds();
 	if (m_db->gen_stitch())
 	{
-		this->runProjection();
-		this->write_gds();
+		gen_projection();
+		write_gds();
 		return;
 	}
-	if (m_db->use_stitch())
-	{
-		this->stitch_solve();
-		this->report();
-		this->write_gds();
-		return;
-	}
-
 	this->solve();
 	this->report();
 	this->write_gds();
@@ -161,7 +153,12 @@ void SimpleMPL::solve()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
-	this->construct_graph();
+
+	if (m_db->stitch())
+		runProjection();
+	else
+		this->construct_graph();
+	
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
 	else
@@ -568,6 +565,8 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
 		delete pcs;
+
+		
 	}
 
 	// recover color assignment according to the simplification level set previously 
@@ -612,6 +611,21 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 					mplAssert(e.second);
 					boost::put(boost::edge_weight, dg, e.first, 1);
 				}
+			}
+		}
+
+		// stitch edge
+		uint32_t s = StitchRelation[v];
+		uint32_t j = mGlobal2Local[s];
+		if (i < j)
+		{
+			std::pair<edge_descriptor, bool> e = edge(i, j, dg);
+			if (!e.second) 
+			{
+				e = add_edge(i, j, dg);
+				mplAssert(e.second); 
+				// for stitch, edge_weight is negative.
+				boost::put(boost::edge_weight, dg, e.first, -1);
 			}
 		}
 	}
@@ -797,47 +811,35 @@ void SimpleMPL::runProjection()
 		mplPrint(kWARN, "No patterns found in specified layers\n");
 		return;
 	}
-#ifdef QDEBUG
-	std::cout << "============= All original patterns ============" << std::endl;
-	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
-	{
-		rectangle_pointer_type temp = m_db->vPatternBbox[i];
-		std::cout << i <<"\t" ; 
-		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
-	}
-	std::cout << "================================================\n\n\n " << std::endl;
-#endif
-
+	// no need to care about how it's constructed
+	this->construct_graph();
 	uint32_t vertex_num = m_db->vPatternBbox.size();
-
-	m_mAdjVertex.resize(vertex_num);
-	
-	uint32_t edge_num = construct_graph_from_distance(vertex_num);
-	edge_num = edge_num >> 1;
-
-	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
 
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
 	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
-	assert(poly_rect_begin.size() == vertex_num);
+	mplAssertMsg(poly_rect_begin.size() == vertex_num, "polyrectBgnId.size() must be equal to polyrect_patterns.size()");
 
-	// generate poly_rect_end, which stores the end index when querying from parent polygon id
+	// generate poly_rect_end, which stores the end rectangle index when querying from parent polygon id
 	std::vector<uint32_t> poly_rect_end;
 	poly_rect_end.resize(vertex_num);
 	for (uint32_t i = 0; i < vertex_num - 1; i++)
 		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
 	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
+	
+	uint32_t new_rect_id = 0;
+	std::vector<rectangle_pointer_type> new_rect_vec;		// store the newly-generated rectangles
+	std::vector<uint32_t> rect_to_parent;					// map from rectangles to its parent polygon
+	std::vector<std::vector<uint32_t> >().swap(ori2new);
+	ori2new.resize(vertex_num);
+	
+	// temperaily used to store the stitch relation
+	std::vector<std::pair<uint32_t, uint32_t> > stitch_pair;
 
-	// generate m_mSplitMappingBbox, which stores all the newly-generated rectangles corresponding to original rectangles
-	uint32_t rect_num = rect_vec.size();
-	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
-	m_mSplitPatternBbox.resize(rect_num);
+	// generate new veretx order
+	std::vector<uint32_t>().swap(m_vVertexOrder);
 
+	int32_t new_polygon_id = -1;
 
-	uint32_t num_new_pattern = 0;
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:num_new_pattern)
-#endif
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
 		// polygon v
@@ -857,99 +859,87 @@ void SimpleMPL::runProjection()
 
 		uint32_t start_idx = poly_rect_begin[v];
 		uint32_t end_idx = poly_rect_end[v];
-		
+
+		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polgon.
+		bool flag = true;
 		// traverse all the rectangles in polygon v, to generate the intersections
 		for (uint32_t j = start_idx; j <= end_idx; j++)
 		{
 			rectangle_type rect(*rect_vec[j]);
 			// the generated split patterns
-			std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[j];
+			std::vector<rectangle_pointer_type> split;
 			projection(rect, split, poss_nei_vec);
-			split.swap(split);
-			num_new_pattern += split.size();
-		}
-	}
-
-	// std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
-
-	//std::vector<rectangle_pointer_type> intermediate(m_db->vPatternBbox);
-	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
-	
-	uint32_t pivot = 0;
-#ifdef DEPRECATED
-	std::vector<uint32_t>().swap(new2ori);
-	SplitMapping.resize(vertex_num);
-	new2ori.resize(num_new_pattern);
-	std::vector<uint32_t>().swap(m_vVertexOrder);
-#endif
-	m_vConflict.clear();
-	m_mAdjVertex.clear();
-	uint32_t pattern_id = 0;
-	for (uint32_t v = 0; v < rect_num; v++)
-	{
-		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
-		{	
-			// SplitMapping[v].push_back(pattern_id);
-			// new2ori[pattern_id] = v;
-			// m_vVertexOrder.push_back(pattern_id);
-			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
-			m_mSplitPatternBbox[v][j]->color(j % 10);
 			
-			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
-			pattern_id++;
+			// if this rectangle is the first one in the whole polygon, we need to generate a new polygon id.
+			if (flag)
+			{
+				flag = false;
+				new_polygon_id += 1;
+				ori2new[v].push_back(new_polygon_id);
+				new2ori.push_back(v);
+				m_vVertexOrder.push_back(new_polygon_id);
+			}
+			
+			// special operations on first new rectangle of every old rectangle
+			split[0]->pattern_id(++new_rect_id);
+			rect_to_parent.push_back(new_polygon_id);
+			new_rect_vec.push_back(split[0]);
+
+			// a new but not first generated rectangle will form a new polygon
+			for (uint32_t s = 1; s < split.size(); s++)
+			{
+				split[s]->pattern_id(++new_rect_id);
+
+				++new_polygon_id;
+				ori2new[v].push_back[new_polygon_id];
+				new2ori.push_back[v];
+				rect_to_parent.push_back(new_polygon_id);
+				new_rect_vec.push_back(split[s]);
+				m_vVertexOrder.push_back(new_polygon_id);
+				stitch_pair.push_back(std::make_pair(new_polygon_id - 1, new_polygon_id));
+			}
 		}
-		//intermediate.erase(intermediate.begin() + pivot);
-		//intermediate.insert(intermediate.begin() + pivot, temp.begin(), temp.end());
-		//pivot += m_mSplitPatternBbox[v].size();
-		// write output gds file 
-		//GdsWriter writer;
-		//std::stringstream ss;
-		//ss << v;
-		//std::string vs = ss.str();
-		//mplPrint(kINFO, "Write output gds file: %s\n", (vs + m_db->output_gds()).c_str());
-		// writer.write_intermediate((m_db->output_gds() + vs +".gds").c_str(), intermediate, 1, m_db->strname, m_db->unit*1e+6);
-		// writer( m_db->output_gds() + vs, *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
-	// std::vector<rectangle_pointer_type> temp;
-	// temp.push_back(m_mSplitPatternBbox[v][j]);
-#ifdef QDEBUG
-	// std::cout << "============= All new patterns ============" << std::endl;
-	//std::cout << "total patterns : " << num_new_pattern <<std::endl;
-	/*
-	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
-	{
-		rectangle_pointer_type temp = m_db->vPatternBbox[i];
-		std::cout << i << " : " <<  temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
-	}
-	*/
-#endif
+	// update information in m_db;
+	m_db->refresh(new_rect_vec, rect_to_parent);
 
-	mplPrint(kINFO, "Now it has %u new patterns.\n", num_new_pattern);
-
-
-#ifdef DEPRECATD
-	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+	// Now, update the adjacency list, we still need original adjacency list
 	std::vector<std::vector<uint32_t> > new_mAdjVertex;
-	new_mAdjVertex.resize(pattern_id);
+	new_mAdjVertex.resize(new_rect_vec.size());
+	uint32_t edge_num = 0;
 
-	adj4NewPatterns(m_mSplitPatternBbox, new_mAdjVertex);
-
-	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
-	m_mAdjVertex.resize(new_mAdjVertex.size());
-	std::copy(m_mAdjVertex.begin(), m_mAdjVertex.end(), new_mAdjVertex.begin());
-
-	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
-	for (uint32_t v = 0; v < vertex_num; v++)
+	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
 	{
-		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
-			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
+		// list all the possible neighbors
+		std::vector<uint32_t> poss_nei;
+		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
+		{
+			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
+				poss_nei.push_back(*it);
+		}
+		//
+		for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
+		{
+			for (std::vector<uint32_t>::iterator nei = poss_nei.begin(); nei != poss_nei.end(); nei++)
+			{
+				coordinate_difference distance = boost::geometry::distance(*new_rect_vec[*it], *new_rect_vec[*nei]);
+				if (distance < m_db->coloring_distance)
+				{
+					edge_num++;
+					new_mAdjVertex[*it].push_back(*nei);
+				}
+			}
+		}
 	}
-	std::cout << "end of runprojection!"<<std::endl;
 
-	m_vCompId.resize(m_db->vPatternBbox.size(), std::numeric_limits<uint32_t>::max());
-#endif
-	
+	StitchRelation.resize(new_rect_vec.size());
+	for (uint32_t i = 0; i < stitch_pair.size(); i++)
+		StitchRelation[stitch_pair[i].first] = stitch_pair[i].second;
 
+	m_mAdjVertex.clear();
+	m_mAdjVertex.swap(new_mAdjVertex);
+
+	mplPrint(kINFO, "%u vertices, %u edges\n", new_rect_vec.size(), edge_num);
 	return;
 }
 
@@ -1007,7 +997,6 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vset.insert(gtl::yl(temp));
 			vset.insert(gtl::yh(temp));
 		}
-
 	}
 
 	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
@@ -1020,7 +1009,6 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	
 	GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
 	//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
-
 
 	// check the stitch positions' legalities
 	// if the position is very colse to the rectangle's boundary, it's illegal.
@@ -1048,6 +1036,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	std::vector<coordinate_type>().swap(vstitches);
 	vstitches.swap(temp);
 
+	// split rectangles according to the stitch positions.
 	if (vstitches.size() <= 0)
 	{
 		rectangle_pointer_type new_Pattern = new rectangle_type(pRect);
@@ -1323,6 +1312,9 @@ void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> 
 
 // this method can solve the circuit with stitches
 // Now Polygon input is supported
+// The connected component simplification operations are the same with no-stitch situations.
+// What we need to do here is change the component graph passed into the solver. A mapping vector 
+// that whether the children rectangles should share the same color with their parent polygon is also needed. 
 void SimpleMPL::stitch_solve()
 {
 	// skip if no uncolored layer
@@ -1330,6 +1322,192 @@ void SimpleMPL::stitch_solve()
 		return;
 
 	char buf[256];
+	mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer(buf);
+
+	if (m_db->vPatternBbox.empty())
+	{
+		mplPrint(kWARN, "No patterns found in specified layer.\n");
+		return;
+	}
+
+	this->construct_graph();
+	if (m_db->simplify_level() > 0) // only perform connected component when enabled
+		this->connected_component();
+	else 
+	{
+		uint32_t vertex_num = m_vVertexOrder.size();
+		uint32_t order_id = 0;
+		for (uint32_t v = 0; v != vertex_num; v++)
+		{
+			m_vCompId[v] = 0;
+			m_vVertexOrder[v] = order_id++;
+		}
+		m_comp_cnt = 1;
+	}
+
+	// get all the rectangles in the original circuits
+	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
+	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
+	assert(poly_rect_begin.size() == vertex_num);
+
+	std::vector<bool> poly_rect_mapping;
+	poly_rect_mapping.resize(rect_vec.size());
+
+
+	// create bookmark to index the starting position of each component 
+	std::vector<uint32_t> vBookmark(m_comp_cnt);
+	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
+			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+	}
+
+	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
+	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	{
+#ifdef DEBUG
+		//if (comp_id != 130)
+		//    continue; 
+#endif
+		// construct a component 
+		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
+		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
+		// solve component 
+		// pass iterators to save memory 
+		this->solve_component(itBgn, itEnd, comp_id);
+	}
+	return;
+
+}
+
+void SimpleMPL::gen_projection()
+{
+	if (m_db->vPatternBbox.empty())
+	{
+		mplPrint(kWARN, "No patterns found in specified layers\n");
+		return;
+	}
+#ifdef QDEBUG
+	std::cout << "============= All original patterns ============" << std::endl;
+	for (uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
+	{
+		rectangle_pointer_type temp = m_db->vPatternBbox[i];
+		std::cout << i << "\t";
+		std::cout << temp->pattern_id() << " -- " << gtl::xl(*temp) << "  " << gtl::yl(*temp) << "  " << gtl::xh(*temp) << "  " << gtl::yh(*temp) << std::endl;
+	}
+	std::cout << "================================================\n\n\n " << std::endl;
+#endif
+
+	uint32_t vertex_num = m_db->vPatternBbox.size();
+
+	uint32_t edge_num = construct_graph_from_distance(vertex_num);
+	edge_num = edge_num >> 1;
+
+	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
+
+	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
+	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
+	assert(poly_rect_begin.size() == vertex_num);
+
+	// generate poly_rect_end, which stores the end index when querying from parent polygon id
+	std::vector<uint32_t> poly_rect_end;
+	poly_rect_end.resize(vertex_num);
+	for (uint32_t i = 0; i < vertex_num - 1; i++)
+		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
+	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
+
+	// generate m_mSplitMappingBbox, which stores all the newly-generated rectangles corresponding to original rectangles
+	uint32_t rect_num = rect_vec.size();
+	std::vector<std::vector<rectangle_pointer_type> > m_mSplitPatternBbox;
+	m_mSplitPatternBbox.resize(rect_num);
+
+	uint32_t num_new_pattern = 0;
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num()) reduction(+:num_new_pattern)
+#endif
+	for (uint32_t v = 0; v < vertex_num; v++)
+	{
+		// polygon v
+		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];
+		// polygon v's neighbor polygons
+		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[v];
+
+		// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
+		std::vector<rectangle_pointer_type> poss_nei_vec;
+		for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
+		{
+			uint32_t s_idx = poly_rect_begin[*it];
+			uint32_t e_idx = poly_rect_end[*it];
+			for (uint32_t a = s_idx; a <= e_idx; a++)
+				poss_nei_vec.push_back(rect_vec[a]);
+		}
+
+		uint32_t start_idx = poly_rect_begin[v];
+		uint32_t end_idx = poly_rect_end[v];
+
+		// traverse all the rectangles in polygon v, to generate the intersections
+		for (uint32_t j = start_idx; j <= end_idx; j++)
+		{
+			rectangle_type rect(*rect_vec[j]);
+			// the generated split patterns
+			std::vector<rectangle_pointer_type>& split = m_mSplitPatternBbox[j];
+			projection(rect, split, poss_nei_vec);
+			split.swap(split);
+			num_new_pattern += split.size();
+		}
+	}
+
+	// std::cout << "vertex_num now : " << vertex_num << "\n\n\n" << std::endl;
+	//std::vector<rectangle_pointer_type> intermediate(m_db->vPatternBbox);
+	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+
+	uint32_t pivot = 0;
+
+	m_vConflict.clear();
+	m_mAdjVertex.clear();
+	uint32_t pattern_id = 0;
+	for (uint32_t v = 0; v < rect_num; v++)
+	{
+		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
+		{
+			m_mSplitPatternBbox[v][j]->pattern_id(pattern_id);
+			m_mSplitPatternBbox[v][j]->color(j % 10);
+
+			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
+			pattern_id++;
+		}
+	}
+
+	mplPrint(kINFO, "Now it has %u new patterns.\n", num_new_pattern);
+
+#ifdef DEPRECATD
+	std::vector<std::pair<uint32_t, uint32_t> >().swap(m_vConflict);
+	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+	new_mAdjVertex.resize(pattern_id);
+
+	adj4NewPatterns(m_mSplitPatternBbox, new_mAdjVertex);
+
+	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+	m_mAdjVertex.resize(new_mAdjVertex.size());
+	std::copy(m_mAdjVertex.begin(), m_mAdjVertex.end(), new_mAdjVertex.begin());
+
+	std::vector<rectangle_pointer_type>().swap(m_db->vPatternBbox);
+	for (uint32_t v = 0; v < vertex_num; v++)
+	{
+		for (uint32_t j = 0; j < m_mSplitPatternBbox[v].size(); j++)
+			m_db->vPatternBbox.push_back(m_mSplitPatternBbox[v][j]);
+	}
+	std::cout << "end of runprojection!" << std::endl;
+
+	m_vCompId.resize(m_db->vPatternBbox.size(), std::numeric_limits<uint32_t>::max());
+#endif
+
+	return;
 }
 
 void SimpleMPL::print_welcome() const

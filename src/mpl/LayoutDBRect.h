@@ -52,6 +52,7 @@ struct LayoutDBRect : public LayoutDB
     /// \return the euclidean distance of two patterns 
     virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const {return gtl::euclidean_distance(r1, r2);}
 
+	virtual void refresh(std::vector<rectangle_pointer_type> new_rect_vec, std::vector<uint32_t> rect_to_parent) { return; }
     /// always return false as each rectangle is its own parent 
     //virtual bool same_parent(uint32_t, uint32_t) const {return false;}
 };

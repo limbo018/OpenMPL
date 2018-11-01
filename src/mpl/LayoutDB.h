@@ -116,6 +116,8 @@ struct LayoutDB : public rectangle_data<int32_t>
 	/// \return the euclidean distance of two patterns 
 	virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const = 0;
 
+	// update the polygon and rectangle information after stitch insertion
+	virtual void refresh(std::vector<rectangle_pointer_type> new_rect_vec, std::vector<uint32_t> rect_to_parent) = 0;
 	/// helper functions 
 	/// update bounding box of layout 
 	void update_bbox(base_type const& bbox);
@@ -131,8 +133,7 @@ struct LayoutDB : public rectangle_data<int32_t>
 	inline int32_t simplify_level() const { return parms.simplify_level; }
 	inline int32_t thread_num() const { return parms.thread_num; }
 	inline bool verbose() const { return parms.verbose; }
-	inline bool gen_stitch() const { return parms.gen_stitch; }
-	inline bool use_stitch() const { return parms.use_stitch; }
+	inline bool stitch() const { return parms.stitch; }
     inline uint32_t dbg_comp_id() const {return parms.dbg_comp_id;}
     inline AlgorithmType algo() const {return parms.algo;}
     inline ShapeMode shape_mode() const {return parms.shape_mode;}
