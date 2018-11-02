@@ -897,7 +897,7 @@ void SimpleMPL::runProjection()
 
 			// special operations on first new rectangle of every old rectangle
 			split[0]->pattern_id(++new_rect_id);
-			split[0]->color(comp_id%100);
+			split[0]->color(pid%30);
 			rect_to_parent.push_back(new_polygon_id);
 			new_rect_vec.push_back(split[0]);
 			new_vCompId_vec.push_back(comp_id);
@@ -916,7 +916,7 @@ void SimpleMPL::runProjection()
 			//	std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
 #endif
 
-				split[s]->color(comp_id%100);
+				split[s]->color(pid%100);
 				ori2new[pid].push_back(new_polygon_id);
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);

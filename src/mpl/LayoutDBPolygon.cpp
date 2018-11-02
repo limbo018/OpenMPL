@@ -320,7 +320,7 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 		}
 		else
 		{
-			mplAssert(pPattern->color() == pPolyRectPattern->color());
+	//		mplAssert(pPattern->color() == pPolyRectPattern->color());
 			gtl::encompass(*pPattern, *pPolyRectPattern);
 		}
 		mplAssert(vPolyRectBeginId[parentPolygonId] <= i);
