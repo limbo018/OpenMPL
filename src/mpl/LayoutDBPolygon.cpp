@@ -269,12 +269,12 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	std::cout << "===== REFRESH =====" << std::endl;
 	std::cout << "rect_to_parent : " << std::endl;
 	std::cout << "size : " << rect_to_parent.size() << std::endl;
-	for(uint32_t i = 0; i < rect_to_parent.size(); i++)
-		std::cout << rect_to_parent[i] << std::endl;
+	//for(uint32_t i = 0; i < rect_to_parent.size(); i++)
+	//	std::cout << rect_to_parent[i] << std::endl;
 	std::cout << "new_rect_vec : " << std::endl;
 	std::cout << "size : " << new_rect_vec.size() << std::endl;
-	for(uint32_t j = 0; j < new_rect_vec.size(); j++)
-		std::cout << new_rect_vec[j]->pattern_id() << std::endl;
+	//for(uint32_t j = 0; j < new_rect_vec.size(); j++)
+	//	std::cout << new_rect_vec[j]->pattern_id() << std::endl;
 	std::cout << "===================" <<  std::endl;
 #endif
 	vParentPolygonId.clear();

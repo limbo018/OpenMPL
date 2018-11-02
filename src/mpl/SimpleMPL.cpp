@@ -845,7 +845,6 @@ void SimpleMPL::runProjection()
 	std::vector<uint32_t>().swap(m_vVertexOrder);
 
 	int32_t new_polygon_id = -1;
-
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
 		// polygon v
@@ -867,6 +866,9 @@ void SimpleMPL::runProjection()
 		uint32_t start_idx = poly_rect_begin[pid];
 		uint32_t end_idx = poly_rect_end[pid];
 
+#ifdef QDEBUG
+		std::cout << "\n\n========= original polygon " << v << " =========\n";
+#endif
 		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polgon.
 		bool flag = true;
 		// traverse all the rectangles in polygon v, to generate the intersections
@@ -884,12 +886,18 @@ void SimpleMPL::runProjection()
 				new_polygon_id += 1;
 				ori2new[pid].push_back(new_polygon_id);
 				m_vVertexOrder.push_back(new_polygon_id);
+#ifdef QDEBUG
+				std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
+#endif
 			}
 			
 			// special operations on first new rectangle of every old rectangle
 			split[0]->pattern_id(++new_rect_id);
 			rect_to_parent.push_back(new_polygon_id);
 			new_rect_vec.push_back(split[0]);
+#ifdef QDEBUG
+			std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
+#endif
 
 			// a new but not first generated rectangle will form a new polygon
 			for (uint32_t s = 1; s < split.size(); s++)
@@ -897,6 +905,10 @@ void SimpleMPL::runProjection()
 				split[s]->pattern_id(++new_rect_id);
 
 				++new_polygon_id;
+#ifdef QDEBUG
+				std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
+				std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
+#endif
 				ori2new[pid].push_back(new_polygon_id);
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);
@@ -1406,81 +1418,3 @@ void SimpleMPL::print_welcome() const
 
 SIMPLEMPL_END_NAMESPACE
 
-
-
-// this method can solve the circuit with stitches
-// Now Polygon input is supported
-// The connected component simplification operations are the same with no-stitch situations.
-// What we need to do here is change the component graph passed into the solver. A mapping vector 
-// that whether the children rectangles should share the same color with their parent polygon is also needed. 
-/*
-void SimpleMPL::stitch_solve()
-{
-	// skip if no uncolored layer
-	if (m_db->parms.sUncolorLayer.empty())
-		return;
-
-	char buf[256];
-	mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
-	boost::timer::auto_cpu_timer timer(buf);
-
-	if (m_db->vPatternBbox.empty())
-	{
-		mplPrint(kWARN, "No patterns found in specified layer.\n");
-		return;
-	}
-
-	this->construct_graph();
-	if (m_db->simplify_level() > 0) // only perform connected component when enabled
-		this->connected_component();
-	else 
-	{
-		uint32_t vertex_num = m_vVertexOrder.size();
-		uint32_t order_id = 0;
-		for (uint32_t v = 0; v != vertex_num; v++)
-		{
-			m_vCompId[v] = 0;
-			m_vVertexOrder[v] = order_id++;
-		}
-		m_comp_cnt = 1;
-	}
-
-	// get all the rectangles in the original circuits
-	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
-	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
-	assert(poly_rect_begin.size() == vertex_num);
-
-	std::vector<bool> poly_rect_mapping;
-	poly_rect_mapping.resize(rect_vec.size());
-
-
-	// create bookmark to index the starting position of each component 
-	std::vector<uint32_t> vBookmark(m_comp_cnt);
-	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
-	{
-		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
-			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
-	}
-
-	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
-
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(m_db->thread_num())
-#endif 
-	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
-	{
-#ifdef DEBUG
-		//if (comp_id != 130)
-		//    continue; 
-#endif
-		// construct a component 
-		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
-		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
-		// solve component 
-		// pass iterators to save memory 
-		this->solve_component(itBgn, itEnd, comp_id);
-	}
-	return;
-
-}
-*/
