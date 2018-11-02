@@ -278,10 +278,10 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	std::cout << "===================" <<  std::endl;
 #endif
 	vParentPolygonId.clear();
-	vParentPolygonId.swap(rect_to_parent);
+	vParentPolygonId.assign(rect_to_parent.begin(), rect_to_parent.end());
 
 	vPolyRectPattern.clear();
-	vPolyRectPattern.swap(new_rect_vec);
+	vPolyRectPattern.assign(new_rect_vec.begin(), new_rect_vec.end());
 
 	// update vPolyRectBeginId
 	std::vector<uint32_t>().swap(vPolyRectBeginId);
@@ -296,7 +296,6 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 			vPolyRectBeginId.push_back(i);
 		}
 	}
-
 	
 #ifdef QDEBUG
 	std::cout << "vPolyRectBeginId : " << std::endl;
