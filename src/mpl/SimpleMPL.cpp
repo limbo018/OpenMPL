@@ -64,7 +64,7 @@ void SimpleMPL::run(int32_t argc, char** argv)
 		return;
 	}
 	this->solve();
-	this->report();
+//	this->report();
 	this->write_gds();
 	return;
 }
@@ -168,9 +168,11 @@ void SimpleMPL::solve()
 		}
 		m_comp_cnt = 1;
 	}
-
-	runProjection();
-
+	if(m_db->stitch())
+	{
+		runProjection();
+		return;
+	}
 	// create bookmark to index the starting position of each component
 	std::vector<uint32_t> vBookmark(m_comp_cnt);
 	std::cout << "==== vBookmark ====" << std::endl;
@@ -290,7 +292,12 @@ uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
 				// use layoutdb_type::euclidean_distance to enable compatibility of both rectangles and polygons
 				coordinate_difference distance = m_db->euclidean_distance(*pAdjPattern, *pPattern);
 				if (distance < m_db->coloring_distance)
+				{
+					std::cout << "distance : " << distance << " " <<"coloring_distance : " << m_db->coloring_distance   << std::endl;
+					std::cout << gtl::xl(*pAdjPattern) << " " << gtl::yl(*pAdjPattern) << " " << gtl::xh(*pAdjPattern) << " " << gtl::yh(*pAdjPattern) << std::endl;
+					std::cout << gtl::xl(*pPattern) << " " << gtl::yl(*pPattern) << " " << gtl::xh(*pPattern) << " " << gtl::yh(*pPattern) << std::endl;
 					vAdjVertex.push_back(pAdjPattern->pattern_id());
+				}
 			}
 		}
 		vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
@@ -864,7 +871,7 @@ void SimpleMPL::runProjection()
 		uint32_t end_idx = poly_rect_end[pid];
 
 #ifdef QDEBUG
-		std::cout << "\n\n========= original polygon " << v << " =========\n";
+		//std::cout << "\n\n========= original polygon " << v << " =========\n";
 #endif
 		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polgon.
 		bool flag = true;
@@ -884,17 +891,18 @@ void SimpleMPL::runProjection()
 				ori2new[pid].push_back(new_polygon_id);
 				m_vVertexOrder.push_back(new_polygon_id);
 #ifdef QDEBUG
-				std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
+		//		std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
 #endif
 			}
 
 			// special operations on first new rectangle of every old rectangle
 			split[0]->pattern_id(++new_rect_id);
+			split[0]->color(comp_id%100);
 			rect_to_parent.push_back(new_polygon_id);
 			new_rect_vec.push_back(split[0]);
 			new_vCompId_vec.push_back(comp_id);
 #ifdef QDEBUG
-			std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[0]->color()) << std::endl;
+			//std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[0]->color()) << std::endl;
 #endif
 
 			// a new but not first generated rectangle will form a new polygon
@@ -904,9 +912,11 @@ void SimpleMPL::runProjection()
 
 				++new_polygon_id;
 #ifdef QDEBUG
-				std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
-				std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
+			//	std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
+			//	std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
 #endif
+
+				split[s]->color(comp_id%100);
 				ori2new[pid].push_back(new_polygon_id);
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);
@@ -934,26 +944,43 @@ void SimpleMPL::runProjection()
 				poss_nei.push_back(*it);
 		}
 
+		std::cout << i << " poss_nei.size() " << poss_nei.size() << std::endl; 
+
 		for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 		{
 			for (std::vector<uint32_t>::iterator nei = poss_nei.begin(); nei != poss_nei.end(); nei++)
 			{
 				coordinate_difference distance = boost::geometry::distance(*new_rect_vec[*it], *new_rect_vec[*nei]);
+				rectangle_pointer_type tempA = new_rect_vec[*it];
+				rectangle_pointer_type tempB = new_rect_vec[*nei];
 				if (distance < m_db->coloring_distance)
 				{
 					edge_num++;
 					new_mAdjVertex[*it].push_back(*nei);
+		//			std::cout << "===== \n\n";
+		//			std::cout << *it << " : " << gtl::xl(*tempA) << " " << gtl::yl(*tempA) << " " << gtl::xh(*tempA) << " " << gtl::yh(*tempA) << std::endl;
+		//			std::cout << *nei << " : " <<gtl::xl(*tempB) << " " << gtl::yl(*tempB) << " " << gtl::xh(*tempB) << " " << gtl::yh(*tempB) << std::endl;
+		//			std::cout << " distance : " << distance <<std::endl; 
+			
 				}
 			}
 		}
 	}
 	StitchRelation.assign(new_rect_vec.size(), -1);
+
 	for (uint32_t i = 0; i < stitch_pair.size(); i++)
 		StitchRelation[stitch_pair[i].first] = stitch_pair[i].second;
-
 	m_mAdjVertex.clear();
 	m_mAdjVertex.swap(new_mAdjVertex);
-
+#ifdef QDEBUG
+	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)
+	{
+		std::cout << i << " neighbor list : ";
+		for(uint32_t j = 0; j < m_mAdjVertex[i].size() ; j++)
+			std::cout << m_mAdjVertex[i][j] << " ";
+		std::cout << std::endl;
+	}
+#endif
 	m_vCompId.clear();
 	m_vCompId.swap(new_vCompId_vec);
 

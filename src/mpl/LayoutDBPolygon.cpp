@@ -298,9 +298,9 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	}
 	
 #ifdef QDEBUG
-	std::cout << "vPolyRectBeginId : " << std::endl;
-	for (uint32_t i = 1, ie = vPolyRectBeginId.size(); i < ie; i++)
-		std::cout << i << " -- " << vPolyRectBeginId[i] << std::endl;
+//	std::cout << "vPolyRectBeginId : " << std::endl;
+//	for (uint32_t i = 1, ie = vPolyRectBeginId.size(); i < ie; i++)
+//		std::cout << i << " -- " << vPolyRectBeginId[i] << std::endl;
 #endif
 	uint32_t num_polygons = vPolyRectBeginId.size();
 	std::vector<rectangle_pointer_type>().swap(vPatternBbox);
@@ -317,13 +317,9 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 		{
 			pPattern = new rectangle_type(*pPolyRectPattern);
 			pPattern->pattern_id(parentPolygonId); // vPatternBbox.pattern_id() is different from vPolyRectPattern.pattern_id()
-			std::cout <<"=============================" << std::endl;
-			std::cout << "pPattern : " << pPattern->pattern_id() << " - " << +unsigned(pPattern->color()) << "\n" << "pPolyRectPattern : " << pPolyRectPattern->pattern_id() << " - " << +unsigned(pPolyRectPattern->color()) << std::endl << std::endl; 
 		}
 		else
 		{
-			std::cout <<"=============================" << std::endl;
-			std::cout << "pPattern : " << pPattern->pattern_id() << " - " << +unsigned(pPattern->color()) << "\n" << "pPolyRectPattern : " << pPolyRectPattern->pattern_id() << " - " << +unsigned(pPolyRectPattern->color()) << std::endl << std::endl;  
 			mplAssert(pPattern->color() == pPolyRectPattern->color());
 			gtl::encompass(*pPattern, *pPolyRectPattern);
 		}
