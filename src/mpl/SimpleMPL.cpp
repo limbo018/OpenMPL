@@ -616,16 +616,20 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 
 		// stitch edge
 		uint32_t s = StitchRelation[v];
-		uint32_t j = mGlobal2Local[s];
-		if (i < j)
+		// the init value is -1. If now s != -1, then s is v's stitch neighbor.
+		if (s != -1)
 		{
-			std::pair<edge_descriptor, bool> e = edge(i, j, dg);
-			if (!e.second) 
+			uint32_t j = mGlobal2Local[s];
+			if (i < j)
 			{
-				e = add_edge(i, j, dg);
-				mplAssert(e.second); 
-				// for stitch, edge_weight is negative.
-				boost::put(boost::edge_weight, dg, e.first, -1);
+				std::pair<edge_descriptor, bool> e = edge(i, j, dg);
+				if (!e.second)
+				{
+					e = add_edge(i, j, dg);
+					mplAssert(e.second);
+					// for stitch, edge_weight is negative.
+					boost::put(boost::edge_weight, dg, e.first, -1);
+				}
 			}
 		}
 	}
@@ -876,7 +880,6 @@ void SimpleMPL::runProjection()
 				flag = false;
 				new_polygon_id += 1;
 				ori2new[v].push_back(new_polygon_id);
-				new2ori.push_back(v);
 				m_vVertexOrder.push_back(new_polygon_id);
 			}
 			
@@ -892,7 +895,6 @@ void SimpleMPL::runProjection()
 
 				++new_polygon_id;
 				ori2new[v].push_back[new_polygon_id];
-				new2ori.push_back[v];
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);
 				m_vVertexOrder.push_back(new_polygon_id);
@@ -931,8 +933,7 @@ void SimpleMPL::runProjection()
 			}
 		}
 	}
-
-	StitchRelation.resize(new_rect_vec.size());
+	StitchRelation.assign(new_rect_vec.size(), -1);
 	for (uint32_t i = 0; i < stitch_pair.size(); i++)
 		StitchRelation[stitch_pair[i].first] = stitch_pair[i].second;
 
@@ -1073,7 +1074,6 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	mplAssert(split.size() > 0);
 
 	return;
-
 }
 
 void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, 
@@ -1261,130 +1261,6 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 	return;
 }
 
-void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex)
-{
-	uint32_t edge_num = 0;
-	uint32_t vertex_num = 0;
-	std::cout <<"in adj4" << std::endl;
-	for (uint32_t i = 0; i < m_mSplitPatternBbox.size(); i++)
-	{
-		std::vector<rectangle_pointer_type> &  box_vec = m_mSplitPatternBbox[i];
-		std::vector<uint32_t> & original_nel_vec = m_mAdjVertex[i];
-		/*
-		for(uint32_t j = 0; j < box_vec.size(); j++)
-			std::cout << box_vec[j]->pattern_id() << " ";
-		std::cout << std::endl;
-		for(uint32_t j = 0; j < original_nel_vec.size(); j++)
-			std::cout << "original nei : " << original_nel_vec[j] << std::endl;
-		*/
-		for(std::vector<rectangle_pointer_type>::iterator new_Pattern = box_vec.begin(); new_Pattern < box_vec.end(); new_Pattern++)
-		{
-			vertex_num ++;
-		//	std::cout << "===== child " << (*new_Pattern)->pattern_id() << " ====="<<std::endl;
-			for(std::vector<uint32_t>::iterator original_nei = original_nel_vec.begin(); original_nei != original_nel_vec.end(); original_nei++)
-			{
-		//		std::cout << "now for its original nei " << *original_nei << "  total " << m_mSplitPatternBbox.size()<< std::endl;
-				std::vector<rectangle_pointer_type> & ori_nei_children_vec = m_mSplitPatternBbox[*original_nei];
-				for(std::vector<rectangle_pointer_type>::iterator child = ori_nei_children_vec.begin(); child!=ori_nei_children_vec.end(); child++)
-				{
-					/*
-					std::cout << (*new_Pattern)->pattern_id() ;
-					std::cout << " -- ori  " << *original_nei ;
-					std::cout << " -- child  " <<  (*child)->pattern_id() << std::endl;
-					std::cout << "new_Pattern " <<  gtl::xl(**new_Pattern) << " " << gtl::yl(**new_Pattern) << " " << gtl::xh(**new_Pattern) << " " << gtl::yh(**new_Pattern) << std::endl;
-					std::cout << "child : " << gtl::xl(**child) << " " << gtl::yl(**child) << " " << gtl::xh(**child) << " " << gtl::yh(**child) << std::endl;
-					*/
-					coordinate_difference distance = boost::geometry::distance(**new_Pattern, **child);
-					// std::cout << " distance " << distance <<std::endl;
-					if(distance < m_db->coloring_distance)
-					{
-						edge_num ++;
-						new_mAdjVertex[(*new_Pattern)->pattern_id()].push_back((*child)->pattern_id());
-					}
-				}
-			}
-		}
-	}
-	mplPrint(kINFO, "%u vertices, %u edges\n", vertex_num, edge_num);
-	std::cout <<"end of  adj4" << std::endl;
-	return;
-}
-
-// this method can solve the circuit with stitches
-// Now Polygon input is supported
-// The connected component simplification operations are the same with no-stitch situations.
-// What we need to do here is change the component graph passed into the solver. A mapping vector 
-// that whether the children rectangles should share the same color with their parent polygon is also needed. 
-void SimpleMPL::stitch_solve()
-{
-	// skip if no uncolored layer
-	if (m_db->parms.sUncolorLayer.empty())
-		return;
-
-	char buf[256];
-	mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
-	boost::timer::auto_cpu_timer timer(buf);
-
-	if (m_db->vPatternBbox.empty())
-	{
-		mplPrint(kWARN, "No patterns found in specified layer.\n");
-		return;
-	}
-
-	this->construct_graph();
-	if (m_db->simplify_level() > 0) // only perform connected component when enabled
-		this->connected_component();
-	else 
-	{
-		uint32_t vertex_num = m_vVertexOrder.size();
-		uint32_t order_id = 0;
-		for (uint32_t v = 0; v != vertex_num; v++)
-		{
-			m_vCompId[v] = 0;
-			m_vVertexOrder[v] = order_id++;
-		}
-		m_comp_cnt = 1;
-	}
-
-	// get all the rectangles in the original circuits
-	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
-	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
-	assert(poly_rect_begin.size() == vertex_num);
-
-	std::vector<bool> poly_rect_mapping;
-	poly_rect_mapping.resize(rect_vec.size());
-
-
-	// create bookmark to index the starting position of each component 
-	std::vector<uint32_t> vBookmark(m_comp_cnt);
-	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
-	{
-		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
-			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
-	}
-
-	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
-
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(m_db->thread_num())
-#endif 
-	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
-	{
-#ifdef DEBUG
-		//if (comp_id != 130)
-		//    continue; 
-#endif
-		// construct a component 
-		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
-		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
-		// solve component 
-		// pass iterators to save memory 
-		this->solve_component(itBgn, itEnd, comp_id);
-	}
-	return;
-
-}
-
 void SimpleMPL::gen_projection()
 {
 	if (m_db->vPatternBbox.empty())
@@ -1526,3 +1402,82 @@ void SimpleMPL::print_welcome() const
 }
 
 SIMPLEMPL_END_NAMESPACE
+
+
+
+// this method can solve the circuit with stitches
+// Now Polygon input is supported
+// The connected component simplification operations are the same with no-stitch situations.
+// What we need to do here is change the component graph passed into the solver. A mapping vector 
+// that whether the children rectangles should share the same color with their parent polygon is also needed. 
+/*
+void SimpleMPL::stitch_solve()
+{
+	// skip if no uncolored layer
+	if (m_db->parms.sUncolorLayer.empty())
+		return;
+
+	char buf[256];
+	mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer(buf);
+
+	if (m_db->vPatternBbox.empty())
+	{
+		mplPrint(kWARN, "No patterns found in specified layer.\n");
+		return;
+	}
+
+	this->construct_graph();
+	if (m_db->simplify_level() > 0) // only perform connected component when enabled
+		this->connected_component();
+	else 
+	{
+		uint32_t vertex_num = m_vVertexOrder.size();
+		uint32_t order_id = 0;
+		for (uint32_t v = 0; v != vertex_num; v++)
+		{
+			m_vCompId[v] = 0;
+			m_vVertexOrder[v] = order_id++;
+		}
+		m_comp_cnt = 1;
+	}
+
+	// get all the rectangles in the original circuits
+	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
+	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
+	assert(poly_rect_begin.size() == vertex_num);
+
+	std::vector<bool> poly_rect_mapping;
+	poly_rect_mapping.resize(rect_vec.size());
+
+
+	// create bookmark to index the starting position of each component 
+	std::vector<uint32_t> vBookmark(m_comp_cnt);
+	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
+			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+	}
+
+	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
+	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	{
+#ifdef DEBUG
+		//if (comp_id != 130)
+		//    continue; 
+#endif
+		// construct a component 
+		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
+		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
+		// solve component 
+		// pass iterators to save memory 
+		this->solve_component(itBgn, itEnd, comp_id);
+	}
+	return;
+
+}
+*/
