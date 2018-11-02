@@ -154,11 +154,7 @@ void SimpleMPL::solve()
 		return;
 	}
 
-	if (m_db->stitch())
-		runProjection();
-	else
-		this->construct_graph();
-	
+	this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
 	else
@@ -172,6 +168,9 @@ void SimpleMPL::solve()
 		}
 		m_comp_cnt = 1;
 	}
+
+	runProjection();
+
 	// create bookmark to index the starting position of each component
 	std::vector<uint32_t> vBookmark(m_comp_cnt);
 	std::cout << "==== vBookmark ====" << std::endl;
@@ -570,8 +569,6 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
 		delete pcs;
-
-		
 	}
 
 	// recover color assignment according to the simplification level set previously 
@@ -818,15 +815,8 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
 
 void SimpleMPL::runProjection()
 {
-	if (m_db->vPatternBbox.empty())
-	{
-		mplPrint(kWARN, "No patterns found in specified layers\n");
-		return;
-	}
-	// no need to care about how it's constructed
-	this->construct_graph();
 	uint32_t vertex_num = m_db->vPatternBbox.size();
-
+	std::vector<uint32_t> new_vCompId_vec;
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
 	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
 	mplAssertMsg(poly_rect_begin.size() == vertex_num, "polyrectBgnId.size() must be equal to polyrect_patterns.size()");
@@ -837,13 +827,13 @@ void SimpleMPL::runProjection()
 	for (uint32_t i = 0; i < vertex_num - 1; i++)
 		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
 	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
-	
+
 	uint32_t new_rect_id = -1;
 	std::vector<rectangle_pointer_type> new_rect_vec;		// store the newly-generated rectangles
 	std::vector<uint32_t> rect_to_parent;					// map from rectangles to its parent polygon
 	std::vector<std::vector<uint32_t> >().swap(ori2new);
 	ori2new.resize(vertex_num);
-	
+
 	// temperaily used to store the stitch relation
 	std::vector<std::pair<uint32_t, uint32_t> > stitch_pair;
 
@@ -853,6 +843,7 @@ void SimpleMPL::runProjection()
 	int32_t new_polygon_id = -1;
 	for (uint32_t v = 0; v < vertex_num; v++)
 	{
+		uint32_t comp_id = m_vCompId[v];
 		// polygon v
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];
 		uint32_t pid = pPattern->pattern_id();
@@ -884,7 +875,7 @@ void SimpleMPL::runProjection()
 			// the generated split patterns
 			std::vector<rectangle_pointer_type> split;
 			projection(rect, split, poss_nei_vec);
-			
+
 			// if this rectangle is the first one in the whole polygon, we need to generate a new polygon id.
 			if (flag)
 			{
@@ -896,11 +887,12 @@ void SimpleMPL::runProjection()
 				std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
 #endif
 			}
-			
+
 			// special operations on first new rectangle of every old rectangle
 			split[0]->pattern_id(++new_rect_id);
 			rect_to_parent.push_back(new_polygon_id);
 			new_rect_vec.push_back(split[0]);
+			new_vCompId_vec.push_back(comp_id);
 #ifdef QDEBUG
 			std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[0]->color()) << std::endl;
 #endif
@@ -920,9 +912,10 @@ void SimpleMPL::runProjection()
 				new_rect_vec.push_back(split[s]);
 				m_vVertexOrder.push_back(new_polygon_id);
 				stitch_pair.push_back(std::make_pair(new_polygon_id - 1, new_polygon_id));
+				new_vCompId_vec.push_back(comp_id);
 			}
 		}
-	}
+			}
 	// update information in m_db;
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
@@ -940,7 +933,7 @@ void SimpleMPL::runProjection()
 			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
 				poss_nei.push_back(*it);
 		}
-		//
+
 		for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 		{
 			for (std::vector<uint32_t>::iterator nei = poss_nei.begin(); nei != poss_nei.end(); nei++)
@@ -960,6 +953,9 @@ void SimpleMPL::runProjection()
 
 	m_mAdjVertex.clear();
 	m_mAdjVertex.swap(new_mAdjVertex);
+
+	m_vCompId.clear();
+	m_vCompId.swap(new_vCompId_vec);
 
 	mplPrint(kINFO, "%u vertices, %u edges\n", new_rect_vec.size(), edge_num);
 	return;
