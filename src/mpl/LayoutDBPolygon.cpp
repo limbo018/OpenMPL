@@ -263,8 +263,20 @@ void LayoutDBPolygon::report_data_kernel() const
 }
 
 // more techniques may be needed to improve the storage performance and reduce the peak memory.
-void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type> new_rect_vec, std::vector<uint32_t> rect_to_parent)
+void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent)
 {
+#ifdef QDEBUG
+	std::cout << "===== REFRESH =====" << std::endl;
+	std::cout << "rect_to_parent : " << std::endl;
+	std::cout << "size : " << rect_to_parent.size() << std::endl;
+	for(uint32_t i = 0; i < rect_to_parent.size(); i++)
+		std::cout << rect_to_parent[i] << std::endl;
+	std::cout << "new_rect_vec : " << std::endl;
+	std::cout << "size : " << new_rect_vec.size() << std::endl;
+	for(uint32_t j = 0; j < new_rect_vec.size(); j++)
+		std::cout << new_rect_vec[j]->pattern_id() << std::endl;
+	std::cout << "===================" <<  std::endl;
+#endif
 	vParentPolygonId.clear();
 	vParentPolygonId.swap(rect_to_parent);
 
@@ -276,11 +288,11 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type> new_rect_vec, 
 	uint32_t base = 0;
 	vPolyRectBeginId.push_back(0);
 
-	for (uint32_t i = 1, ie = rect_to_parent.size(); i < ie; i++)
+	for (uint32_t i = 1, ie = vPolyRectPattern.size(); i < ie; i++)
 	{
 		if (rect_to_parent[i] != base)
 		{
-			base = rect_to_parent[i];
+			base = vParentPolygonId[i];
 			vPolyRectBeginId.push_back(i);
 		}
 	}
@@ -292,16 +304,20 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type> new_rect_vec, 
 	
 	for (uint32_t i = 0, ie = vPolyRectPattern.size(); i != ie; ++i)
 	{
-		const rectangle_pointer_type pPolyRectPattern = vPolyRectPattern[i];
+		const rectangle_pointer_type &pPolyRectPattern = vPolyRectPattern[i];
 		uint32_t parentPolygonId = vParentPolygonId[i];
 		rectangle_pointer_type& pPattern = vPatternBbox[parentPolygonId];
 		if (!pPattern)
 		{
 			pPattern = new rectangle_type(*pPolyRectPattern);
 			pPattern->pattern_id(parentPolygonId); // vPatternBbox.pattern_id() is different from vPolyRectPattern.pattern_id()
+std::cout <<"=============================" << std::endl;
+			std::cout << "pPattern : " << pPattern->pattern_id() << " - " << +unsigned(pPattern->color()) << "\n" << "pPolyRectPattern : " << pPolyRectPattern->pattern_id() << " - " << +unsigned(pPolyRectPattern->color()) << std::endl << std::endl; 
 		}
 		else
 		{
+			std::cout <<"=============================" << std::endl;
+			std::cout << "pPattern : " << pPattern->pattern_id() << " - " << +unsigned(pPattern->color()) << "\n" << "pPolyRectPattern : " << pPolyRectPattern->pattern_id() << " - " << +unsigned(pPolyRectPattern->color()) << std::endl << std::endl;  
 			mplAssert(pPattern->color() == pPolyRectPattern->color());
 			gtl::encompass(*pPattern, *pPolyRectPattern);
 		}

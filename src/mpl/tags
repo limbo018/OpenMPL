@@ -11,15 +11,13 @@ AlgorithmType	Enums.h	/^		AlgorithmType(std::string const& rhs) : base_type() {m
 AlgorithmType	Enums.h	/^class AlgorithmType : public EnumExt<AlgorithmTypeEnum::EnumType>$/;"	c
 AlgorithmTypeEnum	Enums.h	/^struct AlgorithmTypeEnum$/;"	s
 BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:AlgorithmTypeEnum::EnumType
-BOOST_REG_INTERSECTION	Makefile	/^BOOST_REG_INTERSECTION = 0$/;"	m
 CSDP	Makefile	/^CSDP = 1$/;"	m
 CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
-CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_RELEASE) -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
 ControlParameter	Params.h	/^struct ControlParameter$/;"	s
-DBG	Makefile	/^DBG = 0$/;"	m
+DBG	Makefile	/^DBG = 1 $/;"	m
 DEPS	Makefile	/^DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source$/;"	m
 ENUM2STR	Enums.cpp	13;"	d	file:
 EXE	Makefile	/^EXE	= $(EXEDIR)\/OpenMPL$/;"	m
@@ -115,13 +113,13 @@ SimpleMPL	SimpleMPL.cpp	/^SimpleMPL::SimpleMPL()$/;"	f	class:SimpleMPL
 SimpleMPL	SimpleMPL.h	/^class SimpleMPL$/;"	c
 SimpleMPL	stitch/SimpleMPL.cpp	/^SimpleMPL::SimpleMPL()$/;"	f	class:SimpleMPL
 SimpleMPL	stitch/SimpleMPL.h	/^class SimpleMPL$/;"	c
-SplitMapping	SimpleMPL.h	/^	std::vector<std::vector<uint32_t> > SplitMapping;	\/\/ stores the mapping relationships between original patterns and newly-generated patterns.$/;"	m	class:SimpleMPL
 SplitMapping	stitch/SimpleMPL.h	/^		std::vector<std::vector<uint32_t> > SplitMapping; \/\/ stores the mapping relationships between original patterns and newly - generated patterns.$/;"	m	class:SimpleMPL
 StitchGenerateDPL_Points	stitch/StitchProc.cpp	/^void StitchProc::StitchGenerateDPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_pointer_type> vinterRect, std::vector <coordinate_type> vstitches, coordinate_type left, coordinate_type right, bool vddstitch = false)$/;"	f	class:StitchProc
 StitchGenerateTPL_Points	stitch/StitchProc.cpp	/^void StitchProc::StitchGenerateTPL_Points(const rectangle_pointer_type pRect, const std::vector<rectangle_pointer_type> vinterRect, std::vector <coordinate_type> vstitches, coordinate_type left, coordinate_type right, bool vddstitch = false)$/;"	f	class:StitchProc
 StitchProc	stitch/StitchProc.cpp	/^StitchProc::StitchProc()$/;"	f	class:StitchProc
 StitchProc	stitch/StitchProc.cpp	/^StitchProc::StitchProc(double pitch)$/;"	f	class:StitchProc
 StitchProc	stitch/StitchProc.h	/^class StitchProc $/;"	c
+StitchRelation	SimpleMPL.h	/^	std::vector<uint32_t>					StitchRelation;	\/\/ stores the stitch relationships. Each pattern may have two abutting neighbors, but we only store the neighbor after it.$/;"	m	class:SimpleMPL
 UNAME_S	Makefile	/^UNAME_S = $(shell uname -s)$/;"	m
 V	GeometryApi.h	/^    typedef Box* V;$/;"	t	struct:boost::geometry::index::indexable
 V	GeometryApi.h	/^    typedef boost::shared_ptr<Box> V;$/;"	t	struct:boost::geometry::index::indexable
@@ -130,7 +128,6 @@ add	LayoutDB.cpp	/^void LayoutDB::add(int32_t layer, std::vector<point_type> con
 add_path	LayoutDB.cpp	/^void LayoutDB::add_path(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDB
 add_pattern	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDBPolygon
 add_pattern	LayoutDBRect.cpp	/^void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPoint)$/;"	f	class:LayoutDBRect
-adj4NewPatterns	SimpleMPL.cpp	/^void SimpleMPL::adj4NewPatterns(std::vector<std::vector<rectangle_pointer_type> > & m_mSplitPatternBbox, std::vector<std::vector<uint32_t> > & new_mAdjVertex)$/;"	f	class:SimpleMPL
 algo	LayoutDB.h	/^    inline AlgorithmType algo() const {return parms.algo;}$/;"	f	struct:LayoutDB
 algo	Params.h	/^	AlgorithmType algo;                        \/\/\/< control algorithms used to solve coloring problem $/;"	m	struct:ControlParameter
 area_type	LayoutDB.h	/^	typedef gtl::coordinate_traits<coordinate_type>::manhattan_area_type area_type;$/;"	t	struct:LayoutDB
@@ -234,8 +231,9 @@ find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexDistance::fi
 find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexImageContrast::find_best_color(RecoverHiddenVertexImageContrast::vertex_descriptor \/*v*\/)$/;"	f	class:RecoverHiddenVertexImageContrast
 find_unused_colors	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 float_cbk	GdsiiIO.cpp	/^void GdsReader::float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vData)$/;"	f	class:GdsReader
+gen_projection	SimpleMPL.cpp	/^void SimpleMPL::gen_projection()$/;"	f	class:SimpleMPL
 gen_stitch	LayoutDB.h	/^	inline bool gen_stitch() const { return parms.gen_stitch; }$/;"	f	struct:LayoutDB
-gen_stitch	Params.h	/^    bool gen_stitch;                           \/\/\/< control stitch generation$/;"	m	struct:ControlParameter
+gen_stitch	Params.h	/^	bool gen_stitch;						   \/\/\/< used to test the stitch generation algorithms$/;"	m	struct:ControlParameter
 generate_id	Shapes.h	/^		static long generate_id()$/;"	f	class:Shape
 geometry	GeometryApi.h	/^namespace boost { namespace geometry { namespace index {$/;"	n	namespace:boost
 geometry	GeometryApi.h	/^namespace boost { namespace geometry { namespace traits {$/;"	n	namespace:boost
@@ -345,7 +343,6 @@ mplStaticAssert	Msg.h	/^    mplStaticAssert(const char* = NULL) {}$/;"	f	struct:
 mplStaticAssert	Msg.h	/^struct mplStaticAssert<true> $/;"	s
 mplVPrintStream	Msg.cpp	/^int mplVPrintStream(MessageType m, FILE* stream, const char* format, va_list args)$/;"	f
 mplVSPrint	Msg.cpp	/^int mplVSPrint(MessageType m, char* buf, const char* format, va_list args)$/;"	f
-new2ori	SimpleMPL.h	/^	std::vector<uint32_t> new2ori;		\/\/ store the mapping relationships from new patterns back to original patterns.$/;"	m	class:SimpleMPL
 new2ori	stitch/SimpleMPL.h	/^		std::vector<uint32_t>	new2ori;	\/\/ store the mapping relationships from new patterns back to original patterns.$/;"	m	class:SimpleMPL
 operator !=	Enums.h	/^		bool operator!=(EnumExt const& rhs) const {return m_value != rhs.m_value;}$/;"	f	class:EnumExt
 operator !=	Enums.h	/^		bool operator!=(enum_type const& rhs) const {return m_value != rhs;}$/;"	f	class:EnumExt
@@ -381,6 +378,7 @@ operator ==	Enums.h	/^		bool operator==(std::string const& rhs) const {return *t
 operator std::string	Enums.h	/^		virtual operator std::string() const$/;"	f	class:EnumExt
 operator std::string	Shapes.h	/^        operator std::string() const $/;"	f	class:Polygon
 operator std::string	Shapes.h	/^        operator std::string() const $/;"	f	class:Rectangle
+ori2new	SimpleMPL.h	/^	std::vector<std::vector<uint32_t> >		ori2new;		\/\/ stores the mapping relationships from original polygons to newly-generated polygons.$/;"	m	class:SimpleMPL
 output_gds	LayoutDB.h	/^    inline std::string const& output_gds() const {return parms.output_gds;}$/;"	f	class:LayoutDB::std
 output_gds	Params.h	/^	std::string   output_gds;                  \/\/\/< output gdsii filename $/;"	m	struct:ControlParameter
 parms	LayoutDB.h	/^	ControlParameter parms; \/\/\/< control parameters from command line$/;"	m	struct:LayoutDB
@@ -456,6 +454,8 @@ rectangle_type	Shapes.h	/^		typedef Rectangle<coordinate_type> rectangle_type;$/
 rectangle_type	SimpleMPL.h	/^	typedef layoutdb_type::rectangle_type          rectangle_type;$/;"	t	class:SimpleMPL
 rectangle_type	stitch/SimpleMPL.h	/^        typedef layoutdb_type::rectangle_type          rectangle_type;$/;"	t	class:SimpleMPL
 rectangle_type	stitch/StitchProc.h	/^	typedef layoutdb_type::rectangle_type          rectangle_type;$/;"	t	class:StitchProc
+refresh	LayoutDBPolygon.cpp	/^void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent)$/;"	f	class:LayoutDBPolygon
+refresh	LayoutDBRect.h	/^	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent) { return; }$/;"	f	struct:LayoutDBRect
 relation4rect	stitch/StitchProc.cpp	/^void StitchProc::relation4rect()$/;"	f	class:StitchProc
 remove_overlap	LayoutDB.cpp	/^void LayoutDB::remove_overlap(std::vector<LayoutDB::rectangle_pointer_type>& vTargetPattern)$/;"	f	class:LayoutDB
 report	SimpleMPL.cpp	/^void SimpleMPL::report() const$/;"	f	class:SimpleMPL
@@ -494,7 +494,8 @@ solve_component	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_component(const
 solve_graph_coloring	SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg,$/;"	f	class:SimpleMPL
 solve_graph_coloring	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg, $/;"	f	class:SimpleMPL
 status	GdsiiIO.h	/^    GdsParser::GdsRecords::EnumType status; $/;"	m	struct:GdsReader
-stitch_solve	SimpleMPL.cpp	/^void SimpleMPL::stitch_solve()$/;"	f	class:SimpleMPL
+stitch	LayoutDB.h	/^	inline bool stitch() const { return parms.stitch; }$/;"	f	struct:LayoutDB
+stitch	Params.h	/^	bool stitch;							   \/\/\/< control whether stitch is used$/;"	m	struct:ControlParameter
 str2Enum	Enums.cpp	/^AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const$/;"	f	class:AlgorithmType
 str2Enum	Enums.cpp	/^ShapeMode::enum_type ShapeMode::str2Enum(std::string const& s) const$/;"	f	class:ShapeMode
 string_cbk	GdsiiIO.cpp	/^void GdsReader::string_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::string const& str) $/;"	f	class:GdsReader
@@ -510,8 +511,6 @@ type	GeometryApi.h	/^    typedef typename SimpleMPL::Rectangle<CoordinateType>::
 unit	LayoutDB.h	/^	double unit;                               \/\/\/< keep output gdsii file has the same unit as input gdsii file $/;"	m	struct:LayoutDB
 update_bbox	LayoutDB.cpp	/^void LayoutDB::update_bbox(base_type const& bbox)$/;"	f	class:LayoutDB
 ur	stitch/SimpleMPL.h	/^		QiPoint ur;$/;"	m	struct:QiBox
-use_stitch	LayoutDB.h	/^	inline bool use_stitch() const { return parms.use_stitch; }$/;"	f	struct:LayoutDB
-use_stitch	Params.h	/^	bool use_stitch;						   \/\/\/< control whether stitches are used in coloring $/;"	m	struct:ControlParameter
 vLP1HalfInteger	SimpleMPL.cpp	/^std::vector<unsigned int> vLP1HalfInteger;$/;"	v
 vLP1HalfInteger	stitch/SimpleMPL.cpp	/^std::vector<unsigned int> vLP1HalfInteger; $/;"	v
 vLP1NonInteger	SimpleMPL.cpp	/^std::vector<unsigned int> vLP1NonInteger;$/;"	v

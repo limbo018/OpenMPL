@@ -117,7 +117,7 @@ struct LayoutDB : public rectangle_data<int32_t>
 	virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const = 0;
 
 	// update the polygon and rectangle information after stitch insertion
-	virtual void refresh(std::vector<rectangle_pointer_type> new_rect_vec, std::vector<uint32_t> rect_to_parent) = 0;
+	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent) = 0;
 	/// helper functions 
 	/// update bounding box of layout 
 	void update_bbox(base_type const& bbox);

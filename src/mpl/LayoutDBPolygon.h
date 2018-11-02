@@ -81,7 +81,7 @@ struct LayoutDBPolygon : public LayoutDB
     /// \return the euclidean distance of two patterns 
     virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const; 
 	/// update vParentPolygonId, vPolyRectPattern and vPatternBbox after stitch insertion
-	virtual void refresh(std::vector<rectangle_pointer_type> new_rect_vec, std::vector<uint32_t> rect_to_parent);
+	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>&  rect_to_parent);
 };
 
 SIMPLEMPL_END_NAMESPACE

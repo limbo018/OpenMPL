@@ -5,7 +5,7 @@
 # recommend make command: make -j CSDP=1 
 
 # default DBG is off
-DBG = 0
+DBG = 1 
 # default GPROF is off, used to enable runtime profiling
 GPROF = 0
 # default GUROBI is off 
@@ -14,8 +14,6 @@ GUROBI = 1
 LEMONCBC = 0
 # default CSDP is off 
 CSDP = 1
-# default BOOST_REG_INTERSECTION is off
-BOOST_REG_INTERSECTION = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -25,11 +23,11 @@ ifeq ($(UNAME_S), Darwin)
 	-include ../Darwin.mk
 endif 
 
-ifeq ($(DBG), 1)
+#ifeq ($(DBG), 1)
 	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING
-else
-	CXXFLAGS = $(CXXFLAGS_RELEASE) -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR
-endif
+#else
+#	CXXFLAGS = $(CXXFLAGS_RELEASE) -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR
+#endif
 
 ifeq ($(GPROF), 1)
 	CXXFLAGS += -pg

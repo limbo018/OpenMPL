@@ -850,8 +850,9 @@ void SimpleMPL::runProjection()
 	{
 		// polygon v
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];
+		uint32_t pid = pPattern->pattern_id();
 		// polygon v's neighbor polygons
-		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[v];
+		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[pid];
 
 		// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
 		std::vector<rectangle_pointer_type> poss_nei_vec;
@@ -863,8 +864,8 @@ void SimpleMPL::runProjection()
 				poss_nei_vec.push_back(rect_vec[a]);
 		}
 
-		uint32_t start_idx = poly_rect_begin[v];
-		uint32_t end_idx = poly_rect_end[v];
+		uint32_t start_idx = poly_rect_begin[pid];
+		uint32_t end_idx = poly_rect_end[pid];
 
 		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polgon.
 		bool flag = true;
@@ -881,7 +882,7 @@ void SimpleMPL::runProjection()
 			{
 				flag = false;
 				new_polygon_id += 1;
-				ori2new[v].push_back(new_polygon_id);
+				ori2new[pid].push_back(new_polygon_id);
 				m_vVertexOrder.push_back(new_polygon_id);
 			}
 			
@@ -896,7 +897,7 @@ void SimpleMPL::runProjection()
 				split[s]->pattern_id(++new_rect_id);
 
 				++new_polygon_id;
-				ori2new[v].push_back(new_polygon_id);
+				ori2new[pid].push_back(new_polygon_id);
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);
 				m_vVertexOrder.push_back(new_polygon_id);
