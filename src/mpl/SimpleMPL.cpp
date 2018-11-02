@@ -832,7 +832,7 @@ void SimpleMPL::runProjection()
 		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
 	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
 	
-	uint32_t new_rect_id = 0;
+	uint32_t new_rect_id = -1;
 	std::vector<rectangle_pointer_type> new_rect_vec;		// store the newly-generated rectangles
 	std::vector<uint32_t> rect_to_parent;					// map from rectangles to its parent polygon
 	std::vector<std::vector<uint32_t> >().swap(ori2new);
@@ -896,7 +896,7 @@ void SimpleMPL::runProjection()
 			rect_to_parent.push_back(new_polygon_id);
 			new_rect_vec.push_back(split[0]);
 #ifdef QDEBUG
-			std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
+			std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[0]->color()) << std::endl;
 #endif
 
 			// a new but not first generated rectangle will form a new polygon

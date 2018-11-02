@@ -285,17 +285,24 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 
 	// update vPolyRectBeginId
 	std::vector<uint32_t>().swap(vPolyRectBeginId);
-	uint32_t base = 0;
+	uint32_t base = vParentPolygonId[0];
 	vPolyRectBeginId.push_back(0);
 
-	for (uint32_t i = 1, ie = vPolyRectPattern.size(); i < ie; i++)
+	for (uint32_t i = 1, ie = vParentPolygonId.size(); i < ie; i++)
 	{
-		if (rect_to_parent[i] != base)
+		if (vParentPolygonId[i] != base)
 		{
 			base = vParentPolygonId[i];
 			vPolyRectBeginId.push_back(i);
 		}
 	}
+
+	
+#ifdef QDEBUG
+	std::cout << "vPolyRectBeginId : " << std::endl;
+	for (uint32_t i = 1, ie = vPolyRectBeginId.size(); i < ie; i++)
+		std::cout << i << " -- " << vPolyRectBeginId[i] << std::endl;
+#endif
 	uint32_t num_polygons = vPolyRectBeginId.size();
 	std::vector<rectangle_pointer_type>().swap(vPatternBbox);
 
