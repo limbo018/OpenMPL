@@ -172,12 +172,18 @@ void SimpleMPL::solve()
 		}
 		m_comp_cnt = 1;
 	}
-	// create bookmark to index the starting position of each component 
+	// create bookmark to index the starting position of each component
 	std::vector<uint32_t> vBookmark(m_comp_cnt);
+	std::cout << "==== vBookmark ====" << std::endl;
 	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
 	{
 		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
+		{
+			uint32_t a = m_vVertexOrder[i];
+			uint32_t b = m_vCompId[a];
+			std::cout << a << " - " << b << std::endl;
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+		}
 	}
 
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);

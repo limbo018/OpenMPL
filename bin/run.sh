@@ -29,7 +29,8 @@
     -shape POLYGON \
     -in bench/sim_c1.gds  \
     -out benchout/sim_c1_out.gds  \
-    -coloring_distance 120 \
+    -simplify_level	0 \
+	-coloring_distance 120 \
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
