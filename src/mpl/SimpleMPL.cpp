@@ -475,7 +475,6 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 	return pcs;
 }
 
-
 /// given a graph, solve coloring 
 /// contain nested call for itself 
 uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type const& dg,
@@ -614,21 +613,24 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 			}
 		}
 
-		// stitch edge
-		uint32_t s = StitchRelation[v];
-		// the init value is -1. If now s != -1, then s is v's stitch neighbor.
-		if (s != -1)
+		if (m_db->stitch())
 		{
-			uint32_t j = mGlobal2Local[s];
-			if (i < j)
+			// stitch edge
+			uint32_t s = StitchRelation[v];
+			// the init value is -1. If now s != -1, then s is v's stitch neighbor.
+			if (s != -1)
 			{
-				std::pair<edge_descriptor, bool> e = edge(i, j, dg);
-				if (!e.second)
+				uint32_t j = mGlobal2Local[s];
+				if (i < j)
 				{
-					e = add_edge(i, j, dg);
-					mplAssert(e.second);
-					// for stitch, edge_weight is negative.
-					boost::put(boost::edge_weight, dg, e.first, -1);
+					std::pair<edge_descriptor, bool> e = edge(i, j, dg);
+					if (!e.second)
+					{
+						e = add_edge(i, j, dg);
+						mplAssert(e.second);
+						// for stitch, edge_weight is negative.
+						boost::put(boost::edge_weight, dg, e.first, -1);
+					}
 				}
 			}
 		}
@@ -894,7 +896,7 @@ void SimpleMPL::runProjection()
 				split[s]->pattern_id(++new_rect_id);
 
 				++new_polygon_id;
-				ori2new[v].push_back[new_polygon_id];
+				ori2new[v].push_back(new_polygon_id);
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);
 				m_vVertexOrder.push_back(new_polygon_id);
