@@ -108,9 +108,9 @@ void LayoutDBPolygon::set_color(uint32_t pattern_id, int8_t color)
 #ifdef QDEBUG
 //	std::cout << "set_color : " <<  pPattern->pattern_id()  << " has color " << +unsigned(pPattern->color()) << " and new color is " << +unsigned(color)<< std::endl;
 #endif
-	if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
-        mplAssert(pPattern->color() == color);
-    else // assign color to uncolored pattern 
+	//if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
+    //    mplAssert(pPattern->color() == color);
+    //else // assign color to uncolored pattern 
         pPattern->color(color);
     for (uint32_t i = vPolyRectBeginId[pattern_id], ie = vParentPolygonId.size(); i != ie && vParentPolygonId[i] == pattern_id; ++i)
         vPolyRectPattern[i]->color(color);

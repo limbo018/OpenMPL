@@ -5,6 +5,13 @@
 > Created Time: Wed May 20 22:38:50 2015
 ************************************************************************/
 
+/*
+solve_component : 
+	mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
+
+LayoutDBPolygon:
+	set_color()
+*/
 #include "SimpleMPL.h"
 #include "LayoutDBRect.h"
 #include "LayoutDBPolygon.h"
@@ -168,23 +175,56 @@ void SimpleMPL::solve()
 		}
 		m_comp_cnt = 1;
 	}
-	if(m_db->stitch())
+
+	/*
+	std::cout << "Originally, it has " << m_comp_cnt << " components" << std::endl;
+	std::cout << "========= vPatternBbox =========" << std::endl;
+	for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 	{
-		runProjection();
-		return;
+		rectangle_pointer_type pPattern = m_db->vPatternBbox[i];
+		std::vector<uint32_t> adj = m_mAdjVertex[pPattern->pattern_id()];
+		std::cout << "==== " << pPattern->pattern_id() << " ====" << std::endl;
+		std::cout << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
+		std::cout << "nei_adj :\t";
+		for(uint32_t j = 0; j < adj.size(); j++)
+			std::cout << adj[j] << " ";
+		std::cout << std::endl << std::endl;
 	}
+	std::cout << "\n\n\n";
+	*/
+
 	// create bookmark to index the starting position of each component
 	std::vector<uint32_t> vBookmark(m_comp_cnt);
-	std::cout << "==== vBookmark ====" << std::endl;
+	std::cout << "==== Before Projection vBookmark ====" << std::endl;
 	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
 	{
 		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
 		{
-			uint32_t a = m_vVertexOrder[i];
-			uint32_t b = m_vCompId[a];
-			std::cout << a << " - " << b << std::endl;
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 		}
+	}
+	for (uint32_t i = 0; i < vBookmark.size(); i++)
+		std::cout << "component " << i << " : " << vBookmark[i] << std::endl;
+
+	if(m_db->stitch())
+	{
+		runProjection();
+	}
+	// create bookmark to index the starting position of each component
+
+	std::vector<uint32_t>().swap(vBookmark);
+	vBookmark.resize(m_comp_cnt);
+	std::cout << "==== After Projection vBookmark ====" << std::endl;
+	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
+		{
+			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+		}
+	}
+	for (uint32_t i = 0; i < vBookmark.size(); i++)
+	{
+		std::cout << "component " << i << " : " << vBookmark[i] << std::endl;
 	}
 
 	mplPrint(kINFO, "Solving %u independent components...\n", m_comp_cnt);
@@ -293,9 +333,11 @@ uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
 				coordinate_difference distance = m_db->euclidean_distance(*pAdjPattern, *pPattern);
 				if (distance < m_db->coloring_distance)
 				{
+					/*
 					std::cout << "distance : " << distance << " " <<"coloring_distance : " << m_db->coloring_distance   << std::endl;
 					std::cout << gtl::xl(*pAdjPattern) << " " << gtl::yl(*pAdjPattern) << " " << gtl::xh(*pAdjPattern) << " " << gtl::yh(*pAdjPattern) << std::endl;
 					std::cout << gtl::xl(*pPattern) << " " << gtl::yl(*pPattern) << " " << gtl::xh(*pPattern) << " " << gtl::yh(*pPattern) << std::endl;
+					*/
 					vAdjVertex.push_back(pAdjPattern->pattern_id());
 				}
 			}
@@ -653,11 +695,13 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 
 #ifdef DEBUG
 	// check order
+	/*
 	for (std::vector<uint32_t>::const_iterator it = itBgn + 1; it != itEnd; it++)
 	{
 		uint32_t v1 = *(it - 1), v2 = *it;
 		mplAssert(m_vCompId[v1] == m_vCompId(v2);
 	}
+	*/
 #endif
 
 	uint32_t acc_obj_value = std::numeric_limits<uint32_t>::max();
@@ -680,8 +724,8 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
 	// only valid under no stitch 
-	if (acc_obj_value != std::numeric_limits<uint32_t>::max())
-		mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
+	// if (acc_obj_value != std::numeric_limits<uint32_t>::max())
+	//	mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
 
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd - itBgn), component_conflict_num);
@@ -822,6 +866,8 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
 
 void SimpleMPL::runProjection()
 {
+
+	// initialization
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 	std::vector<uint32_t> new_vCompId_vec;
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
@@ -844,13 +890,16 @@ void SimpleMPL::runProjection()
 	// temperaily used to store the stitch relation
 	std::vector<std::pair<uint32_t, uint32_t> > stitch_pair;
 
-	// generate new veretx order
-	std::vector<uint32_t>().swap(m_vVertexOrder);
+	// store new vertex order
+	std::vector<uint32_t> new_vertex_order;
 
+	// std::cout << "\n\n\n========= runProjection =========\n";
 	int32_t new_polygon_id = -1;
-	for (uint32_t v = 0; v < vertex_num; v++)
+	for (uint32_t ver = 0; ver < vertex_num; ver++)
 	{
+		uint32_t v = m_vVertexOrder[ver];
 		uint32_t comp_id = m_vCompId[v];
+		std::cout << "now for " << comp_id << " : \n";
 		// polygon v
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];
 		uint32_t pid = pPattern->pattern_id();
@@ -859,23 +908,26 @@ void SimpleMPL::runProjection()
 
 		// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
 		std::vector<rectangle_pointer_type> poss_nei_vec;
+		//std::cout << "=====" << pid << " has neighbors : \n";
 		for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
 		{
 			uint32_t s_idx = poly_rect_begin[*it];
 			uint32_t e_idx = poly_rect_end[*it];
 			for (uint32_t a = s_idx; a <= e_idx; a++)
+			{
+				//std::cout << gtl::xl(*rect_vec[a]) << " " << gtl::yl(*rect_vec[a]) << " " << gtl::xh(*rect_vec[a]) << " " << gtl::yh(*rect_vec[a]) << std::endl;
 				poss_nei_vec.push_back(rect_vec[a]);
+			}
 		}
+		// std::cout << std::endl;
 
 		uint32_t start_idx = poly_rect_begin[pid];
 		uint32_t end_idx = poly_rect_end[pid];
 
-#ifdef QDEBUG
-		//std::cout << "\n\n========= original polygon " << v << " =========\n";
-#endif
-		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polgon.
+		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polygon.
 		bool flag = true;
 		// traverse all the rectangles in polygon v, to generate the intersections
+		// std::cout << "===== " << pid << " split to : " << std::endl;
 		for (uint32_t j = start_idx; j <= end_idx; j++)
 		{
 			rectangle_type rect(*rect_vec[j]);
@@ -889,21 +941,18 @@ void SimpleMPL::runProjection()
 				flag = false;
 				new_polygon_id += 1;
 				ori2new[pid].push_back(new_polygon_id);
-				m_vVertexOrder.push_back(new_polygon_id);
-#ifdef QDEBUG
-		//		std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
-#endif
+				new2ori.push_back(pid);
+				new_vertex_order.push_back(new_polygon_id);
+				new_vCompId_vec.push_back(comp_id);
+				std::cout << new_polygon_id << " "; 
 			}
 
 			// special operations on first new rectangle of every old rectangle
 			split[0]->pattern_id(++new_rect_id);
-			split[0]->color(pid%30);
+			// std::cout << "polygon : " << new_polygon_id <<std::endl;
 			rect_to_parent.push_back(new_polygon_id);
 			new_rect_vec.push_back(split[0]);
-			new_vCompId_vec.push_back(comp_id);
-#ifdef QDEBUG
-			//std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[0]->color()) << std::endl;
-#endif
+			// std::cout << split[0]->pattern_id() << " : " << gtl::xl(*split[0]) << ", " << gtl::yl(*split[0]) << ", " << gtl::xh(*split[0]) << ", " << gtl::yh(*split[0]) << std::endl;
 
 			// a new but not first generated rectangle will form a new polygon
 			for (uint32_t s = 1; s < split.size(); s++)
@@ -911,57 +960,88 @@ void SimpleMPL::runProjection()
 				split[s]->pattern_id(++new_rect_id);
 
 				++new_polygon_id;
-#ifdef QDEBUG
-			//	std::cout << "generate new polygon " << new_polygon_id << ", ori2new[" << pid << "].push_back : " << ori2new[pid].back() << std::endl;
-			//	std::cout << "new polygon " << new_polygon_id << " add " << new_rect_id << " color " << +unsigned(split[s]->color()) << std::endl;
-#endif
 
-				split[s]->color(pid%100);
 				ori2new[pid].push_back(new_polygon_id);
+				// std::cout << "polygon : " << new_polygon_id <<std::endl;
 				rect_to_parent.push_back(new_polygon_id);
 				new_rect_vec.push_back(split[s]);
-				m_vVertexOrder.push_back(new_polygon_id);
+				new_vertex_order.push_back(new_polygon_id);
+				new2ori.push_back(pid);
 				stitch_pair.push_back(std::make_pair(new_polygon_id - 1, new_polygon_id));
 				new_vCompId_vec.push_back(comp_id);
+				std::cout << new_polygon_id << " "; 
+				// std::cout << split[s]->pattern_id() << " : " << gtl::xl(*split[s]) << ", " << gtl::yl(*split[s]) << ", " << gtl::xh(*split[s]) << ", " << gtl::yh(*split[s]) << std::endl;
 			}
 		}
-			}
+		// std::cout << std::endl << std::endl;
+	}
+
+	// update
+
 	// update information in m_db;
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
 	// Now, update the adjacency list, we still need original adjacency list
-	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+	std::vector<std::set<uint32_t> > new_mAdjVertex;
 	new_mAdjVertex.resize(new_rect_vec.size());
 	uint32_t edge_num = 0;
 
+	// generate new index informaiton
+	std::vector<uint32_t> new_poly_rect_begin = m_db->polyrectBgnId();
+	std::vector<uint32_t> new_poly_rect_end;
+	// update vertex_num
+	vertex_num = new_poly_rect_begin.size();
+
+	new_poly_rect_end.resize(vertex_num);
+	for (uint32_t i = 0; i < vertex_num - 1; i++)
+		new_poly_rect_end[i] = new_poly_rect_begin[i + 1] - 1;
+	new_poly_rect_end[vertex_num - 1] = new_rect_vec.size() - 1;
+
+	// traverse all the original polygons to get the original neighbor list
 	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
 	{
-		// list all the possible neighbors
+		// list all the possible polygon neighbors
 		std::vector<uint32_t> poss_nei;
 		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
 		{
 			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
 				poss_nei.push_back(*it);
 		}
-
-		std::cout << i << " poss_nei.size() " << poss_nei.size() << std::endl; 
-
+		// traverse all the newly-generated polygons in current polygon
 		for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 		{
-			for (std::vector<uint32_t>::iterator nei = poss_nei.begin(); nei != poss_nei.end(); nei++)
+			// std::cout << "\n\n=========== new polygon " << *it << " possible neighbors: " << std::endl;
+			uint32_t start_idx = new_poly_rect_begin[*it];
+			uint32_t end_idx = new_poly_rect_end[*it];
+			// traverse all rectangles in current newly-generated polygon.
+			for(uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
 			{
-				coordinate_difference distance = boost::geometry::distance(*new_rect_vec[*it], *new_rect_vec[*nei]);
-				rectangle_pointer_type tempA = new_rect_vec[*it];
-				rectangle_pointer_type tempB = new_rect_vec[*nei];
-				if (distance < m_db->coloring_distance)
+				// traverse all possible newly-generated neighbor polygons
+				for(std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
 				{
-					edge_num++;
-					new_mAdjVertex[*it].push_back(*nei);
-		//			std::cout << "===== \n\n";
-		//			std::cout << *it << " : " << gtl::xl(*tempA) << " " << gtl::yl(*tempA) << " " << gtl::xh(*tempA) << " " << gtl::yh(*tempA) << std::endl;
-		//			std::cout << *nei << " : " <<gtl::xl(*tempB) << " " << gtl::yl(*tempB) << " " << gtl::xh(*tempB) << " " << gtl::yh(*tempB) << std::endl;
-		//			std::cout << " distance : " << distance <<std::endl; 
-			
+					uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
+					uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
+					// traverse all rectangles in current newly-generated neighbor polygon
+					for(uint32_t nei_rect = nei_start_idx; nei_rect <= nei_end_idx; nei_rect++)
+					{
+						uint32_t nei_rect_pid = new_rect_vec[nei_rect]->pattern_id();
+						coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
+						if(distance < m_db->coloring_distance)
+						{
+							edge_num++;
+							new_mAdjVertex[*it].insert(*nei_poly);
+							/*
+							rectangle_pointer_type tempR1 = new_rect_vec[now_rect];
+							rectangle_pointer_type tempR2 = new_rect_vec[nei_rect_pid];
+							rectangle_pointer_type temp = m_db->vPatternBbox[*nei_poly];
+							std::cout << "now_rect " << now_rect << " : " << gtl::xl(*tempR1) << ", " << gtl::yl(*tempR1) << ", " << gtl::xh(*tempR1) << ", " << gtl::yh(*tempR1) << std::endl;
+							std::cout << "nei_rect_pid " << nei_rect_pid << " : " << gtl::xl(*tempR2) << ", " << gtl::yl(*tempR2) << ", " << gtl::xh(*tempR2) << ", " << gtl::yh(*tempR2) << std::endl;
+							std::cout << "new_poly " << *nei_poly << " : " << gtl::xl(*temp) << ", " << gtl::yl(*temp) << ", " << gtl::xh(*temp) << ", " << gtl::yh(*temp) << std::endl << std::endl; 
+							*/
+							// if the rectangles are close to each other, it means corresponding polygons are neighbors
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -970,21 +1050,21 @@ void SimpleMPL::runProjection()
 
 	for (uint32_t i = 0; i < stitch_pair.size(); i++)
 		StitchRelation[stitch_pair[i].first] = stitch_pair[i].second;
-	m_mAdjVertex.clear();
-	m_mAdjVertex.swap(new_mAdjVertex);
-#ifdef QDEBUG
-	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)
+	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+	m_mAdjVertex.resize(new_mAdjVertex.size());
+	for(uint32_t i = 0; i < new_mAdjVertex.size(); i++)
 	{
-		std::cout << i << " neighbor list : ";
-		for(uint32_t j = 0; j < m_mAdjVertex[i].size() ; j++)
-			std::cout << m_mAdjVertex[i][j] << " ";
-		std::cout << std::endl;
+		for(std::set<uint32_t>::iterator it = new_mAdjVertex[i].begin(); it != new_mAdjVertex[i].end(); it++)
+			m_mAdjVertex[i].push_back(*it);
 	}
-#endif
-	m_vCompId.clear();
+
+	std::vector<uint32_t>().swap(m_vCompId);
 	m_vCompId.swap(new_vCompId_vec);
 
-	mplPrint(kINFO, "%u vertices, %u edges\n", new_rect_vec.size(), edge_num);
+	std::vector<uint32_t>().swap(m_vVertexOrder);
+	m_vVertexOrder.swap(new_vertex_order);
+
+	mplPrint(kINFO, "%u vertices, %u edges\n", m_db->vPatternBbox.size(), edge_num);
 	return;
 }
 

@@ -343,6 +343,7 @@ mplStaticAssert	Msg.h	/^    mplStaticAssert(const char* = NULL) {}$/;"	f	struct:
 mplStaticAssert	Msg.h	/^struct mplStaticAssert<true> $/;"	s
 mplVPrintStream	Msg.cpp	/^int mplVPrintStream(MessageType m, FILE* stream, const char* format, va_list args)$/;"	f
 mplVSPrint	Msg.cpp	/^int mplVSPrint(MessageType m, char* buf, const char* format, va_list args)$/;"	f
+new2ori	SimpleMPL.h	/^ 	std::vector<uint32_t>					new2ori;		\/\/ store the mapping relationships from new polygons back to original polygon.$/;"	m	class:SimpleMPL
 new2ori	stitch/SimpleMPL.h	/^		std::vector<uint32_t>	new2ori;	\/\/ store the mapping relationships from new patterns back to original patterns.$/;"	m	class:SimpleMPL
 operator !=	Enums.h	/^		bool operator!=(EnumExt const& rhs) const {return m_value != rhs.m_value;}$/;"	f	class:EnumExt
 operator !=	Enums.h	/^		bool operator!=(enum_type const& rhs) const {return m_value != rhs;}$/;"	f	class:EnumExt

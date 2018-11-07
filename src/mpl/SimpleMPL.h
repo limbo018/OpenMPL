@@ -141,7 +141,7 @@ protected:
 
 	// void stitch_solve();
 
-// 	std::vector<uint32_t>					new2ori;		// store the mapping relationships from new polygons back to original polygon.
+ 	std::vector<uint32_t>					new2ori;		// store the mapping relationships from new polygons back to original polygon.
 	std::vector<std::vector<uint32_t> >		ori2new;		// stores the mapping relationships from original polygons to newly-generated polygons.
 	std::vector<uint32_t>					StitchRelation;	// stores the stitch relationships. Each pattern may have two abutting neighbors, but we only store the neighbor after it.
 };
