@@ -12,7 +12,7 @@ AlgorithmType	Enums.h	/^class AlgorithmType : public EnumExt<AlgorithmTypeEnum::
 AlgorithmTypeEnum	Enums.h	/^struct AlgorithmTypeEnum$/;"	s
 BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:AlgorithmTypeEnum::EnumType
 CSDP	Makefile	/^CSDP = 1$/;"	m
-CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
+CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
@@ -249,6 +249,9 @@ getHeight	stitch/StitchProc.h	/^	coordinate_type getHeight(rectangle_pointer_typ
 getWidth	stitch/StitchProc.h	/^	coordinate_type getWidth(rectangle_pointer_type rect) { return gtl::xh(*rect) - gtl::xl(*rect); }$/;"	f	class:StitchProc
 get_point_closest_to_center	LayoutDBPolygon.cpp	/^LayoutDBPolygon::point_type LayoutDBPolygon::get_point_closest_to_center(uint32_t pattern_id) const$/;"	f	class:LayoutDBPolygon
 get_point_closest_to_center	LayoutDBRect.cpp	/^LayoutDBRect::point_type LayoutDBRect::get_point_closest_to_center(uint32_t pattern_id) const$/;"	f	class:LayoutDBRect
+graph_edge_type	LayoutDB.h	/^	typedef boost::graph_traits<graph_type>::edge_descriptor graph_edge_type;$/;"	t	struct:LayoutDB
+graph_edge_type	RecoverHiddenVertex.h	/^        typedef layoutdb_type::graph_edge_type         graph_edge_type;$/;"	t	class:RecoverHiddenVertex
+graph_edge_type	SimpleMPL.h	/^	typedef layoutdb_type::graph_edge_type		   graph_edge_type;$/;"	t	class:SimpleMPL
 graph_type	LayoutDB.h	/^	> graph_type;$/;"	t	struct:LayoutDB
 graph_type	RecoverHiddenVertex.h	/^        typedef layoutdb_type::graph_type              graph_type;$/;"	t	class:RecoverHiddenVertex
 graph_type	SimpleMPL.h	/^	typedef layoutdb_type::graph_type              graph_type;$/;"	t	class:SimpleMPL
@@ -437,6 +440,7 @@ read_gds	stitch/SimpleMPL.cpp	/^void SimpleMPL::read_gds()$/;"	f	class:SimpleMPL
 read_gds	stitch/StitchProc.cpp	/^void StitchProc::read_gds()$/;"	f	class:StitchProc
 real_4_cbk	GdsiiIO.cpp	/^void GdsReader::real_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) $/;"	f	class:GdsReader
 real_8_cbk	GdsiiIO.cpp	/^void GdsReader::real_8_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) $/;"	f	class:GdsReader
+reconstruct_polygon	SimpleMPL.cpp	/^void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list)$/;"	f	class:SimpleMPL
 recover_vertex	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::recover_vertex(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 rectangle_pointer_type	GdsiiIO.h	/^	typedef layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;$/;"	t	struct:GdsReader
 rectangle_pointer_type	GdsiiIO.h	/^	typedef layoutdb_type::rectangle_pointer_type rectangle_pointer_type;$/;"	t	struct:GdsWriter

@@ -56,6 +56,11 @@ void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descrip
     for (boost::tie(vi, vie) = adjacent_vertices(v, m_dg); vi != vie; ++vi)
     {
         vertex_descriptor u = *vi;
+        // added by Qi Sun to sovle the stitch error
+        std::pair<graph_edge_type, bool> e12 = boost::edge(v, u, m_dg);
+        assert(e12.second);
+        if(boost::get(boost::edge_weight, m_dg, e12.first) < 0) continue;
+        
         if (m_vColor[u] >= 0)
         {
             mplAssert(m_vColor[u] < m_db.color_num());

@@ -34,6 +34,7 @@ public:
 	typedef layoutdb_type::graph_type              graph_type;
 	typedef layoutdb_type::vertex_descriptor       vertex_descriptor;
 	typedef layoutdb_type::edge_descriptor         edge_descriptor;
+	typedef layoutdb_type::graph_edge_type		   graph_edge_type;
 
 	/// default constructor 
 	SimpleMPL();
@@ -122,6 +123,8 @@ protected:
 	void gen_projection();
 
 	void runProjection();
+
+	void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
 
 	// conduct projection operation on a certain pattern
 	void projection(rectangle_type &  pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec);

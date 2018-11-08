@@ -33,6 +33,7 @@ class RecoverHiddenVertex
         typedef layoutdb_type::graph_type              graph_type;
         typedef layoutdb_type::vertex_descriptor       vertex_descriptor;
         typedef layoutdb_type::edge_descriptor         edge_descriptor;
+        typedef layoutdb_type::graph_edge_type         graph_edge_type;
 
         /// constructor 
         RecoverHiddenVertex(graph_type const& dg, std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 

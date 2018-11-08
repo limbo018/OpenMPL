@@ -270,11 +270,12 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	std::cout << "rect_to_parent : " << std::endl;
 	std::cout << "size : " << rect_to_parent.size() << std::endl;
 	//for(uint32_t i = 0; i < rect_to_parent.size(); i++)
-	//	std::cout << rect_to_parent[i] << std::endl;
+	//	std::cout << rect_to_parent[i] << " ";
+    std::cout << "\n\n";
 	std::cout << "new_rect_vec : " << std::endl;
 	std::cout << "size : " << new_rect_vec.size() << std::endl;
 	//for(uint32_t j = 0; j < new_rect_vec.size(); j++)
-	//	std::cout << new_rect_vec[j]->pattern_id() << std::endl;
+	//	std::cout << new_rect_vec[j]->pattern_id() << " ";
 	std::cout << "===================" <<  std::endl;
 #endif
 	vParentPolygonId.clear();
@@ -296,12 +297,7 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 			vPolyRectBeginId.push_back(i);
 		}
 	}
-	
-#ifdef QDEBUG
-//	std::cout << "vPolyRectBeginId : " << std::endl;
-//	for (uint32_t i = 1, ie = vPolyRectBeginId.size(); i < ie; i++)
-//		std::cout << i << " -- " << vPolyRectBeginId[i] << std::endl;
-#endif
+
 	uint32_t num_polygons = vPolyRectBeginId.size();
 	std::vector<rectangle_pointer_type>().swap(vPatternBbox);
 
@@ -325,7 +321,7 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 		}
 		mplAssert(vPolyRectBeginId[parentPolygonId] <= i);
 	}
-
+ 
 	// no need to store tPatternBbox again, since we don't need to compute the distance between two Polyons again,
 	// Also, due to the stitch insertion, the distanaces in rtree are invalid. I'm not sure whether to delete this.
 	tPatternBbox.clear(); // tPatternBbox is used to store vPatternBbox construction with packing algorithm 

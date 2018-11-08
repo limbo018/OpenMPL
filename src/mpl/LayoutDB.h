@@ -44,6 +44,7 @@ struct LayoutDB : public rectangle_data<int32_t>
 		boost::property<boost::vertex_index_t, uint32_t>,
 		boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, float> >
 	> graph_type;
+	typedef boost::graph_traits<graph_type>::edge_descriptor graph_edge_type;
 	typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor;
 	typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;
 
