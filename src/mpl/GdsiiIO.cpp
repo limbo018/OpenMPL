@@ -153,18 +153,18 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     int32_t layer_offset = (db.parms.sPrecolorLayer.empty())? 100 : *db.parms.sPrecolorLayer.begin();
     // basic operation
     // will add more 
-	if (db.gen_stitch())
-	{
-		write_rectangles(gw, db.vPatternBbox, layer_offset);
+	write_rectangles(gw, db.polyrect_patterns(), layer_offset);
+    if(db.gen_stitch())
+    {
+        write_conflicts(gw, db, vConflict, layer_offset + 10);   // conflict layer 
+        write_edges(gw, db, mAdjVertex, layer_offset + 11); // draw edges 
+    }
+    else
+    {
+	   write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
+	   write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 1); // draw edges 
 	}
-	else
-	{
-		write_rectangles(gw, db.polyrect_patterns(), layer_offset);
-		write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
-		write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 1); // draw edges 
-																			//(*this)(gw, db.hPath); // draw edges if there exits 
-	}
-	
+    
 	gw.gds_write_endstr();
     gw.gds_write_endlib(); 
 }

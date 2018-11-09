@@ -12,12 +12,12 @@ AlgorithmType	Enums.h	/^class AlgorithmType : public EnumExt<AlgorithmTypeEnum::
 AlgorithmTypeEnum	Enums.h	/^struct AlgorithmTypeEnum$/;"	s
 BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:AlgorithmTypeEnum::EnumType
 CSDP	Makefile	/^CSDP = 1$/;"	m
-CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
+CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) #-DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
 ControlParameter	Params.h	/^struct ControlParameter$/;"	s
-DBG	Makefile	/^DBG = 1 $/;"	m
+DBG	Makefile	/^DBG = 1  $/;"	m
 DEPS	Makefile	/^DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source$/;"	m
 ENUM2STR	Enums.cpp	13;"	d	file:
 EXE	Makefile	/^EXE	= $(EXEDIR)\/OpenMPL$/;"	m
@@ -119,7 +119,7 @@ StitchGenerateTPL_Points	stitch/StitchProc.cpp	/^void StitchProc::StitchGenerate
 StitchProc	stitch/StitchProc.cpp	/^StitchProc::StitchProc()$/;"	f	class:StitchProc
 StitchProc	stitch/StitchProc.cpp	/^StitchProc::StitchProc(double pitch)$/;"	f	class:StitchProc
 StitchProc	stitch/StitchProc.h	/^class StitchProc $/;"	c
-StitchRelation	SimpleMPL.h	/^	std::vector<uint32_t>					StitchRelation;	\/\/ stores the stitch relationships. Each pattern may have two abutting neighbors, but we only store the neighbor after it.$/;"	m	class:SimpleMPL
+StitchRelation	SimpleMPL.h	/^	std::vector<std::vector<uint32_t> >		StitchRelation;	\/\/ stores the stitch relationships. Each pattern may have two abutting neighbors, but we only store the neighbor after it.$/;"	m	class:SimpleMPL
 UNAME_S	Makefile	/^UNAME_S = $(shell uname -s)$/;"	m
 V	GeometryApi.h	/^    typedef Box* V;$/;"	t	struct:boost::geometry::index::indexable
 V	GeometryApi.h	/^    typedef boost::shared_ptr<Box> V;$/;"	t	struct:boost::geometry::index::indexable
@@ -231,7 +231,6 @@ find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexDistance::fi
 find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexImageContrast::find_best_color(RecoverHiddenVertexImageContrast::vertex_descriptor \/*v*\/)$/;"	f	class:RecoverHiddenVertexImageContrast
 find_unused_colors	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 float_cbk	GdsiiIO.cpp	/^void GdsReader::float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vData)$/;"	f	class:GdsReader
-gen_projection	SimpleMPL.cpp	/^void SimpleMPL::gen_projection()$/;"	f	class:SimpleMPL
 gen_stitch	LayoutDB.h	/^	inline bool gen_stitch() const { return parms.gen_stitch; }$/;"	f	struct:LayoutDB
 gen_stitch	Params.h	/^	bool gen_stitch;						   \/\/\/< used to test the stitch generation algorithms$/;"	m	struct:ControlParameter
 generate_id	Shapes.h	/^		static long generate_id()$/;"	f	class:Shape
@@ -440,7 +439,7 @@ read_gds	stitch/SimpleMPL.cpp	/^void SimpleMPL::read_gds()$/;"	f	class:SimpleMPL
 read_gds	stitch/StitchProc.cpp	/^void StitchProc::read_gds()$/;"	f	class:StitchProc
 real_4_cbk	GdsiiIO.cpp	/^void GdsReader::real_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) $/;"	f	class:GdsReader
 real_8_cbk	GdsiiIO.cpp	/^void GdsReader::real_8_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) $/;"	f	class:GdsReader
-reconstruct_polygon	SimpleMPL.cpp	/^void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list)$/;"	f	class:SimpleMPL
+reconstruct_polygon	SimpleMPL.cpp	/^void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, std::vector<std::vector<uint32_t> >& stitch_list)$/;"	f	class:SimpleMPL
 recover_vertex	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::recover_vertex(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 rectangle_pointer_type	GdsiiIO.h	/^	typedef layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;$/;"	t	struct:GdsReader
 rectangle_pointer_type	GdsiiIO.h	/^	typedef layoutdb_type::rectangle_pointer_type rectangle_pointer_type;$/;"	t	struct:GdsWriter

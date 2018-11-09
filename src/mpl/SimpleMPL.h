@@ -120,11 +120,10 @@ protected:
 protected:
 	// the main function to run the projection operation
 	// after generating stitches, store all the components into a new output gds file
-	void gen_projection();
 
 	void runProjection();
 
-	void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
+	void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, std::vector<std::vector<uint32_t> >& stitch_list);
 
 	// conduct projection operation on a certain pattern
 	void projection(rectangle_type &  pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec);
@@ -146,7 +145,7 @@ protected:
 
  	std::vector<uint32_t>					new2ori;		// store the mapping relationships from new polygons back to original polygon.
 	std::vector<std::vector<uint32_t> >		ori2new;		// stores the mapping relationships from original polygons to newly-generated polygons.
-	std::vector<uint32_t>					StitchRelation;	// stores the stitch relationships. Each pattern may have two abutting neighbors, but we only store the neighbor after it.
+	std::vector<std::vector<uint32_t> >		StitchRelation;	// stores the stitch relationships. Each pattern may have two abutting neighbors, but we only store the neighbor after it.
 };
 
 SIMPLEMPL_END_NAMESPACE

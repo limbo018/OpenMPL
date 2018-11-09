@@ -27,13 +27,13 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/total_c1.gds  \
-    -out benchout/total_c1_SDP_out.gds  \
-    -simplify_level	2 \
+    -in bench/total_c2.gds  \
+    -out benchout/total_c2_ILP_out.gds  \
+    -simplify_level	3 \
 	-coloring_distance 120 \
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo SDP \
-    -thread_num 8 \
-	-stitch
+    -algo ILP \
+    -thread_num 1 \
+	-stitch 
