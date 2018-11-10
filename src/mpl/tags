@@ -500,6 +500,8 @@ solve_graph_coloring	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_graph_colo
 status	GdsiiIO.h	/^    GdsParser::GdsRecords::EnumType status; $/;"	m	struct:GdsReader
 stitch	LayoutDB.h	/^	inline bool stitch() const { return parms.stitch; }$/;"	f	struct:LayoutDB
 stitch	Params.h	/^	bool stitch;							   \/\/\/< control whether stitch is used$/;"	m	struct:ControlParameter
+stitch_num	SimpleMPL.cpp	/^uint32_t SimpleMPL::stitch_num() const$/;"	f	class:SimpleMPL
+stitch_num	SimpleMPL.cpp	/^uint32_t SimpleMPL::stitch_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const$/;"	f	class:SimpleMPL
 str2Enum	Enums.cpp	/^AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const$/;"	f	class:AlgorithmType
 str2Enum	Enums.cpp	/^ShapeMode::enum_type ShapeMode::str2Enum(std::string const& s) const$/;"	f	class:ShapeMode
 string_cbk	GdsiiIO.cpp	/^void GdsReader::string_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::string const& str) $/;"	f	class:GdsReader

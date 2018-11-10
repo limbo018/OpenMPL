@@ -140,13 +140,13 @@ void SimpleMPL::write_gds()
 	GdsWriter writer;
 	if(m_db->stitch())
 	{
-		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_coloring_with_stitch.gds").c_str());
-		writer(m_db->output_gds() + "_coloring_with_stitch.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_with_stitch.gds").c_str());
+		writer(m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_with_stitch.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
 	else
 	{	
-		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_coloring_no_stitch_result.gds").c_str());
-		writer(m_db->output_gds() + "_coloring_result.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_no_stitch_result.gds").c_str());
+		writer(m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_result.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
 }
 
@@ -246,7 +246,7 @@ void SimpleMPL::solve()
 
 void SimpleMPL::report() const
 {
-	mplPrint(kINFO, "Conflict number = %u\n", conflict_num());
+	mplPrint(kINFO, "Total conflict number = %u, Total stitch number = %u\n", conflict_num(), stitch_num());
 	for (int32_t i = 0, ie = m_db->color_num(); i != ie; ++i)
 		mplPrint(kINFO, "Color %d density = %u\n", i, m_vColorDensity[i]);
 }
@@ -507,7 +507,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt,
 	uint32_t simplify_strategy, std::vector<int8_t>& vColor) const
 {
-	mplPrint(kINFO, "solve graph coloring.");
+	// mplPrint(kINFO, "solve graph coloring.");
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs(dg, m_db->color_num());
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
@@ -724,7 +724,7 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 			}
 		}
 	}
-	mplPrint(kINFO, "%u stitches inserted.\n", stitch_count);
+	// mplPrint(kINFO, "%u stitches inserted.\n", stitch_count);
 }
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
@@ -766,15 +766,20 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
+
 	// only valid under no stitch 
 	if(!m_db->stitch())
 	{
 		if (acc_obj_value != std::numeric_limits<uint32_t>::max())
 			mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
 	}
+	else {
+		uint32_t component_stitch_num = stitch_num(itBgn, itEnd);
+		mplPrint(kINFO, "Component %u has %u patterns...%u stitches\n", comp_id, (uint32_t)(itEnd - itBgn), component_stitch_num);
+	}
 
 	if (m_db->verbose())
-		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd - itBgn), component_conflict_num);
+		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd - itBgn), component_conflict_num);		
 
 	return component_conflict_num;
 }
@@ -794,7 +799,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
 	std::vector<int8_t> vColor(pattern_cnt, -1); // coloring results 
 	map<uint32_t, uint32_t> mGlobal2Local; // global vertex id to local vertex id 
 
-	mplPrint(kINFO, "In component %u\n", comp_id);
+	// mplPrint(kINFO, "In component %u\n", comp_id);
 										   // construct decomposition graph for component
 	construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
 
@@ -1526,13 +1531,71 @@ void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> 
 	new_polygon_id_list.swap(new_polygon_id_temp);
 }
 
+uint32_t SimpleMPL::stitch_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const
+{
+	std::vector<rectangle_pointer_type> const& vPatternBbox = m_db->vPatternBbox;
+	uint32_t cnt = 0;
+	for(std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; ++it)
+	{
+		uint32_t v = *it;
+		int8_t color1 = vPatternBbox[v]->color();
+		if (color1 >= 0 && color1 < m_db->color_num())
+		{
+			for(std::vector<uint32_t>::const_iterator itAdj = StitchRelation[v].begin(); itAdj != StitchRelation[v].end(); ++itAdj)
+			{
+				uint32_t u = *itAdj;
+				int8_t color2 = vPatternBbox[u]->color();
+				if (color2 >= 0 && color2 < m_db->color_num())
+				{
+					if (color1 == color2 ) ++cnt;
+				}
+				else
+					++cnt;
+			}
+		}
+		else ++cnt;
+	}
+	return (cnt >> 1);
+}
+
+uint32_t SimpleMPL::stitch_num() const
+{
+	uint32_t cnt = 0;
+	std::vector<rectangle_pointer_type> const& vPatternBbox = m_db->vPatternBbox;
+	for (uint32_t v = 0; v != vPatternBbox.size(); ++v)
+	{
+		int8_t color1 = vPatternBbox[v]->color();
+		if (color1 >= 0 && color1 < m_db->color_num())
+		{
+			for (std::vector<uint32_t>::const_iterator itAdj = StitchRelation[v].begin(); itAdj != StitchRelation[v].end(); ++itAdj)
+			{
+				uint32_t u = *itAdj;
+				if (v < u) // avoid duplicate 
+				{
+					int8_t color2 = vPatternBbox[u]->color();
+					if (color2 >= 0 && color2 < m_db->color_num())
+					{
+						if (color1 == color2)
+							++cnt;
+					}
+					else // uncolored vertex is counted as conflict 
+						mplAssertMsg(0, "uncolored vertex %u = %d", u, color2);
+				}
+			}
+		}
+		else // uncolored vertex is counted as conflict 
+			mplAssertMsg(0, "uncolored vertex %u = %d", v, color1);
+	}
+	return (cnt >> 1);
+}
+
 void SimpleMPL::print_welcome() const
 {
 	mplPrint(kNONE, "\n\n");
 	mplPrint(kNONE, "=======================================================================\n");
 	mplPrint(kNONE, "                        OpenMPL - Version 1.1                        \n");
 	mplPrint(kNONE, "                                by                                   \n");
-	mplPrint(kNONE, "                Yibo Lin, Bei Yu, Qi Sun and  David Z. Pan           \n");
+	mplPrint(kNONE, "                Yibo Lin, Bei Yu, Qi Sun and David Z. Pan            \n");
 	mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");
 	mplPrint(kNONE, "               CSE Department, Chinese University of Hong Kong       \n");
 	mplPrint(kNONE, "                         Copyright (c) 2018                          \n");

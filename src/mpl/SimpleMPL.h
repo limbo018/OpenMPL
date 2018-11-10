@@ -141,6 +141,10 @@ protected:
 	// So I define this function.
 	LayoutDB::rectangle_type interSectionRect(rectangle_type rect1, rectangle_type rect2);
 
+	uint32_t stitch_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
+
+	uint32_t stitch_num() const;
+
 	// void stitch_solve();
 
  	std::vector<uint32_t>					new2ori;		// store the mapping relationships from new polygons back to original polygon.
