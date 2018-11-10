@@ -12,7 +12,7 @@ AlgorithmType	Enums.h	/^class AlgorithmType : public EnumExt<AlgorithmTypeEnum::
 AlgorithmTypeEnum	Enums.h	/^struct AlgorithmTypeEnum$/;"	s
 BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:AlgorithmTypeEnum::EnumType
 CSDP	Makefile	/^CSDP = 1$/;"	m
-CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) #-DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
+CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_RELEASE) # -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter

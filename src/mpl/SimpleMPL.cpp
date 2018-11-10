@@ -138,12 +138,16 @@ void SimpleMPL::write_gds()
 	}
 	// write output gds file 
 	GdsWriter writer;
-	mplPrint(kINFO, "Write output gds file: %s\n", m_db->output_gds().c_str());
-	if(m_db->stitch())		
-		writer(m_db->output_gds() + "_with_stitch.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+	if(m_db->stitch())
+	{
+		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_coloring_with_stitch.gds").c_str());
+		writer(m_db->output_gds() + "_coloring_with_stitch.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+	}
 	else
-		writer(m_db->output_gds(), *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
-
+	{	
+		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_coloring_no_stitch_result.gds").c_str());
+		writer(m_db->output_gds() + "_coloring_result.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+	}
 }
 
 void SimpleMPL::solve()
@@ -152,9 +156,6 @@ void SimpleMPL::solve()
 	if (m_db->parms.sUncolorLayer.empty())
 		return;
 	
-	char buf[256];
-	mplSPrint(kINFO, buf, "coloring takes %%t seconds CPU, %%w seconds real\n");
-	boost::timer::auto_cpu_timer timer(buf);
 	if (m_db->vPatternBbox.empty())
 	{
 		mplPrint(kWARN, "No patterns found in specified layers\n");
@@ -176,11 +177,15 @@ void SimpleMPL::solve()
 		m_comp_cnt = 1;
 	}
 
-	if(m_db->stitch())
+	if(m_db->stitch() || m_db->gen_stitch())
 		runProjection();
 	
 	if(m_db->gen_stitch())
 		return;
+
+	char buf[256];
+	mplSPrint(kINFO, buf, "stitch coloring takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer(buf);
 
 	// create bookmark to index the starting position of each component
 
@@ -502,6 +507,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt,
 	uint32_t simplify_strategy, std::vector<int8_t>& vColor) const
 {
+	mplPrint(kINFO, "solve graph coloring.");
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs(dg, m_db->color_num());
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
@@ -542,6 +548,10 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		// std::cout << "\nAfter simplification" ;
 		vSubColor.assign(num_vertices(sg), -1);
 		std::cout << "subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
+
+#ifdef QDEBUG
+		write_graph(sg, "DLX_subcomponent_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id));
+#endif
 
 /*
 		for (uint32_t i = 0; i != pattern_cnt; ++i)
@@ -896,7 +906,7 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
 	// somehow edge properties need mutable graph_type& 
 	dp.property("weight", boost::get(boost::edge_weight, g));
 	dp.property("label", boost::get(boost::edge_weight, g));
-	std::ofstream out((filename + ".gv").c_str());
+	std::ofstream out(("benchout/" + filename + ".gv").c_str());
 	boost::write_graphviz_dp(out, g, dp, string("id"));
 	out.close();
 	la::graphviz2pdf(filename);
@@ -904,6 +914,9 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
 
 void SimpleMPL::runProjection()
 {
+	char buf[256];
+	mplSPrint(kINFO, buf, "stitch generation takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer(buf);
 
 	// initialization
 	uint32_t vertex_num = m_db->vPatternBbox.size();
@@ -1032,8 +1045,7 @@ void SimpleMPL::runProjection()
 		std::cout << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
 	}
 */
-	// update
-
+	
 	// update information in m_db;
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
@@ -1119,10 +1131,10 @@ void SimpleMPL::runProjection()
 		}
 
 		GdsWriter writer;
-		mplPrint(kINFO, "Write output gds file: %s\n", m_db->output_gds().c_str());
 		mplPrint(kINFO, "Stitches: %u\n", stitch_number);
 		mplPrint(kINFO, "AdjVertex : %u\n", m_mAdjVertex.size());
-//		writer.write_intermediate(m_db->output_gds() + "_stitch.gds", m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
+		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_gen_stitch.gds").c_str());
+
 		writer(m_db->output_gds() + "_gen_stitch.gds", *m_db, stitch_pair, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
 /*
@@ -1236,13 +1248,13 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		lower_boundary = gtl::yl(pRect);
 		upper_boundary = gtl::yh(pRect);
 	}
-	coordinate_type threshold = 50;
+	coordinate_type threshold = 20;
 	std::vector<coordinate_type> temp;
 	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 	{
 		coordinate_type dis_low = std::abs(*it - lower_boundary);
 		coordinate_type dis_up = std::abs(*it - upper_boundary);
-		if (dis_low >= threshold & dis_up >= threshold)
+		if (dis_low >= threshold && dis_up >= threshold)
 			temp.push_back(*it);
 	}
 	std::vector<coordinate_type>().swap(vstitches);
@@ -1467,11 +1479,11 @@ void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> 
 	std::vector<bool> visited(rect_list_size, false);
 
 	std::vector<uint32_t>().swap(new_polygon_id_list);
-	new_polygon_id_list.resize(rect_list_size, -1);
+	new_polygon_id_list.resize(rect_list_size, std::numeric_limits<uint32_t>::max());
 
 	for(uint32_t i = 0; i< rect_list_size; i++)
 	{
-		if(new_polygon_id_list[i]==-1)
+		if(new_polygon_id_list[i] == std::numeric_limits<uint32_t>::max())
 		{
 			polygon_id += 1;
 			new_polygon_id_list[i]=polygon_id;
