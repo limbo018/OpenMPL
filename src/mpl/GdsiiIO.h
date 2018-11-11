@@ -88,6 +88,13 @@ struct GdsWriter
 			std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, 
 			std::vector<std::vector<uint32_t> > const& mAdjVertex, 
 			std::string const& strname = "TOPCELL", double unit = 0.001) const;
+
+	void operator() (std::string const& filename, layoutdb_type const& db,
+			std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, 
+			std::vector<std::vector<uint32_t> > const& vStitches,
+			std::vector<std::vector<uint32_t> > const& mAdjVertex,
+			std::string const& strname = "TOPCELL", double unit = 0.001) const;
+
     /// write rectangles 
 	void write_rectangles(GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const;
     /// write conflicts 

@@ -12,12 +12,13 @@ AlgorithmType	Enums.h	/^class AlgorithmType : public EnumExt<AlgorithmTypeEnum::
 AlgorithmTypeEnum	Enums.h	/^struct AlgorithmTypeEnum$/;"	s
 BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:AlgorithmTypeEnum::EnumType
 CSDP	Makefile	/^CSDP = 1$/;"	m
+CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
 CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_RELEASE) # -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
 ControlParameter	Params.h	/^struct ControlParameter$/;"	s
-DBG	Makefile	/^DBG = 1  $/;"	m
+DBG	Makefile	/^DBG = 0  $/;"	m
 DEPS	Makefile	/^DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source$/;"	m
 ENUM2STR	Enums.cpp	13;"	d	file:
 EXE	Makefile	/^EXE	= $(EXEDIR)\/OpenMPL$/;"	m
@@ -352,6 +353,7 @@ operator !=	Enums.h	/^		bool operator!=(enum_type const& rhs) const {return m_va
 operator !=	Enums.h	/^		bool operator!=(std::string const& rhs) const {return *this != EnumExt(rhs);}$/;"	f	class:EnumExt
 operator ()	GdsiiIO.cpp	/^bool GdsReader::operator() (std::string const& filename)  $/;"	f	class:GdsReader
 operator ()	GdsiiIO.cpp	/^void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_type const& db, $/;"	f	class:GdsWriter
+operator ()	GdsiiIO.cpp	/^void GdsWriter::operator() (std::string const& filename, layoutdb_type const& db, $/;"	f	class:GdsWriter
 operator ()	GeometryApi.h	/^    result_type operator()(V const& v) const { return *v; }$/;"	f	struct:boost::geometry::index::indexable
 operator ()	LayoutDB.h	/^		bool operator() (rectangle_pointer_type const& r1, rectangle_pointer_type const& r2) const$/;"	f	struct:LayoutDB::compare_rectangle_type
 operator ()	LayoutDB.h	/^		bool operator() (rectangle_type const& r1, rectangle_type const& r2) const$/;"	f	struct:LayoutDB::compare_rectangle_type
@@ -500,8 +502,8 @@ solve_graph_coloring	stitch/SimpleMPL.cpp	/^uint32_t SimpleMPL::solve_graph_colo
 status	GdsiiIO.h	/^    GdsParser::GdsRecords::EnumType status; $/;"	m	struct:GdsReader
 stitch	LayoutDB.h	/^	inline bool stitch() const { return parms.stitch; }$/;"	f	struct:LayoutDB
 stitch	Params.h	/^	bool stitch;							   \/\/\/< control whether stitch is used$/;"	m	struct:ControlParameter
-stitch_num	SimpleMPL.cpp	/^uint32_t SimpleMPL::stitch_num() const$/;"	f	class:SimpleMPL
 stitch_num	SimpleMPL.cpp	/^uint32_t SimpleMPL::stitch_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const$/;"	f	class:SimpleMPL
+stitch_num	SimpleMPL.cpp	/^uint32_t SimpleMPL::stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitches) const$/;"	f	class:SimpleMPL
 str2Enum	Enums.cpp	/^AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const$/;"	f	class:AlgorithmType
 str2Enum	Enums.cpp	/^ShapeMode::enum_type ShapeMode::str2Enum(std::string const& s) const$/;"	f	class:ShapeMode
 string_cbk	GdsiiIO.cpp	/^void GdsReader::string_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::string const& str) $/;"	f	class:GdsReader

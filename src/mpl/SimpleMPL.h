@@ -132,7 +132,7 @@ protected:
 	bool whetherHorizontal(rectangle_type temp);
 
 	// generate stitch insertion points based on Bei Yu's method
-	void GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches);
+	void GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, std::vector<coordinate_type> & vstitches);
 	
 	// generate stitch insertion points based on Jian Kuang's method, DAC 2013
 	void GenerateStitchPosition_Jian(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches, uint32_t nei_num, std::vector<coordinate_type> & vstitches);
@@ -143,7 +143,7 @@ protected:
 
 	uint32_t stitch_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
 
-	uint32_t stitch_num() const;
+	uint32_t stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitches) const;
 
 	// void stitch_solve();
 

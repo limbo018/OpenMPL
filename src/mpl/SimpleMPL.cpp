@@ -140,8 +140,11 @@ void SimpleMPL::write_gds()
 	GdsWriter writer;
 	if(m_db->stitch())
 	{
+		std::vector<std::vector<uint32_t> > Final_Stitches;
+		uint32_t final_stitch_num = stitch_num(Final_Stitches);
+		mplPrint(kINFO, "Total %u final stitches.\n", final_stitch_num);
 		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_with_stitch.gds").c_str());
-		writer(m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_with_stitch.gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
+		writer(m_db->output_gds() + "_" + limbo::to_string(m_db->color_num()) + "_coloring_with_stitch.gds", *m_db, m_vConflict, Final_Stitches, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
 	else
 	{	
@@ -246,7 +249,7 @@ void SimpleMPL::solve()
 
 void SimpleMPL::report() const
 {
-	mplPrint(kINFO, "Total conflict number = %u, Total stitch number = %u\n", conflict_num(), stitch_num());
+	mplPrint(kINFO, "Total conflict number = %u\n", conflict_num());
 	for (int32_t i = 0, ie = m_db->color_num(); i != ie; ++i)
 		mplPrint(kINFO, "Color %d density = %u\n", i, m_vColorDensity[i]);
 }
@@ -547,7 +550,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 		// std::cout << "\nAfter simplification" ;
 		vSubColor.assign(num_vertices(sg), -1);
-		std::cout << "subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
+		// std::cout << "subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
 
 #ifdef QDEBUG
 		write_graph(sg, "DLX_subcomponent_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id));
@@ -680,14 +683,12 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 					mplAssert(e.second);
 					boost::put(boost::edge_weight, dg, e.first, 1);
 /*
-#ifdef QDEBUG
 					rectangle_pointer_type tempA = m_db->vPatternBbox[v];
 					std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA) << std::endl;
 					std::cout << "conflicts with\n";
 					rectangle_pointer_type tempB = m_db->vPatternBbox[u];
 					std::cout << u << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl;
 					std::cout << "\n\n";
-#endif
 */
 				}
 			}
@@ -698,6 +699,9 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 			for(std::vector<uint32_t>::const_iterator it = StitchRelation[v].begin(); it != StitchRelation[v].end(); ++it)
 			{
 				uint32_t s = *it;
+
+				mplAssert(mGlobal2Local.count(s));
+
 				uint32_t j = mGlobal2Local[s];
 				if (i < j)
 				{
@@ -707,24 +711,20 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 						e = add_edge(i, j, dg);
 						mplAssert(e.second);
 						// for stitch, edge_weight is negative.
-						boost::put(boost::edge_weight, dg, e.first, -0.1);
+						boost::put(boost::edge_weight, dg, e.first, -1);
 						stitch_count += 1;
-/*
-#ifdef QDEBUG
+
 						rectangle_pointer_type tempA = m_db->vPatternBbox[v];
 						std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA) << std::endl;
-						std::cout << "stitch with\n";
+						std::cout << "inserts stitch with\n";
 						rectangle_pointer_type tempB = m_db->vPatternBbox[s];
-						std::cout << s << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl;
-						std::cout << "\n\n";
-#endif
-*/
+						std::cout << s << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
 					}
 				}
 			}
 		}
 	}
-	// mplPrint(kINFO, "%u stitches inserted.\n", stitch_count);
+	mplPrint(kINFO, "%u stitches inserted.\n", stitch_count);
 }
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
@@ -775,7 +775,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 	else {
 		uint32_t component_stitch_num = stitch_num(itBgn, itEnd);
-		mplPrint(kINFO, "Component %u has %u patterns...%u stitches\n", comp_id, (uint32_t)(itEnd - itBgn), component_stitch_num);
+		mplPrint(kINFO, "Component %u has %u patterns...%u final stitches\n\n", comp_id, (uint32_t)(itEnd - itBgn), component_stitch_num);
 	}
 
 	if (m_db->verbose())
@@ -1136,21 +1136,28 @@ void SimpleMPL::runProjection()
 		}
 
 		GdsWriter writer;
-		mplPrint(kINFO, "Stitches: %u\n", stitch_number);
-		mplPrint(kINFO, "AdjVertex : %u\n", m_mAdjVertex.size());
+		mplPrint(kINFO, "Stitches number: %u\n", stitch_number / 2);
+		mplPrint(kINFO, "AdjVertex size: %u\n", m_mAdjVertex.size());
 		mplPrint(kINFO, "Write output gds file: %s\n", (m_db->output_gds() + "_gen_stitch.gds").c_str());
 
 		writer(m_db->output_gds() + "_gen_stitch.gds", *m_db, stitch_pair, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
-/*
-#ifdef QDEBUG
+
 	std::cout << "\n\n\n======== stitch relationships ========== \n\n";
 	for(uint32_t i = 0; i < StitchRelation.size(); i++)
 	{
-		if(StitchRelation[i]!=-1)
-			std::cout << i << " has stitch with " << StitchRelation[i] << std::endl; 
+		rectangle_pointer_type tempA = m_db->vPatternBbox[i];
+		for(uint32_t j = 0; j < StitchRelation[i].size(); j++)
+		{
+			rectangle_pointer_type tempB = m_db->vPatternBbox[StitchRelation[i][j]];
+			std::cout << i << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
+			std::cout << "\nhas stitch with\n" ;
+			std::cout << StitchRelation[i][j] << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
+		}
 	}
 
+/*
+#ifdef QDEBUG
 	std::cout << "\n\n\n========= conflict relationships ==========\n\n";
 	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)
 	{
@@ -1193,78 +1200,80 @@ LayoutDB::rectangle_type SimpleMPL::interSectionRect(rectangle_type rect1, recta
 void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec)
 {
 	bool hor = whetherHorizontal(pRect);
-	std::set<coordinate_type> vset;
-	std::vector<coordinate_type> vPossibleStitches;
-	if (hor)
+	std::vector<coordinate_type> vstitches;
+	coordinate_difference width = gtl::xh(pRect) - gtl::xl(pRect);
+	if(width <= 5000)
 	{
-		vset.insert(gtl::xl(pRect));
-		vset.insert(gtl::xh(pRect));
-	}
-	else {
-		vset.insert(gtl::yl(pRect));
-		vset.insert(gtl::yh(pRect));
-	}
-	std::vector<rectangle_type> vInterSect;
-	// generate intersections
-	for (std::vector<rectangle_pointer_type>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
-	{
-		rectangle_type extendPattern(*(*it));
-		gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
-		gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
-
-		rectangle_type temp = interSectionRect(pRect, extendPattern);
-		temp.pattern_id(extendPattern.pattern_id());
-		vInterSect.push_back(temp);
+		std::set<coordinate_type> vset;
+		std::vector<coordinate_type> vPossibleStitches;
 		if (hor)
 		{
-			vset.insert(gtl::xl(temp));
-			vset.insert(gtl::xh(temp));
+			vset.insert(gtl::xl(pRect));
+			vset.insert(gtl::xh(pRect));
+		}
+		else {
+			vset.insert(gtl::yl(pRect));
+			vset.insert(gtl::yh(pRect));
+		}
+		std::vector<rectangle_type> vInterSect;
+		// generate intersections
+		for (std::vector<rectangle_pointer_type>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
+		{
+			rectangle_type extendPattern(*(*it));
+			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
+			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
+
+			rectangle_type temp = interSectionRect(pRect, extendPattern);
+			temp.pattern_id(extendPattern.pattern_id());
+			vInterSect.push_back(temp);
+			if (hor)
+			{
+				vset.insert(gtl::xl(temp));
+				vset.insert(gtl::xh(temp));
+			}
+			else
+			{
+				vset.insert(gtl::yl(temp));
+				vset.insert(gtl::yh(temp));
+			}
+		}
+
+		for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
+			vPossibleStitches.push_back(*it);
+		std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
+
+		uint32_t nei_num = nei_Vec.size();
+		
+		GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, vstitches);
+		//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
+
+		// check the stitch positions' legalities
+		// if the position is very colse to the rectangle's boundary, it's illegal.
+		coordinate_type lower_boundary;
+		coordinate_type upper_boundary;
+		if (hor)
+		{
+			lower_boundary = gtl::xl(pRect);
+			upper_boundary = gtl::xh(pRect);
 		}
 		else
 		{
-			vset.insert(gtl::yl(temp));
-			vset.insert(gtl::yh(temp));
+			lower_boundary = gtl::yl(pRect);
+			upper_boundary = gtl::yh(pRect);
 		}
+		coordinate_type threshold = 20;
+		std::vector<coordinate_type> temp;
+		for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
+		{
+			coordinate_type dis_low = std::abs(*it - lower_boundary);
+			coordinate_type dis_up = std::abs(*it - upper_boundary);
+			if (dis_low >= threshold && dis_up >= threshold)
+				temp.push_back(*it);
+		}
+		std::vector<coordinate_type>().swap(vstitches);
+		vstitches.swap(temp);
+
 	}
-
-	for (std::set<coordinate_type>::iterator it = vset.begin(); it != vset.end(); it++)
-		vPossibleStitches.push_back(*it);
-	std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
-
-	uint32_t nei_num = nei_Vec.size();
-
-	std::vector<coordinate_type> vstitches;
-	
-	if(vPossibleStitches.size() <= 20)
-		GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
-	//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
-
-	// check the stitch positions' legalities
-	// if the position is very colse to the rectangle's boundary, it's illegal.
-	coordinate_type lower_boundary;
-	coordinate_type upper_boundary;
-	if (hor)
-	{
-		lower_boundary = gtl::xl(pRect);
-		upper_boundary = gtl::xh(pRect);
-	}
-	else
-	{
-		lower_boundary = gtl::yl(pRect);
-		upper_boundary = gtl::yh(pRect);
-	}
-	coordinate_type threshold = 20;
-	std::vector<coordinate_type> temp;
-	for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
-	{
-		coordinate_type dis_low = std::abs(*it - lower_boundary);
-		coordinate_type dis_up = std::abs(*it - upper_boundary);
-		if (dis_low >= threshold && dis_up >= threshold)
-			temp.push_back(*it);
-	}
-	std::vector<coordinate_type>().swap(vstitches);
-	vstitches.swap(temp);
-
 	// split rectangles according to the stitch positions.
 	if (vstitches.size() <= 0)
 	{
@@ -1355,7 +1364,7 @@ void SimpleMPL::GenerateStitchPosition_Jian(const rectangle_type pRect, std::vec
 }
 
 void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type> & vPossibleStitches,
-	uint32_t nei_num, std::vector<coordinate_type> & vstitches)
+	std::vector<coordinate_type> & vstitches)
 {
 	bool ishor = whetherHorizontal(pRect);
 	coordinate_type lower, upper;
@@ -1547,7 +1556,7 @@ uint32_t SimpleMPL::stitch_num(const std::vector<uint32_t>::const_iterator itBgn
 				int8_t color2 = vPatternBbox[u]->color();
 				if (color2 >= 0 && color2 < m_db->color_num())
 				{
-					if (color1 == color2 ) ++cnt;
+					if (color1 != color2 ) ++cnt;
 				}
 				else
 					++cnt;
@@ -1558,10 +1567,12 @@ uint32_t SimpleMPL::stitch_num(const std::vector<uint32_t>::const_iterator itBgn
 	return (cnt >> 1);
 }
 
-uint32_t SimpleMPL::stitch_num() const
+uint32_t SimpleMPL::stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitches) const
 {
+	// std::cout << "\n\n=========== final stitch ===============\n";
 	uint32_t cnt = 0;
 	std::vector<rectangle_pointer_type> const& vPatternBbox = m_db->vPatternBbox;
+	Final_Stitches.resize(vPatternBbox.size());
 	for (uint32_t v = 0; v != vPatternBbox.size(); ++v)
 	{
 		int8_t color1 = vPatternBbox[v]->color();
@@ -1575,8 +1586,19 @@ uint32_t SimpleMPL::stitch_num() const
 					int8_t color2 = vPatternBbox[u]->color();
 					if (color2 >= 0 && color2 < m_db->color_num())
 					{
-						if (color1 == color2)
+						if (color1 != color2)
+						{
+							Final_Stitches[v].push_back(u);
+							Final_Stitches[u].push_back(v);
+							
+							rectangle_pointer_type tempA = vPatternBbox[v];
+							rectangle_pointer_type tempB = vPatternBbox[u];
+							std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
+							std::cout << "\nfinal stitch with\n" ;
+							std::cout << u << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
+							
 							++cnt;
+						}
 					}
 					else // uncolored vertex is counted as conflict 
 						mplAssertMsg(0, "uncolored vertex %u = %d", u, color2);
@@ -1586,8 +1608,10 @@ uint32_t SimpleMPL::stitch_num() const
 		else // uncolored vertex is counted as conflict 
 			mplAssertMsg(0, "uncolored vertex %u = %d", v, color1);
 	}
-	return (cnt >> 1);
+	return cnt;
 }
+
+
 
 void SimpleMPL::print_welcome() const
 {

@@ -154,6 +154,7 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     // basic operation
     // will add more 
 	write_rectangles(gw, db.polyrect_patterns(), layer_offset);
+
     if(db.gen_stitch())
     {
         write_conflicts(gw, db, vConflict, layer_offset + 10);   // conflict layer 
@@ -161,11 +162,44 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     }
     else
     {
-	   write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
-	   write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 1); // draw edges 
+        write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
+        write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 1); // draw edges 
 	}
     
 	gw.gds_write_endstr();
+    gw.gds_write_endlib(); 
+}
+
+void GdsWriter::operator() (std::string const& filename, layoutdb_type const& db, 
+        std::vector<std::pair<uint32_t, uint32_t> > const& vConflict,
+        std::vector<std::vector<uint32_t> > const& vStitches,
+        std::vector<std::vector<uint32_t> > const& mAdjVertex,
+        std::string const& strname, double unit) const
+{
+    GdsParser::GdsWriter gw (filename.c_str());
+    gw.gds_create_lib("POLYGONS", unit /* um per bit */ );
+    gw.gds_write_bgnstr();
+    gw.gds_write_strname(strname.c_str());
+
+    // if there are precolored patterns, keep the same layer convention 
+    int32_t layer_offset = (db.parms.sPrecolorLayer.empty())? 100 : *db.parms.sPrecolorLayer.begin();
+    // basic operation
+    // will add more 
+    write_rectangles(gw, db.polyrect_patterns(), layer_offset);
+
+    if(db.gen_stitch())
+    {
+        write_conflicts(gw, db, vConflict, layer_offset + 10);   // conflict layer
+        write_edges(gw, db, mAdjVertex, layer_offset + 12); // draw edges 
+    }
+    else
+    {
+        write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
+        write_edges(gw, db, vStitches, layer_offset + db.color_num() + 1);  // draw stitches
+        write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 2); // draw edges 
+    }
+    
+    gw.gds_write_endstr();
     gw.gds_write_endlib(); 
 }
 
