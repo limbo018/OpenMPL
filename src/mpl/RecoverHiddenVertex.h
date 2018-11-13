@@ -62,6 +62,7 @@ class RecoverHiddenVertex
         std::vector<uint32_t> const& m_vColorDensity;
         layoutdb_type const& m_db;
         std::vector<char> m_vUnusedColor; ///< local variable to avoid frequent construction
+        std::vector<char> m_vStitchColor; ///< local variable to store the stitch neighbors' colors
 };
 
 /// recover with distance heuristic 

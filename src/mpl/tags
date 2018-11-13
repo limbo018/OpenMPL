@@ -13,12 +13,11 @@ AlgorithmTypeEnum	Enums.h	/^struct AlgorithmTypeEnum$/;"	s
 BACKTRACK	Enums.h	/^		BACKTRACK = 0,    \/\/ no dependency $/;"	e	enum:AlgorithmTypeEnum::EnumType
 CSDP	Makefile	/^CSDP = 1$/;"	m
 CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_DEBUG) -DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING -DDEBUG_SDPCOLORING$/;"	m
-CXXFLAGS	Makefile	/^	CXXFLAGS = $(CXXFLAGS_RELEASE) # -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR$/;"	m
 CmdParser	Params.h	/^	CmdParser(ControlParameter& p) : parms(p) {}$/;"	f	struct:CmdParser
 CmdParser	Params.h	/^struct CmdParser$/;"	s
 ControlParameter	Params.h	/^inline ControlParameter::ControlParameter()$/;"	f	class:ControlParameter
 ControlParameter	Params.h	/^struct ControlParameter$/;"	s
-DBG	Makefile	/^DBG = 0  $/;"	m
+DBG	Makefile	/^DBG = 1  $/;"	m
 DEPS	Makefile	/^DEPS = $(OBJS:%.o=%.d) 	# one dependency file for each source$/;"	m
 ENUM2STR	Enums.cpp	13;"	d	file:
 EXE	Makefile	/^EXE	= $(EXEDIR)\/OpenMPL$/;"	m
@@ -328,6 +327,7 @@ m_vConflict	stitch/SimpleMPL.h	/^        mutable std::vector<std::pair<uint32_t,
 m_vConflict	stitch/StitchProc.h	/^	mutable std::vector<std::pair<uint32_t, uint32_t> > m_vConflict;$/;"	m	class:StitchProc
 m_vDist	RecoverHiddenVertex.h	/^        std::vector<coordinate_difference> m_vDist; \/\/\/< minimum distance for different colors to current vertex $/;"	m	class:RecoverHiddenVertexDistance
 m_vHiddenVertices	RecoverHiddenVertex.h	/^        std::stack<vertex_descriptor>& m_vHiddenVertices;$/;"	m	class:RecoverHiddenVertex
+m_vStitchColor	RecoverHiddenVertex.h	/^        std::vector<char> m_vStitchColor; \/\/\/< local variable to store the stitch neighbors' colors$/;"	m	class:RecoverHiddenVertex
 m_vUnusedColor	RecoverHiddenVertex.h	/^        std::vector<char> m_vUnusedColor; \/\/\/< local variable to avoid frequent construction$/;"	m	class:RecoverHiddenVertex
 m_vVertexOrder	SimpleMPL.h	/^	std::vector<uint32_t>          m_vVertexOrder; \/\/\/< vertex id$/;"	m	class:SimpleMPL
 m_vVertexOrder	stitch/SimpleMPL.h	/^        std::vector<uint32_t>               m_vVertexOrder; \/\/\/< vertex id$/;"	m	class:SimpleMPL

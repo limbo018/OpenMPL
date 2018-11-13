@@ -65,6 +65,11 @@ void SimpleMPL::run(int32_t argc, char** argv)
 	this->read_cmd(argc, argv);
 	this->read_gds();
 	this->solve();
+
+#ifdef COMPONENTS
+	return;
+#endif
+
 	if(m_db->gen_stitch())
 		return;
 	this->report();
@@ -219,6 +224,9 @@ void SimpleMPL::solve()
 		// pass iterators to save memory 
 		this->solve_component(itBgn, itEnd, comp_id);
 	}
+#ifdef COMPONENTS
+	return ;
+#endif
 
 #ifdef DEBUG_NONINTEGERS
 	mplPrint(kNONE, "vLP1NonInteger vLP1HalfInteger vLP2NonInteger vLP2HalfInteger vLPEndNonInteger vLPEndHalfInteger vLPNumIter\n");
@@ -496,7 +504,7 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 		break;
 	default: mplAssertMsg(0, "unknown algorithm type");
 	}
-	pcs->stitch_weight(-1);
+	pcs->stitch_weight(0.1);
 	pcs->color_num(m_db->color_num());
 	pcs->threads(1); // we use parallel at higher level 
 
@@ -552,10 +560,11 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		vSubColor.assign(num_vertices(sg), -1);
 		// std::cout << "subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
 
-#ifdef QDEBUG
-		write_graph(sg, "DLX_subcomponent_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id));
+#ifdef COMPONENTS
+		std::string filename = m_db->output_gds() + "g_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id);
+		write_graph(sg, filename);
+		continue;
 #endif
-
 /*
 		for (uint32_t i = 0; i != pattern_cnt; ++i)
 		{
@@ -563,12 +572,12 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 			m_db->vPatternBbox[v]->color(5);
 			m_db->set_color(v, 5);
 		}
-		std::string intermediate_name = m_db->output_gds() + "_sub_" + limbo::to_string(sub_comp_id) + ".gds";
+		std::string intermediate_name = m_db->output_gds() + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id) + ".gds";
 		GdsWriter writer;
 		std::cout << "here should output gds file. It has " << pattern_cnt << " patterns." << std::endl;
 		mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
 		writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
-*/		
+*/
  		// solve coloring 
 		typedef lac::Coloring<graph_type> coloring_solver_type;
 		coloring_solver_type* pcs = create_coloring_solver(sg);
@@ -585,7 +594,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 				vSubColor[v] = color; // necessary for 2nd trial
 			}
 		}
-
+/*
 #ifdef QDEBUG
 		if(vSubColor.size() > 100)
 		{
@@ -606,6 +615,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 			writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
 		}
 #endif
+*/
 		// 1st trial 
 		// std::cout << "now start solving : " << std::endl;
 		double obj_value1 = (*pcs)(); // solve coloring 
@@ -620,6 +630,10 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
 			&& (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
 			obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
+#endif
+		
+#ifdef COMPONENTS
+		write_graph(sg, "c_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id));
 #endif
 																																   // choose smaller objective value 
 		if (obj_value1 < obj_value2)
@@ -640,13 +654,17 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		delete pcs;
 	}
 
+#ifdef COMPONENTS
+	return 1;
+#endif
 	// recover color assignment according to the simplification level set previously 
 	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
 	gs.recover(vColor, mSubColor, mSimpl2Orig);
 
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
-	RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
+	RecoverHiddenVertex(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
+	// RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
 
 	return acc_obj_value;
 }
@@ -682,18 +700,9 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 					e = add_edge(i, j, dg);
 					mplAssert(e.second);
 					boost::put(boost::edge_weight, dg, e.first, 1);
-/*
-					rectangle_pointer_type tempA = m_db->vPatternBbox[v];
-					std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA) << std::endl;
-					std::cout << "conflicts with\n";
-					rectangle_pointer_type tempB = m_db->vPatternBbox[u];
-					std::cout << u << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl;
-					std::cout << "\n\n";
-*/
 				}
 			}
 		}
-
 		if (m_db->stitch())
 		{
 			for(std::vector<uint32_t>::const_iterator it = StitchRelation[v].begin(); it != StitchRelation[v].end(); ++it)
@@ -752,6 +761,11 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 		acc_obj_value = coloring_component(itBgn, itEnd, comp_id);
 	else
 		std::cout << "precolored." << std::endl;
+
+#ifdef COMPONENTS
+	return acc_obj_value;
+#endif
+
 	// update global color density map 
 	// if parallelization is enabled, there will be uncertainty in the density map 
 	// because the density is being updated while being read 
@@ -818,6 +832,10 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
 
 	// solve graph coloring 
 	uint32_t acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor);
+
+#ifdef COMPONENTS
+	return acc_obj_value;
+#endif
 
 #ifdef DEBUG
 	for (uint32_t i = 0; i != pattern_cnt; ++i)
@@ -911,7 +929,8 @@ void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filenam
 	// somehow edge properties need mutable graph_type& 
 	dp.property("weight", boost::get(boost::edge_weight, g));
 	dp.property("label", boost::get(boost::edge_weight, g));
-	std::ofstream out(("benchout/" + filename + ".gv").c_str());
+	// std::ofstream out(("benchout/" + filename + ".gv").c_str());
+	std::ofstream out((filename + ".gv").c_str());
 	boost::write_graphviz_dp(out, g, dp, string("id"));
 	out.close();
 	la::graphviz2pdf(filename);
@@ -1242,7 +1261,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			vPossibleStitches.push_back(*it);
 		std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
 
-		uint32_t nei_num = nei_Vec.size();
+		// uint32_t nei_num = nei_Vec.size();
 		
 		GenerateStitchPosition_Bei(pRect, vInterSect, vPossibleStitches, vstitches);
 		//GenerateStitchPosition_Jian(pRect, vInterSect, vPossibleStitches, nei_num, vstitches);
@@ -1590,13 +1609,13 @@ uint32_t SimpleMPL::stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitch
 						{
 							Final_Stitches[v].push_back(u);
 							Final_Stitches[u].push_back(v);
-							
+/*
 							rectangle_pointer_type tempA = vPatternBbox[v];
 							rectangle_pointer_type tempB = vPatternBbox[u];
 							std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
 							std::cout << "\nfinal stitch with\n" ;
 							std::cout << u << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
-							
+*/							
 							++cnt;
 						}
 					}

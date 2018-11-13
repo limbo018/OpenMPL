@@ -19,6 +19,7 @@ RecoverHiddenVertex::RecoverHiddenVertex(RecoverHiddenVertex::graph_type const& 
     , m_vHiddenVertices (vHiddenVertices)
     , m_vColorDensity (vColorDensity)
     , m_db (db)
+    , m_vStitchColor(db.color_num())
     , m_vUnusedColor(db.color_num())
 {
 }
@@ -50,21 +51,23 @@ void RecoverHiddenVertex::recover_vertex(RecoverHiddenVertex::vertex_descriptor 
 
 void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descriptor v)
 {
-    // find available colors 
+     // find available colors 
+    std::fill(m_vStitchColor.begin(), m_vStitchColor.end(), false);
     std::fill(m_vUnusedColor.begin(), m_vUnusedColor.end(), true);
     boost::graph_traits<graph_type>::adjacency_iterator vi, vie;
     for (boost::tie(vi, vie) = adjacent_vertices(v, m_dg); vi != vie; ++vi)
     {
         vertex_descriptor u = *vi;
-        // added by Qi Sun to sovle the stitch error
-        std::pair<graph_edge_type, bool> e12 = boost::edge(v, u, m_dg);
-        assert(e12.second);
-        if(boost::get(boost::edge_weight, m_dg, e12.first) < 0) continue;
-        
         if (m_vColor[u] >= 0)
         {
             mplAssert(m_vColor[u] < m_db.color_num());
-            m_vUnusedColor[m_vColor[u]] = false;
+            // added by Qi Sun to sovle the stitch color
+            std::pair<graph_edge_type, bool> e12 = boost::edge(v, u, m_dg);
+            assert(e12.second);
+            if (boost::get(boost::edge_weight, m_dg, e12.first) < 0) 
+                m_vStitchColor[m_vColor[u]] = true;
+            else 
+                m_vUnusedColor[m_vColor[u]] = false;
         }
     }
 }
@@ -74,6 +77,14 @@ int8_t RecoverHiddenVertex::find_best_color(RecoverHiddenVertex::vertex_descript
     // find the first available color 
     int8_t best_color = -1;
     for (int8_t i = 0; i != m_db.color_num(); ++i)
+    {
+        if (m_vUnusedColor[i] && m_vStitchColor[i])
+        {
+            best_color = i;
+            return best_color;
+        }
+    }
+    for(int8_t i = 0; i != m_db.color_num(); ++i)
     {
         if (m_vUnusedColor[i])
         {
