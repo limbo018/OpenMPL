@@ -1161,6 +1161,7 @@ void SimpleMPL::runProjection()
 			new2ori.push_back(pid);
 			new_vertex_order.push_back(new_polygon_id);
 			new_vCompId_vec.push_back(comp_id);
+			ori2newp[pid].push_back(new_polygon_id);
 		}
 		
 	}
@@ -1205,6 +1206,11 @@ void SimpleMPL::runProjection()
 		std::vector<uint32_t> poss_nei;
 		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
 		{
+			if( !proj_target[i] && !proj_target[m_mAdjVertex[i][j]] )
+			{
+				new_mAdjVertex[ori2new[i].front()].insert(ori2new[m_mAdjVertex[i][j]].front());
+				continue;
+			}
 			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
 				poss_nei.push_back(*it);
 		}
