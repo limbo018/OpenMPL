@@ -145,7 +145,11 @@ protected:
 
 	uint32_t stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitches) const;
 
+	// conduct graph simplification firstly to reduce the number of patterns which need to be splited.
+	void gen_proj_target();
 	// void stitch_solve();
+
+	std::vector<bool> 						proj_target;	// store the patterns which need to be splited
 
  	std::vector<uint32_t>					new2ori;		// store the mapping relationships from new polygons back to original polygon.
 	std::vector<std::vector<uint32_t> >		ori2new;		// stores the mapping relationships from original polygons to newly-generated polygons.

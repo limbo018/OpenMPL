@@ -128,6 +128,66 @@ void SimpleMPL::read_gds()
 	m_db->report_data();
 }
 
+void SimpleMPL::gen_proj_target()
+{
+	std::fill(proj_target.begin(), proj_target.end(), false);
+	std::vector<uint32_t> vBookmark(m_comp_cnt);
+	// std::cout << "==== After Projection vBookmark ====" << std::endl;
+	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
+			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+	}
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
+	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
+	{
+		// construct a component 
+		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
+		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
+		if (check_uncolored(itBgn, itEnd))
+		{
+			uint32_t pattern_cnt = itEnd - itBgn;
+			graph_type dg(pattern_cnt);
+			std::vector<int8_t> vColor(pattern_cnt, -1); // coloring results 
+			map<uint32_t, uint32_t> mGlobal2Local; // global vertex id to local vertex id 
+
+			construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
+
+			// graph simplification 
+			typedef lac::GraphSimplification<graph_type> graph_simplification_type;
+			uint32_t simplify_strategy = graph_simplification_type::NONE;
+			// keep the order of simplification 
+			if (m_db->simplify_level() > 1)
+				simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
+			if (m_db->simplify_level() > 2)
+				simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
+
+			graph_simplification_type gs(dg, m_db->color_num());
+			gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
+			// set max merge level, actually it only works when MERGE_SUBK4 is on 
+			if (m_db->color_num() == 3)
+				gs.max_merge_level(3);
+			else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better 
+				gs.max_merge_level(2);
+
+			gs.simplify(simplify_strategy);
+
+			for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
+			{
+				graph_type sg;
+				std::vector<vertex_descriptor> vSimpl2Orig;
+				gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
+				for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
+					proj_target[*it] = true;
+			}
+		}
+	}
+}
+
+
 void SimpleMPL::write_gds()
 {
 	char buf[256];
@@ -185,9 +245,11 @@ void SimpleMPL::solve()
 	clock_t cons_end = clock();
 	mplPrint(kINFO, "construct_graph takes  %f.\n", (double)(cons_end - cons_start)/CLOCKS_PER_SEC);
 
-
 	if(m_db->stitch() || m_db->gen_stitch())
+	{
+		gen_proj_target();
 		runProjection();
+	}	
 	
 	if(m_db->gen_stitch())
 		return;
@@ -994,7 +1056,6 @@ void SimpleMPL::runProjection()
 	writer.write_intermediate(m_db->output_gds() + "_abutting.gds", rect_vec, 1, m_db->strname, m_db->unit*1e+6);
 #endif
 */
-
 	std::vector<rectangle_pointer_type> new_rect_vec;		// store the newly-generated rectangles
 	std::vector<uint32_t> rect_to_parent;					// map from rectangles to its parent polygon
 	std::vector<std::vector<uint32_t> >().swap(ori2new);
@@ -1010,83 +1071,98 @@ void SimpleMPL::runProjection()
 	clock_t projection_start = clock();
 	double reconstruct_polygon_total = 0;
 	double project_total = 0;
+
 	for (uint32_t ver = 0; ver < vertex_num; ver++)
 	{
-
 		uint32_t v = m_vVertexOrder[ver];
 		uint32_t comp_id = m_vCompId[v];
-		// std::cout << "now for " << comp_id << " : \n";
-		// polygon v
+		
 		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[v];
 		uint32_t pid = pPattern->pattern_id();
 		// polygon v's neighbor polygons
 		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[pid];
-
-		// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
-		std::vector<rectangle_pointer_type> poss_nei_vec;
-		//std::cout << "=====" << pid << " has neighbors : \n";
-		for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
-		{
-			uint32_t s_idx = poly_rect_begin[*it];
-			uint32_t e_idx = poly_rect_end[*it];
-			for (uint32_t a = s_idx; a <= e_idx; a++)
-			{
-				//std::cout << gtl::xl(*rect_vec[a]) << " " << gtl::yl(*rect_vec[a]) << " " << gtl::xh(*rect_vec[a]) << " " << gtl::yh(*rect_vec[a]) << std::endl;
-				poss_nei_vec.push_back(rect_vec[a]);
-			}
-		}
-		// std::cout << std::endl;
-
 		uint32_t start_idx = poly_rect_begin[pid];
 		uint32_t end_idx = poly_rect_end[pid];
 
-		// flag is used to judge whether the newly-generated rectangle is the first one in the whole polygon.
-
-		std::vector<std::pair<rectangle_pointer_type, uint32_t> > poly_split; 
-		std::vector<uint32_t> new_polygon_id_list;
-		// traverse all the rectangles in polygon v, to generate the intersections
-		for (uint32_t j = start_idx; j <= end_idx; j++)
+		if(proj_target[comp_id])
 		{
-			rectangle_type rect(*rect_vec[j]);
-			// the generated split patterns
-			std::vector<rectangle_pointer_type> split;
-			clock_t each_pro = clock();
-			projection(rect, split, poss_nei_vec);
-			clock_t each_pend = clock();
-			project_total += (double)(each_pend - each_pro)/CLOCKS_PER_SEC;
-
-			for(std::vector<rectangle_pointer_type>::iterator it = split.begin(); it!=split.end(); it++)
-				poly_split.push_back(std::make_pair(*it, rect.pattern_id()));
-		}
-		uint32_t pivot = new_polygon_id;
-
-		std::vector<std::vector<uint32_t> > stitch_list;
-		clock_t each_re = clock();
-		reconstruct_polygon(new_polygon_id, new_polygon_id_list, poly_split, stitch_list);
-		clock_t each_end = clock();
-		reconstruct_polygon_total += (double)(each_end - each_re)/CLOCKS_PER_SEC;
-
-		assert(new_polygon_id_list.size() == poly_split.size());
-
-		StitchRelation.insert(StitchRelation.end(), stitch_list.begin(), stitch_list.end());
-
-		for(uint32_t i = 0; i < poly_split.size(); i++)
-		{
-			poly_split[i].first->pattern_id(++new_rect_id);
-			if(m_db->gen_stitch())
-				poly_split[i].first->color(new_polygon_id_list[i]%7);
-			new_rect_vec.push_back(poly_split[i].first);
-			rect_to_parent.push_back(new_polygon_id_list[i]);
-
-			if(pivot != new_polygon_id_list[i])
+			// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
+			std::vector<rectangle_pointer_type> poss_nei_vec;
+			//std::cout << "=====" << pid << " has neighbors : \n";
+			for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
 			{
-				pivot = new_polygon_id_list[i];
-				new2ori.push_back(pid);
-				ori2new[pid].push_back(pivot);
-				new_vertex_order.push_back(pivot);
-				new_vCompId_vec.push_back(comp_id);
+				uint32_t s_idx = poly_rect_begin[*it];
+				uint32_t e_idx = poly_rect_end[*it];
+				for (uint32_t a = s_idx; a <= e_idx; a++)
+				{
+					//std::cout << gtl::xl(*rect_vec[a]) << " " << gtl::yl(*rect_vec[a]) << " " << gtl::xh(*rect_vec[a]) << " " << gtl::yh(*rect_vec[a]) << std::endl;
+					poss_nei_vec.push_back(rect_vec[a]);
+				}
+			}
+
+			std::vector<std::pair<rectangle_pointer_type, uint32_t> > poly_split; 
+			std::vector<uint32_t> new_polygon_id_list;
+			// traverse all the rectangles in polygon v, to generate the intersections
+			for (uint32_t j = start_idx; j <= end_idx; j++)
+			{
+				rectangle_type rect(*rect_vec[j]);
+				// the generated split patterns
+				std::vector<rectangle_pointer_type> split;
+				clock_t each_pro = clock();
+				projection(rect, split, poss_nei_vec);
+				clock_t each_pend = clock();
+				project_total += (double)(each_pend - each_pro)/CLOCKS_PER_SEC;
+
+				for(std::vector<rectangle_pointer_type>::iterator it = split.begin(); it!=split.end(); it++)
+					poly_split.push_back(std::make_pair(*it, rect.pattern_id()));
+			}
+			uint32_t pivot = new_polygon_id;
+
+			std::vector<std::vector<uint32_t> > stitch_list;
+			clock_t each_re = clock();
+			reconstruct_polygon(new_polygon_id, new_polygon_id_list, poly_split, stitch_list);
+			clock_t each_end = clock();
+			reconstruct_polygon_total += (double)(each_end - each_re)/CLOCKS_PER_SEC;
+
+			assert(new_polygon_id_list.size() == poly_split.size());
+
+			StitchRelation.insert(StitchRelation.end(), stitch_list.begin(), stitch_list.end());
+
+			for(uint32_t i = 0; i < poly_split.size(); i++)
+			{
+				poly_split[i].first->pattern_id(++new_rect_id);
+				if(m_db->gen_stitch())
+					poly_split[i].first->color(new_polygon_id_list[i]%7);
+				new_rect_vec.push_back(poly_split[i].first);
+				rect_to_parent.push_back(new_polygon_id_list[i]);
+
+				if(pivot != new_polygon_id_list[i])
+				{
+					pivot = new_polygon_id_list[i];
+					new2ori.push_back(pid);
+					ori2new[pid].push_back(pivot);
+					new_vertex_order.push_back(pivot);
+					new_vCompId_vec.push_back(comp_id);
+				}
 			}
 		}
+		else
+		{
+			new_polygon_id += 1;
+			for (uint32_t j = start_idx; j <= end_idx; j++)
+			{
+				rectangle_type rect(*rect_vec[j]);
+				rect.pattern_id(++new_rect_id);
+				if(m_db->gen_stitch())
+					rect.color(new_rect_id%7);
+				new_rect_vec.push_back(rect);
+				rect_to_parent.push_back(new_polygon_id);
+			}
+			new2ori.push_back(pid);
+			new_vertex_order.push_back(new_polygon_id);
+			new_vCompId_vec.push_back(comp_id);
+		}
+		
 	}
 	clock_t projection_end = clock();
 	mplPrint(kINFO, "projection takes : %f seconds\n", (double)(projection_end - projection_start)/CLOCKS_PER_SEC );

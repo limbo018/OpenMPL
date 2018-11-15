@@ -26,6 +26,7 @@ RecoverHiddenVertex::RecoverHiddenVertex(RecoverHiddenVertex::graph_type const& 
 
 void RecoverHiddenVertex::operator()()
 {
+    std::cout << "in RecoverHiddenVerte.\n";
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
 	while (!m_vHiddenVertices.empty())
@@ -40,12 +41,17 @@ void RecoverHiddenVertex::operator()()
 
 void RecoverHiddenVertex::recover_vertex(RecoverHiddenVertex::vertex_descriptor v)
 {
+    rectangle_pointer_type temp = m_db.vPatternBbox[*(m_itBgn+v)];
+    std::cout << "\nid " << temp->pattern_id() << " : " << std::endl;
     // find available colors 
     find_unused_colors(v);
     // find best color 
     int8_t best_color = find_best_color(v);
     // assign color 
     mplAssert(best_color >= 0 && best_color < m_db.color_num());
+
+    std::cout << "location : " << gtl::xl(*temp) << ", " << gtl::yl(*temp) 
+            << ", " << gtl::xh(*temp) << ", " << gtl::yh(*temp) << ", color " << +unsigned(best_color) << std::endl;
     m_vColor[v] = best_color;
 }
 
@@ -55,8 +61,10 @@ void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descrip
     std::fill(m_vStitchColor.begin(), m_vStitchColor.end(), false);
     std::fill(m_vUnusedColor.begin(), m_vUnusedColor.end(), true);
     boost::graph_traits<graph_type>::adjacency_iterator vi, vie;
+    int count = 0;
     for (boost::tie(vi, vie) = adjacent_vertices(v, m_dg); vi != vie; ++vi)
     {
+        count ++;
         vertex_descriptor u = *vi;
         if (m_vColor[u] >= 0)
         {
@@ -65,18 +73,24 @@ void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descrip
             std::pair<graph_edge_type, bool> e12 = boost::edge(v, u, m_dg);
             assert(e12.second);
             if (boost::get(boost::edge_weight, m_dg, e12.first) < 0) 
+            {
+                std::cout << "stitch : " << +unsigned(m_vColor[u]) << std::endl;
                 m_vStitchColor[m_vColor[u]] = true;
+            }
             else 
+            {
+                std::cout << "conflict : " << +unsigned(m_vColor[u]) << std::endl; 
                 m_vUnusedColor[m_vColor[u]] = false;
+            }
         }
     }
+    std::cout << "deg : " << count << std::endl;
 }
 
 int8_t RecoverHiddenVertex::find_best_color(RecoverHiddenVertex::vertex_descriptor /*v*/) 
 {
     // find the first available color 
     int8_t best_color = -1;
-
     for (int8_t i = 0; i != m_db.color_num(); ++i)
     {
         if (m_vUnusedColor[i] && m_vStitchColor[i])
