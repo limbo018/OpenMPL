@@ -26,3 +26,5 @@ test/regr
 test/models
 decomp_*
 bin/*.zip
+bin/bench/*.gds
+bin/benchout/*
