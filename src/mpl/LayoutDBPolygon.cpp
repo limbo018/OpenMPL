@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "LayoutDBPolygon.h"
+#include <boost/timer/timer.hpp>
 #include <stack>
 
 SIMPLEMPL_BEGIN_NAMESPACE
@@ -271,13 +272,16 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	std::cout << "size : " << rect_to_parent.size() << std::endl;
 	//for(uint32_t i = 0; i < rect_to_parent.size(); i++)
 	//	std::cout << rect_to_parent[i] << " ";
-    std::cout << "\n\n";
 	std::cout << "new_rect_vec : " << std::endl;
 	std::cout << "size : " << new_rect_vec.size() << std::endl;
 	//for(uint32_t j = 0; j < new_rect_vec.size(); j++)
 	//	std::cout << new_rect_vec[j]->pattern_id() << " ";
 	std::cout << "===================" <<  std::endl;
 #endif
+    char buf[256];
+    mplSPrint(kINFO, buf, "refresh graph takes %%t seconds CPU, %%w seconds real\n");
+    boost::timer::auto_cpu_timer timer(buf);
+
 	vParentPolygonId.clear();
 	vParentPolygonId.assign(rect_to_parent.begin(), rect_to_parent.end());
 
@@ -327,6 +331,7 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	tPatternBbox.clear(); // tPatternBbox is used to store vPatternBbox construction with packing algorithm 
 	rtree_type tTmp(vPatternBbox.begin(), vPatternBbox.end());
 	tPatternBbox.swap(tTmp);
+    return;
 }
 
 SIMPLEMPL_END_NAMESPACE

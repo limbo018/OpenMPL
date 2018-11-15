@@ -8,7 +8,6 @@
 /*
 solve_component : 
 	mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
-
 LayoutDBPolygon:
 	set_color()
 */
@@ -17,7 +16,7 @@ LayoutDBPolygon:
 #include "LayoutDBPolygon.h"
 #include "RecoverHiddenVertex.h"
 #include <sstream>
-
+#include <time.h>
 #include <stack>
 #include <boost/graph/graphviz.hpp>
 #include <boost/timer/timer.hpp>
@@ -65,11 +64,9 @@ void SimpleMPL::run(int32_t argc, char** argv)
 	this->read_cmd(argc, argv);
 	this->read_gds();
 	this->solve();
-
 #ifdef COMPONENTS
 	return;
 #endif
-
 	if(m_db->gen_stitch())
 		return;
 	this->report();
@@ -170,6 +167,7 @@ void SimpleMPL::solve()
 		return;
 	}
 
+	clock_t cons_start = clock();
 	this->construct_graph();
 	if (m_db->simplify_level() > 0) // only perform connected component when enabled 
 		this->connected_component();
@@ -184,6 +182,9 @@ void SimpleMPL::solve()
 		}
 		m_comp_cnt = 1;
 	}
+	clock_t cons_end = clock();
+	mplPrint(kINFO, "construct_graph takes  %f.\n", (double)(cons_end - cons_start)/CLOCKS_PER_SEC);
+
 
 	if(m_db->stitch() || m_db->gen_stitch())
 		runProjection();
@@ -217,12 +218,14 @@ void SimpleMPL::solve()
 		//    continue; 
 #endif
 		// construct a component 
-		// std::cout << "In component " << comp_id << std::endl;
+		clock_t comp_start = clock();
 		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
 		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
 		// solve component 
 		// pass iterators to save memory 
 		this->solve_component(itBgn, itEnd, comp_id);
+		clock_t comp_end = clock();
+		mplPrint(kINFO, "Component %d takes %f seconds.\n", comp_id, (double)(comp_end - comp_start)/CLOCKS_PER_SEC);
 	}
 #ifdef COMPONENTS
 	return ;
@@ -531,7 +534,14 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		gs.max_merge_level(3);
 	else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better 
 		gs.max_merge_level(2);
+
+	// clock_t sim_start = clock();
+
 	gs.simplify(simplify_strategy);
+
+	// clock_t sim_end = clock();
+	// mplPrint(kINFO, "Component %d has size %d simplification takes : %f\n", comp_id, pattern_cnt, (double)(sim_end - sim_start) / CLOCKS_PER_SEC);
+
 	// collect simplified information 
 	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
 
@@ -549,6 +559,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
+		// clock_t sub_comp_start = clock();
 		// std::cout << "solve subcomponent " << sub_comp_id;
 		graph_type sg;
 		std::vector<int8_t>& vSubColor = mSubColor[sub_comp_id];
@@ -558,14 +569,14 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 		// std::cout << "\nAfter simplification" ;
 		vSubColor.assign(num_vertices(sg), -1);
-		// std::cout << "subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
 
-#ifdef COMPONENTS
-		std::string filename = m_db->output_gds() + "g_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id);
-		write_graph(sg, filename);
-		continue;
-#endif
 /*
+		if(vSubColor.size() >= 100)
+		{
+			std::string filename = m_db->output_gds() + "g_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id);
+			write_graph(sg, filename);
+		}
+		
 		for (uint32_t i = 0; i != pattern_cnt; ++i)
 		{
 			uint32_t const& v = *(itBgn + i);
@@ -625,13 +636,14 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 #endif
 		// 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only 
 		double obj_value2 = std::numeric_limits<double>::max();
+/*
 #ifndef DEBUG_NONINTEGERS
 		// very restrict condition to determine whether perform MERGE_SUBK4 or not 
 		if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP)
 			&& (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed 
 			obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor); // call again 
 #endif
-		
+*/		
 #ifdef COMPONENTS
 		write_graph(sg, "c_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id));
 #endif
@@ -651,6 +663,10 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
+		
+		// clock_t sub_comp_end = clock();
+		// mplPrint(kINFO, "Comp_%d_subcomp_%d has %d nodes, takes %fs\n", comp_id, sub_comp_id, vSubColor.size(), (double)(sub_comp_end - sub_comp_start)/CLOCKS_PER_SEC);
+
 		delete pcs;
 	}
 
@@ -659,13 +675,15 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 #endif
 	// recover color assignment according to the simplification level set previously 
 	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
+	clock_t recover_start = clock();
 	gs.recover(vColor, mSubColor, mSimpl2Orig);
 
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
 	RecoverHiddenVertex(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
 	// RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
-
+	clock_t recover_end = clock();
+	mplPrint(kINFO, "Comp_%d recovery takes %f seconds.\n", comp_id, (double)(recover_end - recover_end)/CLOCKS_PER_SEC);
 	return acc_obj_value;
 }
 
@@ -722,18 +740,19 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 						// for stitch, edge_weight is negative.
 						boost::put(boost::edge_weight, dg, e.first, -1);
 						stitch_count += 1;
-
+/*
 						rectangle_pointer_type tempA = m_db->vPatternBbox[v];
 						std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA) << std::endl;
 						std::cout << "inserts stitch with\n";
 						rectangle_pointer_type tempB = m_db->vPatternBbox[s];
 						std::cout << s << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
+*/
 					}
 				}
 			}
 		}
 	}
-	mplPrint(kINFO, "%u stitches inserted.\n", stitch_count);
+	// mplPrint(kINFO, "%u stitches inserted.\n", stitch_count);
 }
 
 uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
@@ -988,6 +1007,9 @@ void SimpleMPL::runProjection()
 	uint32_t new_polygon_id = -1;
 	uint32_t new_rect_id = -1;
 
+	clock_t projection_start = clock();
+	double reconstruct_polygon_total = 0;
+	double project_total = 0;
 	for (uint32_t ver = 0; ver < vertex_num; ver++)
 	{
 
@@ -1028,7 +1050,10 @@ void SimpleMPL::runProjection()
 			rectangle_type rect(*rect_vec[j]);
 			// the generated split patterns
 			std::vector<rectangle_pointer_type> split;
+			clock_t each_pro = clock();
 			projection(rect, split, poss_nei_vec);
+			clock_t each_pend = clock();
+			project_total += (double)(each_pend - each_pro)/CLOCKS_PER_SEC;
 
 			for(std::vector<rectangle_pointer_type>::iterator it = split.begin(); it!=split.end(); it++)
 				poly_split.push_back(std::make_pair(*it, rect.pattern_id()));
@@ -1036,7 +1061,10 @@ void SimpleMPL::runProjection()
 		uint32_t pivot = new_polygon_id;
 
 		std::vector<std::vector<uint32_t> > stitch_list;
+		clock_t each_re = clock();
 		reconstruct_polygon(new_polygon_id, new_polygon_id_list, poly_split, stitch_list);
+		clock_t each_end = clock();
+		reconstruct_polygon_total += (double)(each_end - each_re)/CLOCKS_PER_SEC;
 
 		assert(new_polygon_id_list.size() == poly_split.size());
 
@@ -1060,6 +1088,9 @@ void SimpleMPL::runProjection()
 			}
 		}
 	}
+	clock_t projection_end = clock();
+	mplPrint(kINFO, "projection takes : %f seconds\n", (double)(projection_end - projection_start)/CLOCKS_PER_SEC );
+	mplPrint(kINFO, "reconstruct_polygon_total : %f seconds\n", reconstruct_polygon_total);
 /*
 	std::cout << "\n\n===========================\n";
 	for(uint32_t i = 0; i < new_rect_vec.size(); i++)
@@ -1090,6 +1121,7 @@ void SimpleMPL::runProjection()
 		new_poly_rect_end[i] = new_poly_rect_begin[i + 1] - 1;
 	new_poly_rect_end[vertex_num - 1] = new_rect_vec.size() - 1;
 
+	clock_t new_relation_start = clock();
 	// traverse all the original polygons to get the original neighbor list
 	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
 	{
@@ -1132,6 +1164,8 @@ void SimpleMPL::runProjection()
 			}
 		}
 	}
+	clock_t new_relation_end = clock();
+	mplPrint(kINFO, "Generate new relationships takes %f seconds.\n", (double)(new_relation_end - new_relation_start)/CLOCKS_PER_SEC );
 
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex.resize(new_mAdjVertex.size());
@@ -1161,7 +1195,7 @@ void SimpleMPL::runProjection()
 
 		writer(m_db->output_gds() + "_gen_stitch.gds", *m_db, stitch_pair, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
-
+/*
 	std::cout << "\n\n\n======== stitch relationships ========== \n\n";
 	for(uint32_t i = 0; i < StitchRelation.size(); i++)
 	{
@@ -1175,7 +1209,6 @@ void SimpleMPL::runProjection()
 		}
 	}
 
-/*
 #ifdef QDEBUG
 	std::cout << "\n\n\n========= conflict relationships ==========\n\n";
 	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)
@@ -1238,6 +1271,8 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		// generate intersections
 		for (std::vector<rectangle_pointer_type>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
 		{
+			coordinate_difference distance = boost::geometry::distance(pRect, *(*it));
+			if(distance >= m_db->coloring_distance) continue;
 			rectangle_type extendPattern(*(*it));
 			gtl::bloat(extendPattern, gtl::HORIZONTAL, m_db->coloring_distance);
 			gtl::bloat(extendPattern, gtl::VERTICAL, m_db->coloring_distance);
@@ -1505,6 +1540,11 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, std::vector<std::vector<uint32_t> >& stitch_list)
 {
 	uint32_t start = polygon_id + 1;
+	/*
+	char buf[256];
+	mplSPrint(kINFO, buf, " takes %%t seconds CPU, %%w seconds real\n");
+	boost::timer::auto_cpu_timer timer(buf);
+	*/
 	std::vector<std::pair<rectangle_pointer_type, uint32_t> > rect_temp;
 	std::vector<uint32_t> new_polygon_id_temp;
 
@@ -1608,14 +1648,7 @@ uint32_t SimpleMPL::stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitch
 						if (color1 != color2)
 						{
 							Final_Stitches[v].push_back(u);
-							Final_Stitches[u].push_back(v);
-/*
-							rectangle_pointer_type tempA = vPatternBbox[v];
-							rectangle_pointer_type tempB = vPatternBbox[u];
-							std::cout << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
-							std::cout << "\nfinal stitch with\n" ;
-							std::cout << u << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
-*/							
+							Final_Stitches[u].push_back(v);							
 							++cnt;
 						}
 					}
@@ -1629,7 +1662,6 @@ uint32_t SimpleMPL::stitch_num(std::vector<std::vector<uint32_t> >& Final_Stitch
 	}
 	return cnt;
 }
-
 
 
 void SimpleMPL::print_welcome() const

@@ -76,6 +76,7 @@ int8_t RecoverHiddenVertex::find_best_color(RecoverHiddenVertex::vertex_descript
 {
     // find the first available color 
     int8_t best_color = -1;
+
     for (int8_t i = 0; i != m_db.color_num(); ++i)
     {
         if (m_vUnusedColor[i] && m_vStitchColor[i])
@@ -84,6 +85,7 @@ int8_t RecoverHiddenVertex::find_best_color(RecoverHiddenVertex::vertex_descript
             return best_color;
         }
     }
+
     for(int8_t i = 0; i != m_db.color_num(); ++i)
     {
         if (m_vUnusedColor[i])
