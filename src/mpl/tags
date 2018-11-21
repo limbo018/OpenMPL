@@ -232,6 +232,7 @@ find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexDistance::fi
 find_best_color	RecoverHiddenVertex.cpp	/^int8_t RecoverHiddenVertexImageContrast::find_best_color(RecoverHiddenVertexImageContrast::vertex_descriptor \/*v*\/)$/;"	f	class:RecoverHiddenVertexImageContrast
 find_unused_colors	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 float_cbk	GdsiiIO.cpp	/^void GdsReader::float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vData)$/;"	f	class:GdsReader
+gen_proj_target	SimpleMPL.cpp	/^void SimpleMPL::gen_proj_target()$/;"	f	class:SimpleMPL
 gen_stitch	LayoutDB.h	/^	inline bool gen_stitch() const { return parms.gen_stitch; }$/;"	f	struct:LayoutDB
 gen_stitch	Params.h	/^	bool gen_stitch;						   \/\/\/< used to test the stitch generation algorithms$/;"	m	struct:ControlParameter
 generate_id	Shapes.h	/^		static long generate_id()$/;"	f	class:Shape
@@ -432,6 +433,7 @@ print	Shapes.h	/^        void print(std::ostream& os) const $/;"	f	class:Rectang
 print	Shapes.h	/^        void print(std::ostream& os) const$/;"	f	class:Polygon
 print_welcome	SimpleMPL.cpp	/^void SimpleMPL::print_welcome() const$/;"	f	class:SimpleMPL
 print_welcome	stitch/SimpleMPL.cpp	/^void SimpleMPL::print_welcome() const$/;"	f	class:SimpleMPL
+proj_target	SimpleMPL.h	/^	std::vector<bool> 						proj_target;	\/\/ store the patterns which need to be splited$/;"	m	class:SimpleMPL
 projection	SimpleMPL.cpp	/^void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec)$/;"	f	class:SimpleMPL
 projection	stitch/StitchProc.cpp	/^void StitchProc::projection()$/;"	f	class:StitchProc
 read_cmd	SimpleMPL.cpp	/^void SimpleMPL::read_cmd(int32_t argc, char** argv)$/;"	f	class:SimpleMPL

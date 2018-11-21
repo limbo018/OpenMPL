@@ -84,7 +84,7 @@ protected:
 		uint32_t simplify_strategy, std::vector<int8_t>& vColor) const;
 	/// given a component, construct graph, mapping from global index to local index, and set precolor 
 	void construct_component_graph(const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt,
-		graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor) const;
+		graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor, bool flag) const;
 
 	/// report conflict number for a component 
 	uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;

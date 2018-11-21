@@ -130,7 +130,8 @@ void SimpleMPL::read_gds()
 
 void SimpleMPL::gen_proj_target()
 {
-	std::fill(proj_target.begin(), proj_target.end(), false);
+	uint32_t count = 0;
+	proj_target.resize(m_db->vPatternBbox.size(), false);
 	std::vector<uint32_t> vBookmark(m_comp_cnt);
 	// std::cout << "==== After Projection vBookmark ====" << std::endl;
 	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
@@ -138,7 +139,13 @@ void SimpleMPL::gen_proj_target()
 		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 	}
-
+	/*
+	std::cout << "bookmark : " << std::endl;
+	for(uint32_t i = 0; i < m_comp_cnt; i++)
+	{
+		std::cout << "comp " << i << " starts at " << vBookmark[i] << std::endl;
+	}
+	*/
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num())
 #endif 
@@ -154,37 +161,43 @@ void SimpleMPL::gen_proj_target()
 			std::vector<int8_t> vColor(pattern_cnt, -1); // coloring results 
 			map<uint32_t, uint32_t> mGlobal2Local; // global vertex id to local vertex id 
 
-			construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
+			construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor, false);
 
 			// graph simplification 
 			typedef lac::GraphSimplification<graph_type> graph_simplification_type;
-			uint32_t simplify_strategy = graph_simplification_type::NONE;
-			// keep the order of simplification 
-			if (m_db->simplify_level() > 1)
-				simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
-			if (m_db->simplify_level() > 2)
-				simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
+			uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
+			simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
 			graph_simplification_type gs(dg, m_db->color_num());
 			gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
-			// set max merge level, actually it only works when MERGE_SUBK4 is on 
-			if (m_db->color_num() == 3)
-				gs.max_merge_level(3);
-			else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better 
-				gs.max_merge_level(2);
 
 			gs.simplify(simplify_strategy);
+			std::vector<bool> vSim2OriTotal(mGlobal2Local.size(), false);
 
 			for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 			{
 				graph_type sg;
 				std::vector<vertex_descriptor> vSimpl2Orig;
 				gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
-				for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
-					proj_target[*it] = true;
+				for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(), ite = vSimpl2Orig.end(); it != ite; ++it)
+					vSim2OriTotal[*it] = true;
 			}
+
+			std::map<uint32_t, uint32_t>::iterator it, ite;
+			for(it = mGlobal2Local.begin(), ite = mGlobal2Local.end(); it != ite; ++it)
+			{
+				if(vSim2OriTotal[it->second])
+				{
+					proj_target[it->first] = true;
+					count ++;
+					rectangle_pointer_type const& pPattern = m_db->vPatternBbox[it->first];
+					//std::cout <<"proj_target " << it->first << " : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
+				}
+			}
+			
 		}
 	}
+	std::cout << "number of projection : " << count << std::endl;
 }
 
 
@@ -242,6 +255,7 @@ void SimpleMPL::solve()
 		}
 		m_comp_cnt = 1;
 	}
+
 	clock_t cons_end = clock();
 	mplPrint(kINFO, "construct_graph takes  %f.\n", (double)(cons_end - cons_start)/CLOCKS_PER_SEC);
 
@@ -287,7 +301,7 @@ void SimpleMPL::solve()
 		// pass iterators to save memory 
 		this->solve_component(itBgn, itEnd, comp_id);
 		clock_t comp_end = clock();
-		mplPrint(kINFO, "Component %d takes %f seconds.\n", comp_id, (double)(comp_end - comp_start)/CLOCKS_PER_SEC);
+		// mplPrint(kINFO, "Component %d takes %f seconds.\n", comp_id, (double)(comp_end - comp_start)/CLOCKS_PER_SEC);
 	}
 #ifdef COMPONENTS
 	return ;
@@ -597,12 +611,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better 
 		gs.max_merge_level(2);
 
-	// clock_t sim_start = clock();
-
 	gs.simplify(simplify_strategy);
-
-	// clock_t sim_end = clock();
-	// mplPrint(kINFO, "Component %d has size %d simplification takes : %f\n", comp_id, pattern_cnt, (double)(sim_end - sim_start) / CLOCKS_PER_SEC);
 
 	// collect simplified information 
 	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
@@ -631,8 +640,15 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 		// std::cout << "\nAfter simplification" ;
 		vSubColor.assign(num_vertices(sg), -1);
-
 /*
+		std::cout << "\n============================ subcomponent : " << sub_comp_id << std::endl;
+		for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
+		{
+			rectangle_pointer_type const& pPattern = m_db->vPatternBbox[(*it) + (*itBgn)];
+			std::cout <<"simplification " << *it << " : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
+		}
+		std::cout << "==============================" << std::endl;
+
 		if(vSubColor.size() >= 100)
 		{
 			std::string filename = m_db->output_gds() + "g_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id);
@@ -745,12 +761,12 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	RecoverHiddenVertex(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
 	// RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
 	clock_t recover_end = clock();
-	mplPrint(kINFO, "Comp_%d recovery takes %f seconds.\n", comp_id, (double)(recover_end - recover_end)/CLOCKS_PER_SEC);
+	// mplPrint(kINFO, "\nComp_%d recovery takes %f seconds.\n", comp_id, (double)(recover_end - recover_end)/CLOCKS_PER_SEC);
 	return acc_obj_value;
 }
 
 void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_iterator itBgn, uint32_t const pattern_cnt,
-	SimpleMPL::graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor) const
+	SimpleMPL::graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor, bool flag) const
 {
 	
 	// precolored patterns 
@@ -779,11 +795,18 @@ void SimpleMPL::construct_component_graph(const std::vector<uint32_t>::const_ite
 				{
 					e = add_edge(i, j, dg);
 					mplAssert(e.second);
+					/*
+					rectangle_pointer_type const & tempA = m_db->vPatternBbox[v];
+					rectangle_pointer_type const & tempB = m_db->vPatternBbox[u];
+					std::cout << "add edge : " << std::endl;
+					std::cout << "left " << v << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA) << std::endl;
+					std::cout << "right " << u << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl;
+					*/
 					boost::put(boost::edge_weight, dg, e.first, 1);
 				}
 			}
 		}
-		if (m_db->stitch())
+		if (flag && m_db->stitch())
 		{
 			for(std::vector<uint32_t>::const_iterator it = StitchRelation[v].begin(); it != StitchRelation[v].end(); ++it)
 			{
@@ -835,7 +858,14 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 	*/
 #endif
-
+	/*
+	std::cout << "In solve component : "  << comp_id << std::endl; 
+	for(std::vector<uint32_t>::const_iterator it = itBgn; it != itEnd; it++)
+	{
+		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[*it];
+		std::cout << pPattern->pattern_id() << " : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
+	}
+	*/
 	uint32_t acc_obj_value = std::numeric_limits<uint32_t>::max();
 	// if current pattern does not contain uncolored patterns, directly calculate conflicts 
 	if (check_uncolored(itBgn, itEnd))
@@ -861,7 +891,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
-
+/*
 	// only valid under no stitch 
 	if(!m_db->stitch())
 	{
@@ -872,7 +902,7 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 		uint32_t component_stitch_num = stitch_num(itBgn, itEnd);
 		mplPrint(kINFO, "Component %u has %u patterns...%u final stitches\n\n", comp_id, (uint32_t)(itEnd - itBgn), component_stitch_num);
 	}
-
+*/
 	if (m_db->verbose())
 		mplPrint(kDEBUG, "Component %u has %u patterns...%u conflicts\n", comp_id, (uint32_t)(itEnd - itBgn), component_conflict_num);		
 
@@ -896,7 +926,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
 
 	// mplPrint(kINFO, "In component %u\n", comp_id);
 										   // construct decomposition graph for component
-	construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor);
+	construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor, true);
 
 	// for debug, it does not affect normal run 
 	if (comp_id == m_db->dbg_comp_id())
@@ -1064,7 +1094,6 @@ void SimpleMPL::runProjection()
 	// store new vertex order
 	std::vector<uint32_t> new_vertex_order;
 
-	// std::cout << "\n\n\n========= runProjection =========\n";
 	uint32_t new_polygon_id = -1;
 	uint32_t new_rect_id = -1;
 
@@ -1084,8 +1113,9 @@ void SimpleMPL::runProjection()
 		uint32_t start_idx = poly_rect_begin[pid];
 		uint32_t end_idx = poly_rect_end[pid];
 
-		if(proj_target[comp_id])
+		if(proj_target[pid])
 		{
+			// std::cout << pid << " generate stitches : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl; 
 			// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
 			std::vector<rectangle_pointer_type> poss_nei_vec;
 			//std::cout << "=====" << pid << " has neighbors : \n";
@@ -1151,17 +1181,18 @@ void SimpleMPL::runProjection()
 			new_polygon_id += 1;
 			for (uint32_t j = start_idx; j <= end_idx; j++)
 			{
-				rectangle_type rect(*rect_vec[j]);
-				rect.pattern_id(++new_rect_id);
+				rectangle_pointer_type rect = rect_vec[j];
+				rect->pattern_id(++new_rect_id);
 				if(m_db->gen_stitch())
-					rect.color(new_rect_id%7);
+					rect->color(new_polygon_id%7);
 				new_rect_vec.push_back(rect);
 				rect_to_parent.push_back(new_polygon_id);
 			}
 			new2ori.push_back(pid);
 			new_vertex_order.push_back(new_polygon_id);
 			new_vCompId_vec.push_back(comp_id);
-			ori2newp[pid].push_back(new_polygon_id);
+			ori2new[pid].push_back(new_polygon_id);
+			StitchRelation.push_back(std::vector<uint32_t>());
 		}
 		
 	}
@@ -1174,10 +1205,10 @@ void SimpleMPL::runProjection()
 	{
 		rectangle_pointer_type pPattern = new_rect_vec[i];
 		std::cout << "polygon " << rect_to_parent[i] << " rect " << pPattern->pattern_id() << " : ";
-		std::cout << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
+		std::cout << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl << std::endl;
 	}
-*/
-	
+*/	
+
 	// update information in m_db;
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
@@ -1206,11 +1237,6 @@ void SimpleMPL::runProjection()
 		std::vector<uint32_t> poss_nei;
 		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
 		{
-			if( !proj_target[i] && !proj_target[m_mAdjVertex[i][j]] )
-			{
-				new_mAdjVertex[ori2new[i].front()].insert(ori2new[m_mAdjVertex[i][j]].front());
-				continue;
-			}
 			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
 				poss_nei.push_back(*it);
 		}
@@ -1236,7 +1262,6 @@ void SimpleMPL::runProjection()
 						coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
 						if(distance < m_db->coloring_distance)
 						{
-							edge_num++;
 							new_mAdjVertex[*it].insert(*nei_poly);
 							// if the rectangles are close to each other, it means corresponding polygons are neighbors
 							break;
@@ -1254,7 +1279,10 @@ void SimpleMPL::runProjection()
 	for(uint32_t i = 0; i < new_mAdjVertex.size(); i++)
 	{
 		for(std::set<uint32_t>::iterator it = new_mAdjVertex[i].begin(); it != new_mAdjVertex[i].end(); it++)
+		{
+			edge_num++;
 			m_mAdjVertex[i].push_back(*it);
+		}
 	}
 	
 	if(m_db->gen_stitch())
@@ -1307,7 +1335,14 @@ void SimpleMPL::runProjection()
 
 	std::vector<uint32_t>().swap(m_vVertexOrder);
 	m_vVertexOrder.swap(new_vertex_order);
-
+/*
+	for(uint32_t i = 0; i < m_vVertexOrder.size(); ++i)
+	{
+		std::cout << "order " << i << " is " << m_vVertexOrder[i];
+		rectangle_pointer_type const & pPattern = m_db->vPatternBbox[m_vVertexOrder[i]];
+		std::cout << " polygon " << pPattern->pattern_id() << " : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
+	}
+*/
 	mplPrint(kINFO, "After stitch insertion, %u vertices, %u edges\n", m_db->vPatternBbox.size(), edge_num);
 	return;
 }
@@ -1397,7 +1432,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			lower_boundary = gtl::yl(pRect);
 			upper_boundary = gtl::yh(pRect);
 		}
-		coordinate_type threshold = 20;
+		coordinate_type threshold = 0;
 		std::vector<coordinate_type> temp;
 		for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		{
