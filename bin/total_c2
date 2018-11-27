@@ -1,0 +1,102 @@
+
+
+=======================================================================
+                        OpenMPL - Version 1.1                        
+                                by                                   
+                Yibo Lin, Bei Yu, Qi Sun and David Z. Pan            
+               ECE Department, University of Texas at Austin         
+               CSE Department, Chinese University of Hong Kong       
+                         Copyright (c) 2018                          
+            Contact Authors:  {yibolin, dpan}@cerc.utexas.edu        
+                              {byu, qsun}@cse.cuhk.edu.hk            
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+(I) Reading input file bench/total_c2.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 3963
+(I) Total patterns # = 2196
+(I) Shape mode = POLYGON
+(I) Coloring distance = 120 db ( 120 nm )
+(I) Color num = 3
+(I) Simplification level = 3
+(I) Thread num = 1
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = SDP_CSDP
+(I) reading input files takes 0.310000 seconds CPU, 0.319963 seconds real
+(I) Constructing graph for 2196 patterns...
+(I) 2196 vertices, 4632 edges
+(I) Computing connected components...
+(I) construct_graph takes  0.120000.
+number of projection : 889
+(I) projection takes : 0.120000 seconds
+(I) reconstruct_polygon_total : 0.040000 seconds
+(I) refresh graph takes 0.010000 seconds CPU, 0.010752 seconds real
+(I) Generate new relationships takes 0.100000 seconds.
+(I) After stitch insertion, 3427 vertices, 14022 edges
+(I) stitch generation takes 0.230000 seconds CPU, 0.231204 seconds real
+(I) Solving 10 independent components...
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_0 has 6 nodes, takes 0.010000s
+(I) Graph has 217 nodes, with cost 25
+(I) Comp_0_subcomp_1 has 217 nodes, takes 0.870000s
+(I) Graph has 234 nodes, with cost 24
+(I) Comp_0_subcomp_2 has 234 nodes, takes 1.080000s
+(I) Graph has 200 nodes, with cost 20
+(I) Comp_0_subcomp_3 has 200 nodes, takes 0.740000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_4 has 6 nodes, takes 0.000000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_5 has 6 nodes, takes 0.000000s
+(I) Graph has 252 nodes, with cost 26
+(I) Comp_0_subcomp_6 has 252 nodes, takes 1.810000s
+(I) Graph has 252 nodes, with cost 28
+(I) Comp_0_subcomp_7 has 252 nodes, takes 1.550000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_8 has 6 nodes, takes 0.000000s
+(I) Graph has 201 nodes, with cost 21
+(I) Comp_0_subcomp_9 has 201 nodes, takes 0.940000s
+(I) Graph has 4 nodes, with cost 1
+(I) Graph has 4 nodes, with cost 1
+(I) Comp_0_subcomp_10 has 4 nodes, takes 0.000000s
+(I) Graph has 153 nodes, with cost 17
+(I) Comp_0_subcomp_11 has 153 nodes, takes 0.470000s
+(I) Graph has 186 nodes, with cost 24
+(I) Comp_0_subcomp_12 has 186 nodes, takes 0.700000s
+(I) Graph has 10 nodes, with cost 1
+(I) Comp_0_subcomp_13 has 10 nodes, takes 0.000000s
+(I) Graph has 88 nodes, with cost 10
+(I) Comp_0_subcomp_14 has 88 nodes, takes 0.110000s
+(I) Graph has 4 nodes, with cost 1
+(I) Graph has 4 nodes, with cost 1
+(I) Comp_0_subcomp_15 has 4 nodes, takes 0.000000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_16 has 6 nodes, takes 0.000000s
+(I) Graph has 162 nodes, with cost 17
+(I) Comp_0_subcomp_17 has 162 nodes, takes 0.540000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_18 has 6 nodes, takes 0.010000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_19 has 6 nodes, takes 0.000000s
+(I) Graph has 243 nodes, with cost 23
+(I) Comp_0_subcomp_20 has 243 nodes, takes 1.520000s
+(I) stitch coloring takes 16.170000 seconds CPU, 16.166633 seconds real
+(I) Total conflict number = 12
+(I) Color 0 density = 794
+(I) Color 1 density = 1377
+(I) Color 2 density = 1256
+(I) Total 341 final stitches.
+(I) Write output gds file: benchout/total_c2_3_coloring_with_stitch.gds
+(I) writing output file takes 0.020000 seconds CPU, 0.071905 seconds real
+(I) program takes 20.420000 seconds CPU, 20.480469 seconds real

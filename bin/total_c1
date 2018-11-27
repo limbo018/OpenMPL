@@ -1,0 +1,99 @@
+
+
+=======================================================================
+                        OpenMPL - Version 1.1                        
+                                by                                   
+                Yibo Lin, Bei Yu, Qi Sun and David Z. Pan            
+               ECE Department, University of Texas at Austin         
+               CSE Department, Chinese University of Hong Kong       
+                         Copyright (c) 2018                          
+            Contact Authors:  {yibolin, dpan}@cerc.utexas.edu        
+                              {byu, qsun}@cse.cuhk.edu.hk            
+=======================================================================
+(D) size of Shape = 8 bytes
+(D) size of Rectangle = 24 bytes
+(D) size of Polygon = 32 bytes
+(I) Reading input file bench/total_c1.gds
+(I) Ignored 0 duplicate patterns
+(I) Input data for polygon based layout...
+(I) # polygon rectangles = 2093
+(I) Total patterns # = 1124
+(I) Shape mode = POLYGON
+(I) Coloring distance = 120 db ( 120 nm )
+(I) Color num = 3
+(I) Simplification level = 3
+(I) Thread num = 1
+(I) Uncolored layer # = 2 ( 1 101 )
+(I) Precolored layer # = 0
+(I) Path layer # = 0
+(I) Algorithm = SDP_CSDP
+(I) reading input files takes 0.170000 seconds CPU, 0.180883 seconds real
+(I) Constructing graph for 1124 patterns...
+(I) 1124 vertices, 2146 edges
+(I) Computing connected components...
+(I) construct_graph takes  0.060000.
+number of projection : 286
+(I) projection takes : 0.050000 seconds
+(I) reconstruct_polygon_total : 0.000000 seconds
+(I) refresh graph takes 0.000000 seconds CPU, 0.004625 seconds real
+(I) Generate new relationships takes 0.040000 seconds.
+(I) After stitch insertion, 1490 vertices, 5396 edges
+(I) stitch generation takes 0.090000 seconds CPU, 0.089375 seconds real
+(I) Solving 4 independent components...
+(I) Graph has 4 nodes, with cost 1
+(I) Graph has 4 nodes, with cost 1
+(I) Comp_0_subcomp_0 has 4 nodes, takes 0.000000s
+(I) Graph has 4 nodes, with cost 1
+(I) Graph has 4 nodes, with cost 1
+(I) Comp_0_subcomp_1 has 4 nodes, takes 0.000000s
+(I) Graph has 5 nodes, with cost 1
+(I) Graph has 10 nodes, with cost 2
+(I) Comp_0_subcomp_2 has 10 nodes, takes 0.010000s
+(I) Graph has 42 nodes, with cost 4
+(I) Comp_0_subcomp_3 has 42 nodes, takes 0.020000s
+(I) Graph has 22 nodes, with cost 2
+(I) Comp_0_subcomp_4 has 22 nodes, takes 0.000000s
+(I) Graph has 6 nodes, with cost 0.1
+(I) Graph has 13 nodes, with cost 1
+(I) Comp_0_subcomp_5 has 13 nodes, takes 0.000000s
+(I) Graph has 5 nodes, with cost 0
+(I) Graph has 59 nodes, with cost 6
+(I) Comp_0_subcomp_6 has 59 nodes, takes 0.040000s
+(I) Graph has 4 nodes, with cost 1
+(I) Graph has 4 nodes, with cost 1
+(I) Comp_0_subcomp_7 has 4 nodes, takes 0.000000s
+(I) Graph has 7 nodes, with cost 1
+(I) Graph has 56 nodes, with cost 7
+(I) Comp_0_subcomp_8 has 56 nodes, takes 0.040000s
+(I) Graph has 103 nodes, with cost 11
+(I) Comp_0_subcomp_9 has 103 nodes, takes 0.160000s
+(I) Graph has 7 nodes, with cost 1
+(I) Graph has 64 nodes, with cost 7
+(I) Comp_0_subcomp_10 has 64 nodes, takes 0.040000s
+(I) Graph has 4 nodes, with cost 1
+(I) Graph has 4 nodes, with cost 1
+(I) Comp_0_subcomp_11 has 4 nodes, takes 0.010000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 6 nodes, with cost 0
+(I) Comp_0_subcomp_12 has 6 nodes, takes 0.000000s
+(I) Graph has 2 nodes, with cost 0
+(I) Comp_0_subcomp_13 has 2 nodes, takes 0.000000s
+(I) Graph has 2 nodes, with cost 0
+(I) Comp_0_subcomp_14 has 2 nodes, takes 0.000000s
+(I) Graph has 3 nodes, with cost 0
+(I) Graph has 4 nodes, with cost 0
+(I) Comp_0_subcomp_15 has 4 nodes, takes 0.000000s
+(I) Graph has 2 nodes, with cost 0
+(I) Comp_0_subcomp_16 has 2 nodes, takes 0.000000s
+(I) Graph has 6 nodes, with cost 0
+(I) Graph has 78 nodes, with cost 7
+(I) Comp_0_subcomp_17 has 78 nodes, takes 0.070000s
+(I) stitch coloring takes 1.450000 seconds CPU, 1.443931 seconds real
+(I) Total conflict number = 9
+(I) Color 0 density = 313
+(I) Color 1 density = 627
+(I) Color 2 density = 550
+(I) Total 112 final stitches.
+(I) Write output gds file: benchout/total_c1_3_coloring_with_stitch.gds
+(I) writing output file takes 0.010000 seconds CPU, 0.046726 seconds real
+(I) program takes 2.480000 seconds CPU, 2.523655 seconds real

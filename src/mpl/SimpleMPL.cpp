@@ -166,7 +166,7 @@ void SimpleMPL::gen_proj_target()
 			// graph simplification 
 			typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 			uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
-			simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
+			// simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
 			graph_simplification_type gs(dg, m_db->color_num());
 			gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
@@ -630,16 +630,15 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
-		// clock_t sub_comp_start = clock();
-		// std::cout << "solve subcomponent " << sub_comp_id;
+		clock_t sub_comp_start = clock();
 		graph_type sg;
 		std::vector<int8_t>& vSubColor = mSubColor[sub_comp_id];
 		std::vector<vertex_descriptor>& vSimpl2Orig = mSimpl2Orig[sub_comp_id];
 
 		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 
-		// std::cout << "\nAfter simplification" ;
 		vSubColor.assign(num_vertices(sg), -1);
+		// std::cout << "solve subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
 /*
 		std::cout << "\n============================ subcomponent : " << sub_comp_id << std::endl;
 		for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
@@ -649,12 +648,12 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 		std::cout << "==============================" << std::endl;
 
-		if(vSubColor.size() >= 100)
+		if(vSubColor.size() >= 80)
 		{
 			std::string filename = m_db->output_gds() + "g_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id);
 			write_graph(sg, filename);
 		}
-		
+	
 		for (uint32_t i = 0; i != pattern_cnt; ++i)
 		{
 			uint32_t const& v = *(itBgn + i);
@@ -685,24 +684,23 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 /*
 #ifdef QDEBUG
-		if(vSubColor.size() > 100)
+		int abutting_count = 0;
+		for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 		{
-			for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
-			{
-				m_db->vPatternBbox[i]->color(1);
-				m_db->set_color(i, 1);
-			}
-			for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
-			{
-				vertex_descriptor v = *vi;
-				m_db->vPatternBbox[vSimpl2Orig[v]]->color(5);
-				m_db->set_color(vSimpl2Orig[v], 5);
-			}
-			std::string intermediate_name = m_db->output_gds() + "_sub_" + limbo::to_string(sub_comp_id) + ".gds";
-			GdsWriter writer;
-			mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
-			writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
+			m_db->vPatternBbox[i]->color(0);
+			m_db->set_color(i, 0);
 		}
+		for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+		{
+			vertex_descriptor v = *vi;
+			abutting_count ++ ;
+			m_db->vPatternBbox[vSimpl2Orig[v]]->color(abutting_count % 5 + 1);
+			m_db->set_color(vSimpl2Orig[v], abutting_count % 5 + 1);
+		}
+		std::string intermediate_name = m_db->output_gds() + "_comp_" + limbo::to_string(comp_id) + "_sub_" + limbo::to_string(sub_comp_id) + "_abutting.gds";
+		GdsWriter writer;
+		// mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
+		writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
 #endif
 */
 		// 1st trial 
@@ -741,9 +739,28 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
-		
-		// clock_t sub_comp_end = clock();
-		// mplPrint(kINFO, "Comp_%d_subcomp_%d has %d nodes, takes %fs\n", comp_id, sub_comp_id, vSubColor.size(), (double)(sub_comp_end - sub_comp_start)/CLOCKS_PER_SEC);
+
+#ifdef QDEBUG
+		for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
+		{
+			m_db->vPatternBbox[i]->color(0);
+			m_db->set_color(i, 0);
+		}
+		for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+		{
+			vertex_descriptor v = *vi;
+			int8_t color = pcs->color(v);
+			m_db->vPatternBbox[vSimpl2Orig[v]]->color(color + 1);
+			m_db->set_color(vSimpl2Orig[v], color + 1);
+		}
+		std::string intermediate_name = m_db->output_gds() + "_comp_" + limbo::to_string(comp_id) + "_sub_" + limbo::to_string(sub_comp_id) + "_coloring.gds";
+		GdsWriter writer;
+		// mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
+		writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
+#endif
+
+		clock_t sub_comp_end = clock();
+		mplPrint(kINFO, "Comp_%d_subcomp_%d has %d nodes, takes %fs\n\n\n", comp_id, sub_comp_id, vSubColor.size(), (double)(sub_comp_end - sub_comp_start)/CLOCKS_PER_SEC);
 
 		delete pcs;
 	}
@@ -1235,36 +1252,45 @@ void SimpleMPL::runProjection()
 	{
 		// list all the possible polygon neighbors
 		std::vector<uint32_t> poss_nei;
+		bool split_flag = false;
 		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
 		{
+			if(!proj_target[m_mAdjVertex[i][j]] && !proj_target[i])
+				new_mAdjVertex[ori2new[i].front()].insert(ori2new[m_mAdjVertex[i][j]].front());
+			else
+				split_flag = true;
 			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
 				poss_nei.push_back(*it);
+
 		}
-		// traverse all the newly-generated polygons in current polygon
-		for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
+		if(split_flag)
 		{
-			// std::cout << *it << " : " << gtl::xl(*m_db->vPatternBbox[*it]) << ", " << gtl::yl(*m_db->vPatternBbox[*it]) << ", " << gtl::xh(*m_db->vPatternBbox[*it]) << ", " << gtl::yh(*m_db->vPatternBbox[*it]) << std::endl;
-			// std::cout << "\n\n=========== new polygon " << *it << " possible neighbors: " << std::endl;
-			uint32_t start_idx = new_poly_rect_begin[*it];
-			uint32_t end_idx = new_poly_rect_end[*it];
-			// traverse all rectangles in current newly-generated polygon.
-			for(uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
+			// traverse all the newly-generated polygons in current polygon
+			for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 			{
-				// traverse all possible newly-generated neighbor polygons
-				for(std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
+				// std::cout << *it << " : " << gtl::xl(*m_db->vPatternBbox[*it]) << ", " << gtl::yl(*m_db->vPatternBbox[*it]) << ", " << gtl::xh(*m_db->vPatternBbox[*it]) << ", " << gtl::yh(*m_db->vPatternBbox[*it]) << std::endl;
+				// std::cout << "\n\n=========== new polygon " << *it << " possible neighbors: " << std::endl;
+				uint32_t start_idx = new_poly_rect_begin[*it];
+				uint32_t end_idx = new_poly_rect_end[*it];
+				// traverse all rectangles in current newly-generated polygon.
+				for(uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
 				{
-					uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
-					uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
-					// traverse all rectangles in current newly-generated neighbor polygon
-					for(uint32_t nei_rect = nei_start_idx; nei_rect <= nei_end_idx; nei_rect++)
+					// traverse all possible newly-generated neighbor polygons
+					for(std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
 					{
-						uint32_t nei_rect_pid = new_rect_vec[nei_rect]->pattern_id();
-						coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
-						if(distance < m_db->coloring_distance)
+						uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
+						uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
+						// traverse all rectangles in current newly-generated neighbor polygon
+						for(uint32_t nei_rect = nei_start_idx; nei_rect <= nei_end_idx; nei_rect++)
 						{
-							new_mAdjVertex[*it].insert(*nei_poly);
-							// if the rectangles are close to each other, it means corresponding polygons are neighbors
-							break;
+							uint32_t nei_rect_pid = new_rect_vec[nei_rect]->pattern_id();
+							coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
+							if(distance < m_db->coloring_distance)
+							{
+								new_mAdjVertex[*it].insert(*nei_poly);
+								// if the rectangles are close to each other, it means corresponding polygons are neighbors
+								break;
+							}
 						}
 					}
 				}
@@ -1318,7 +1344,6 @@ void SimpleMPL::runProjection()
 			std::cout << StitchRelation[i][j] << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
 		}
 	}
-
 #ifdef QDEBUG
 	std::cout << "\n\n\n========= conflict relationships ==========\n\n";
 	for(uint32_t i = 0; i < m_mAdjVertex.size(); i++)

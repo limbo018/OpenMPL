@@ -109,9 +109,9 @@ void LayoutDBPolygon::set_color(uint32_t pattern_id, int8_t color)
 #ifdef QDEBUG
 //	std::cout << "set_color : " <<  pPattern->pattern_id()  << " has color " << +unsigned(pPattern->color()) << " and new color is " << +unsigned(color)<< std::endl;
 #endif
-	if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
-        mplAssert(pPattern->color() == color);
-    else // assign color to uncolored pattern 
+	//if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
+    //    mplAssert(pPattern->color() == color);
+    //else // assign color to uncolored pattern 
         pPattern->color(color);
     for (uint32_t i = vPolyRectBeginId[pattern_id], ie = vParentPolygonId.size(); i != ie && vParentPolygonId[i] == pattern_id; ++i)
         vPolyRectPattern[i]->color(color);
@@ -266,6 +266,7 @@ void LayoutDBPolygon::report_data_kernel() const
 // more techniques may be needed to improve the storage performance and reduce the peak memory.
 void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent)
 {
+/*
 #ifdef QDEBUG
 	std::cout << "===== REFRESH =====" << std::endl;
 	std::cout << "rect_to_parent : " << std::endl;
@@ -278,6 +279,7 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	//	std::cout << new_rect_vec[j]->pattern_id() << " ";
 	std::cout << "===================" <<  std::endl;
 #endif
+*/
     char buf[256];
     mplSPrint(kINFO, buf, "refresh graph takes %%t seconds CPU, %%w seconds real\n");
     boost::timer::auto_cpu_timer timer(buf);
