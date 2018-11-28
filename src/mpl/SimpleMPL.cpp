@@ -130,9 +130,7 @@ void SimpleMPL::read_gds()
 
 void SimpleMPL::gen_proj_target()
 {
-	uint32_t count = 0;
 	proj_target.resize(m_db->vPatternBbox.size(), false);
-
 	std::vector<uint32_t> vBookmark(m_comp_cnt);
 	// std::cout << "==== After Projection vBookmark ====" << std::endl;
 	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
@@ -140,9 +138,7 @@ void SimpleMPL::gen_proj_target()
 		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 	}
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(m_db->thread_num())
-#endif 
+
 	for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
 	{
 		// construct a component 
@@ -167,7 +163,9 @@ void SimpleMPL::gen_proj_target()
 
 			gs.simplify(simplify_strategy);
 			std::vector<bool> vSim2OriTotal(mGlobal2Local.size(), false);
-
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
 			for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 			{
 				graph_type sg;
@@ -176,24 +174,23 @@ void SimpleMPL::gen_proj_target()
 				for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(), ite = vSimpl2Orig.end(); it != ite; ++it)
 					vSim2OriTotal[*it] = true;
 			}
-
-			std::map<uint32_t, uint32_t>::iterator it, ite;
-			for(it = mGlobal2Local.begin(), ite = mGlobal2Local.end(); it != ite; ++it)
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
+			std::map<uint32_t, uint32_t>::iterator it = mGlobal2Local.begin(), ite = mGlobal2Local.end();
+			for(; it != ite; ++it)
 			{
 				if(vSim2OriTotal[it->second])
 				{
 					proj_target[it->first] = true;
-					count ++;
-					rectangle_pointer_type const& pPattern = m_db->vPatternBbox[it->first];
+					// rectangle_pointer_type const& pPattern = m_db->vPatternBbox[it->first];
 					//std::cout <<"proj_target " << it->first << " : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl;
 				}
 			}
-			
 		}
 	}
-	std::cout << "number of projection : " << count << std::endl;
+	std::cout << "(I) number of projection : " << std::count(proj_target.begin(), proj_target.end(), true) << std::endl;
 }
-
 
 void SimpleMPL::write_gds()
 {
@@ -1079,25 +1076,6 @@ void SimpleMPL::runProjection()
 		poly_rect_end[i] = poly_rect_begin[i + 1] - 1;
 	poly_rect_end[vertex_num - 1] = rect_vec.size() - 1;
 
-/*
-#ifdef QDEBUG
-	for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
-	{
-		rectangle_pointer_type pPattern = m_db->vPatternBbox[i];
-		uint32_t start_idx = poly_rect_begin[pPattern->pattern_id()];
-		uint32_t end_idx = poly_rect_end[pPattern->pattern_id()];
-		int count = 0;
-		for(uint32_t j = start_idx; j <= end_idx; j++)
-		{
-			rect_vec[j]->color(count);
-			count ++;
-		}
-	}
-
-	GdsWriter writer;
-	writer.write_intermediate(m_db->output_gds() + "_abutting.gds", rect_vec, 1, m_db->strname, m_db->unit*1e+6);
-#endif
-*/
 	std::vector<rectangle_pointer_type> new_rect_vec;		// store the newly-generated rectangles
 	std::vector<uint32_t> rect_to_parent;					// map from rectangles to its parent polygon
 	std::vector<std::vector<uint32_t> >().swap(ori2new);
@@ -1125,21 +1103,17 @@ void SimpleMPL::runProjection()
 		uint32_t start_idx = poly_rect_begin[pid];
 		uint32_t end_idx = poly_rect_end[pid];
 
+		// We should generate stitches for this polygon.
 		if(proj_target[pid])
 		{
-			// std::cout << pid << " generate stitches : " << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl; 
 			// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
 			std::vector<rectangle_pointer_type> poss_nei_vec;
-			//std::cout << "=====" << pid << " has neighbors : \n";
 			for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
 			{
 				uint32_t s_idx = poly_rect_begin[*it];
 				uint32_t e_idx = poly_rect_end[*it];
 				for (uint32_t a = s_idx; a <= e_idx; a++)
-				{
-					//std::cout << gtl::xl(*rect_vec[a]) << " " << gtl::yl(*rect_vec[a]) << " " << gtl::xh(*rect_vec[a]) << " " << gtl::yh(*rect_vec[a]) << std::endl;
 					poss_nei_vec.push_back(rect_vec[a]);
-				}
 			}
 
 			std::vector<std::pair<rectangle_pointer_type, uint32_t> > poly_split; 
@@ -1160,15 +1134,13 @@ void SimpleMPL::runProjection()
 			}
 			uint32_t pivot = new_polygon_id;
 
-			std::vector<std::vector<uint32_t> > stitch_list;
 			clock_t each_re = clock();
-			reconstruct_polygon(new_polygon_id, new_polygon_id_list, poly_split, stitch_list);
+			// generate new polygons and stitch relations, update 'StitchRelation'
+			reconstruct_polygon(new_polygon_id, new_polygon_id_list, poly_split);
 			clock_t each_end = clock();
 			reconstruct_polygon_total += (double)(each_end - each_re)/CLOCKS_PER_SEC;
 
 			assert(new_polygon_id_list.size() == poly_split.size());
-
-			StitchRelation.insert(StitchRelation.end(), stitch_list.begin(), stitch_list.end());
 
 			for(uint32_t i = 0; i < poly_split.size(); i++)
 			{
@@ -1211,21 +1183,12 @@ void SimpleMPL::runProjection()
 	clock_t projection_end = clock();
 	mplPrint(kINFO, "projection takes : %f seconds\n", (double)(projection_end - projection_start)/CLOCKS_PER_SEC );
 	mplPrint(kINFO, "reconstruct_polygon_total : %f seconds\n", reconstruct_polygon_total);
-/*
-	std::cout << "\n\n===========================\n";
-	for(uint32_t i = 0; i < new_rect_vec.size(); i++)
-	{
-		rectangle_pointer_type pPattern = new_rect_vec[i];
-		std::cout << "polygon " << rect_to_parent[i] << " rect " << pPattern->pattern_id() << " : ";
-		std::cout << gtl::xl(*pPattern) << ", " << gtl::yl(*pPattern) << ", " << gtl::xh(*pPattern) << ", " << gtl::yh(*pPattern) << std::endl << std::endl;
-	}
-*/	
 
 	// update information in m_db;
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
 	// Now, update the adjacency list, we still need original adjacency list
-	std::vector<std::set<uint32_t> > new_mAdjVertex;
+	std::vector<std::vector<uint32_t> > new_mAdjVertex;
 	new_mAdjVertex.resize(m_db->vPatternBbox.size());
 	uint32_t edge_num = 0;
 
@@ -1250,11 +1213,12 @@ void SimpleMPL::runProjection()
 		bool split_flag = false;
 		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
 		{
-			if(!proj_target[m_mAdjVertex[i][j]] && !proj_target[i])
-				new_mAdjVertex[ori2new[i].front()].insert(ori2new[m_mAdjVertex[i][j]].front());
+			uint32_t nei_id = m_mAdjVertex[i][j];
+			if(!proj_target[nei_id] && !proj_target[i])
+				new_mAdjVertex[ori2new[i].front()].push_back(ori2new[nei_id].front());
 			else
 			{
-				for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
+				for (std::vector<uint32_t>::iterator it = ori2new[nei_id].begin(); it != ori2new[nei_id].end(); it++)
 					poss_nei.push_back(*it);
 				split_flag = true;
 			}
@@ -1264,26 +1228,21 @@ void SimpleMPL::runProjection()
 			// traverse all the newly-generated polygons in current polygon
 			for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 			{
-				// std::cout << *it << " : " << gtl::xl(*m_db->vPatternBbox[*it]) << ", " << gtl::yl(*m_db->vPatternBbox[*it]) << ", " << gtl::xh(*m_db->vPatternBbox[*it]) << ", " << gtl::yh(*m_db->vPatternBbox[*it]) << std::endl;
-				// std::cout << "\n\n=========== new polygon " << *it << " possible neighbors: " << std::endl;
 				uint32_t start_idx = new_poly_rect_begin[*it];
 				uint32_t end_idx = new_poly_rect_end[*it];
-				// traverse all rectangles in current newly-generated polygon.
-				for(uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
+				for (std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
 				{
-					// traverse all possible newly-generated neighbor polygons
-					for(std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
+					uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
+					uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
+					bool done = false;
+					for (uint32_t now_rect = start_idx; now_rect != end_idx; now_rect++)
 					{
-						uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
-						uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
-						// traverse all rectangles in current newly-generated neighbor polygon
-						for(uint32_t nei_rect = nei_start_idx; nei_rect <= nei_end_idx; nei_rect++)
+						for (uint32_t nei_rect = nei_start_idx; nei_rect != nei_end_idx; nei_rect++)
 						{
-							uint32_t nei_rect_pid = new_rect_vec[nei_rect]->pattern_id();
-							coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
-							if(distance < m_db->coloring_distance)
+							coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect]);
+							if (distance < m_db->coloring_distance)
 							{
-								new_mAdjVertex[*it].insert(*nei_poly);
+								new_mAdjVertex[*it].push_back(*nei_poly);
 								/*
 								std::cout << "minimal distance is " << m_db->coloring_distance << ", but this is " << distance << std::endl;
 								std::cout << *it << " --has neighbor-- " << *nei_poly << std::endl;
@@ -1294,9 +1253,12 @@ void SimpleMPL::runProjection()
 								std::cout << *nei_poly << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
 								*/
 								// if the rectangles are close to each other, it means corresponding polygons are neighbors
+								done = true;
 								break;
 							}
 						}
+						if (done)
+							break;
 					}
 				}
 			}
@@ -1306,6 +1268,12 @@ void SimpleMPL::runProjection()
 	mplPrint(kINFO, "Generate new relationships takes %f seconds.\n", (double)(new_relation_end - new_relation_start)/CLOCKS_PER_SEC );
 
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
+	m_mAdjVertex.swap(new_mAdjVertex);
+	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
+	{
+		edge_num += m_mAdjVertex[i].size();
+	}
+	/*
 	m_mAdjVertex.resize(new_mAdjVertex.size());
 	for(uint32_t i = 0; i < new_mAdjVertex.size(); i++)
 	{
@@ -1315,7 +1283,8 @@ void SimpleMPL::runProjection()
 			m_mAdjVertex[i].push_back(*it);
 		}
 	}
-	
+	*/
+
 	if(m_db->gen_stitch())
 	{
 		std::vector<std::pair<uint32_t, uint32_t> > stitch_pair;
@@ -1403,17 +1372,23 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 	coordinate_difference width = gtl::xh(pRect) - gtl::xl(pRect);
 	if(width <= 5000)
 	{
+		coordinate_type lower_boundary;
+		coordinate_type upper_boundary;
+
 		std::set<coordinate_type> vset;
 		std::vector<coordinate_type> vPossibleStitches;
 		if (hor)
 		{
-			vset.insert(gtl::xl(pRect));
-			vset.insert(gtl::xh(pRect));
+			lower_boundary = gtl::xl(pRect);
+			upper_boundary = gtl::xh(pRect);
 		}
 		else {
-			vset.insert(gtl::yl(pRect));
-			vset.insert(gtl::yh(pRect));
+			lower_boundary = gtl::yl(pRect);
+			upper_boundary = gtl::yh(pRect);
 		}
+		vset.insert(lower_boundary);
+		vset.insert(upper_boundary);
+
 		std::vector<rectangle_type> vInterSect;
 		// generate intersections
 		for (std::vector<rectangle_pointer_type>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
@@ -1451,18 +1426,6 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		// check the stitch positions' legalities
 		// if the position is very colse to the rectangle's boundary, it's illegal.
 		
-		coordinate_type lower_boundary;
-		coordinate_type upper_boundary;
-		if (hor)
-		{
-			lower_boundary = gtl::xl(pRect);
-			upper_boundary = gtl::xh(pRect);
-		}
-		else
-		{
-			lower_boundary = gtl::yl(pRect);
-			upper_boundary = gtl::yh(pRect);
-		}
 		coordinate_type threshold = 50;
 		std::vector<coordinate_type> temp;
 		for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
@@ -1685,8 +1648,9 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 	return;
 }
 
-void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, std::vector<std::vector<uint32_t> >& stitch_list)
+void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list)
 {
+	std::vector<std::vector<uint32_t> > stitch_list;
 	uint32_t start = polygon_id + 1;
 	/*
 	char buf[256];
@@ -1745,6 +1709,7 @@ void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> 
 	}
 	rect_list.swap(rect_temp);
 	new_polygon_id_list.swap(new_polygon_id_temp);
+	StitchRelation.insert(StitchRelation.end(), stitch_list.begin(), stitch_list.end());
 }
 
 uint32_t SimpleMPL::stitch_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const
