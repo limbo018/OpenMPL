@@ -1709,7 +1709,7 @@ void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> 
 	{
 		for(uint32_t j = i + 1; j < rect_list.size(); j++)
 		{
-			if(rect_list[i].second == rect_list[j].second)
+			if(rect_list[i].second == rect_list[j].second && boost::geometry::distance(*(rect_list[i].first), *(rect_list[j].first)) == 0)
 			{
 				stitch_list[new_polygon_id_list[i] - start].push_back(new_polygon_id_list[j]);
 				stitch_list[new_polygon_id_list[j] - start].push_back(new_polygon_id_list[i]);
