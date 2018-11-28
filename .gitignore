@@ -9,7 +9,7 @@ obj
 lib/*
 
 bin/.out
-bin/SimpleMPL
+bin/OpenMPL
 bin/.log
 bin/*.gds
 bin/bench/*.ascii
@@ -28,3 +28,4 @@ decomp_*
 bin/*.zip
 bin/bench/*.gds
 bin/benchout/*
+lib/OpenMPL.a
