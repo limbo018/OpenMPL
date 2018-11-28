@@ -638,7 +638,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 
 		vSubColor.assign(num_vertices(sg), -1);
-		// std::cout << "solve subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
+		std::cout << "solve subcomponent " << sub_comp_id << " has " << vSubColor.size() << " nodes." << std::endl;
 /*
 		std::cout << "\n============================ subcomponent : " << sub_comp_id << std::endl;
 		for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
@@ -722,6 +722,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 */		
 #ifdef COMPONENTS
 		write_graph(sg, "c_" + limbo::to_string(comp_id) + "_" + limbo::to_string(sub_comp_id));
+		continue;
 #endif
 																																   // choose smaller objective value 
 		if (obj_value1 < obj_value2)
@@ -1117,7 +1118,7 @@ void SimpleMPL::runProjection()
 	clock_t projection_start = clock();
 	double reconstruct_polygon_total = 0;
 	double project_total = 0;
-
+	
 	for (uint32_t ver = 0; ver < vertex_num; ver++)
 	{
 		uint32_t v = m_vVertexOrder[ver];
@@ -1445,6 +1446,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 
 		// check the stitch positions' legalities
 		// if the position is very colse to the rectangle's boundary, it's illegal.
+		/*
 		coordinate_type lower_boundary;
 		coordinate_type upper_boundary;
 		if (hor)
@@ -1468,7 +1470,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		}
 		std::vector<coordinate_type>().swap(vstitches);
 		vstitches.swap(temp);
-
+		*/
 	}
 	// split rectangles according to the stitch positions.
 	if (vstitches.size() <= 0)
