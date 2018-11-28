@@ -443,7 +443,7 @@ read_gds	stitch/SimpleMPL.cpp	/^void SimpleMPL::read_gds()$/;"	f	class:SimpleMPL
 read_gds	stitch/StitchProc.cpp	/^void StitchProc::read_gds()$/;"	f	class:StitchProc
 real_4_cbk	GdsiiIO.cpp	/^void GdsReader::real_4_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) $/;"	f	class:GdsReader
 real_8_cbk	GdsiiIO.cpp	/^void GdsReader::real_8_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser::GdsData::EnumType data_type, std::vector<double> const& vFloat) $/;"	f	class:GdsReader
-reconstruct_polygon	SimpleMPL.cpp	/^void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, std::vector<std::vector<uint32_t> >& stitch_list)$/;"	f	class:SimpleMPL
+reconstruct_polygon	SimpleMPL.cpp	/^void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> & new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list)$/;"	f	class:SimpleMPL
 recover_vertex	RecoverHiddenVertex.cpp	/^void RecoverHiddenVertex::recover_vertex(RecoverHiddenVertex::vertex_descriptor v)$/;"	f	class:RecoverHiddenVertex
 rectangle_pointer_type	GdsiiIO.h	/^	typedef layoutdb_type::rectangle_pointer_type  rectangle_pointer_type;$/;"	t	struct:GdsReader
 rectangle_pointer_type	GdsiiIO.h	/^	typedef layoutdb_type::rectangle_pointer_type rectangle_pointer_type;$/;"	t	struct:GdsWriter

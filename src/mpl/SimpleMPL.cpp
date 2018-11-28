@@ -731,7 +731,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
-
+/*
 #ifdef QDEBUG
 		for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 		{
@@ -750,7 +750,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		// mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
 		writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
 #endif
-
+*/
 		clock_t sub_comp_end = clock();
 		mplPrint(kINFO, "Comp_%d_subcomp_%d has %d nodes, takes %fs\n\n\n", comp_id, sub_comp_id, vSubColor.size(), (double)(sub_comp_end - sub_comp_start)/CLOCKS_PER_SEC);
 
@@ -1459,7 +1459,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		// check the stitch positions' legalities
 		// if the position is very colse to the rectangle's boundary, it's illegal.
 		
-		coordinate_type threshold = 50;
+		coordinate_type threshold = 0;
 		std::vector<coordinate_type> temp;
 		for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		{
