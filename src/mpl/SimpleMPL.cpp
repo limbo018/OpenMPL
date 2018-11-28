@@ -1188,7 +1188,7 @@ void SimpleMPL::runProjection()
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
 	// Now, update the adjacency list, we still need original adjacency list
-	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+	std::vector<std::set<uint32_t> > new_mAdjVertex;
 	new_mAdjVertex.resize(m_db->vPatternBbox.size());
 	uint32_t edge_num = 0;
 
@@ -1225,6 +1225,7 @@ void SimpleMPL::runProjection()
 		}
 		if(split_flag)
 		{
+			/*
 			// traverse all the newly-generated polygons in current polygon
 			for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 			{
@@ -1243,7 +1244,7 @@ void SimpleMPL::runProjection()
 							if (distance < m_db->coloring_distance)
 							{
 								new_mAdjVertex[*it].push_back(*nei_poly);
-								/*
+								
 								std::cout << "minimal distance is " << m_db->coloring_distance << ", but this is " << distance << std::endl;
 								std::cout << *it << " --has neighbor-- " << *nei_poly << std::endl;
 								rectangle_pointer_type tempA = m_db->vPatternBbox[*it];
@@ -1251,7 +1252,7 @@ void SimpleMPL::runProjection()
 								std::cout << *it << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
 								std::cout << "\nwith\n";
 								std::cout << *nei_poly << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
-								*/
+								
 								// if the rectangles are close to each other, it means corresponding polygons are neighbors
 								done = true;
 								break;
@@ -1262,7 +1263,7 @@ void SimpleMPL::runProjection()
 					}
 				}
 			}
-			/*
+			*/
 			// traverse all the newly-generated polygons in current polygon
 			for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 			{
@@ -1293,18 +1294,18 @@ void SimpleMPL::runProjection()
 					}
 				}
 			}
-			*/
+			
 		}
 	}
 	clock_t new_relation_end = clock();
 	mplPrint(kINFO, "Generate new relationships takes %f seconds.\n", (double)(new_relation_end - new_relation_start)/CLOCKS_PER_SEC );
-	
+	/*
 	m_mAdjVertex.swap(new_mAdjVertex);	
 	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
 	{
 		edge_num += m_mAdjVertex[i].size();
 	}
-	/*
+	*/
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex.resize(new_mAdjVertex.size());
 	for (uint32_t i = 0; i < new_mAdjVertex.size(); i++)
