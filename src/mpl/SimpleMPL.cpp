@@ -131,21 +131,8 @@ void SimpleMPL::read_gds()
 void SimpleMPL::gen_proj_target()
 {
 	uint32_t count = 0;
-	proj_target.resize(m_db->vPatternBbox.size(), false);
-	std::vector<uint32_t> vBookmark(m_comp_cnt);
-	// std::cout << "==== After Projection vBookmark ====" << std::endl;
-	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
-	{
-		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
-			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
-	}
+	proj_target.resize(m_db->vPatternBbox.size(), true);
 	/*
-	std::cout << "bookmark : " << std::endl;
-	for(uint32_t i = 0; i < m_comp_cnt; i++)
-	{
-		std::cout << "comp " << i << " starts at " << vBookmark[i] << std::endl;
-	}
-	*/
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num())
 #endif 
@@ -166,7 +153,7 @@ void SimpleMPL::gen_proj_target()
 			// graph simplification 
 			typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 			uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
-			// simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
+			simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
 			graph_simplification_type gs(dg, m_db->color_num());
 			gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
@@ -198,6 +185,7 @@ void SimpleMPL::gen_proj_target()
 		}
 	}
 	std::cout << "number of projection : " << count << std::endl;
+	*/
 }
 
 
@@ -740,7 +728,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
-
+/*
 #ifdef QDEBUG
 		for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 		{
@@ -759,7 +747,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		// mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
 		writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
 #endif
-
+*/
 		clock_t sub_comp_end = clock();
 		mplPrint(kINFO, "Comp_%d_subcomp_%d has %d nodes, takes %fs\n\n\n", comp_id, sub_comp_id, vSubColor.size(), (double)(sub_comp_end - sub_comp_start)/CLOCKS_PER_SEC);
 

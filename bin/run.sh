@@ -27,8 +27,8 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/sim_c1.gds  \
-    -out benchout/sim_c1 \
+    -in bench/total_c5.gds  \
+    -out benchout/total_c5 \
     -simplify_level	3 \
 	-coloring_distance 120 \
 	-uncolor_layer 1 \
@@ -36,4 +36,4 @@
     -color_num 3 \
     -algo SDP \
     -thread_num 1 \
-	-gen_stitch
+	-stitch
