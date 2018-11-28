@@ -131,8 +131,15 @@ void SimpleMPL::read_gds()
 void SimpleMPL::gen_proj_target()
 {
 	uint32_t count = 0;
-	proj_target.resize(m_db->vPatternBbox.size(), true);
-	/*
+	proj_target.resize(m_db->vPatternBbox.size(), false);
+
+	std::vector<uint32_t> vBookmark(m_comp_cnt);
+	// std::cout << "==== After Projection vBookmark ====" << std::endl;
+	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
+	{
+		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
+			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
+	}
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num())
 #endif 
@@ -185,7 +192,6 @@ void SimpleMPL::gen_proj_target()
 		}
 	}
 	std::cout << "number of projection : " << count << std::endl;
-	*/
 }
 
 
@@ -728,7 +734,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		}
 		else // no need to update vSubColor, as it is already updated by sub call 
 			acc_obj_value += obj_value2;
-/*
+
 #ifdef QDEBUG
 		for(uint32_t i = 0; i < m_db->vPatternBbox.size(); i++)
 		{
@@ -747,7 +753,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 		// mplPrint(kINFO, "Write output component gds file: %s\n", intermediate_name.c_str());
 		writer.write_intermediate(intermediate_name, m_db->polyrect_patterns(), 100, m_db->strname, m_db->unit*1e+6);
 #endif
-*/
+
 		clock_t sub_comp_end = clock();
 		mplPrint(kINFO, "Comp_%d_subcomp_%d has %d nodes, takes %fs\n\n\n", comp_id, sub_comp_id, vSubColor.size(), (double)(sub_comp_end - sub_comp_start)/CLOCKS_PER_SEC);
 
@@ -1247,10 +1253,11 @@ void SimpleMPL::runProjection()
 			if(!proj_target[m_mAdjVertex[i][j]] && !proj_target[i])
 				new_mAdjVertex[ori2new[i].front()].insert(ori2new[m_mAdjVertex[i][j]].front());
 			else
+			{
+				for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
+					poss_nei.push_back(*it);
 				split_flag = true;
-			for (std::vector<uint32_t>::iterator it = ori2new[m_mAdjVertex[i][j]].begin(); it != ori2new[m_mAdjVertex[i][j]].end(); it++)
-				poss_nei.push_back(*it);
-
+			}
 		}
 		if(split_flag)
 		{
@@ -1277,6 +1284,15 @@ void SimpleMPL::runProjection()
 							if(distance < m_db->coloring_distance)
 							{
 								new_mAdjVertex[*it].insert(*nei_poly);
+								/*
+								std::cout << "minimal distance is " << m_db->coloring_distance << ", but this is " << distance << std::endl;
+								std::cout << *it << " --has neighbor-- " << *nei_poly << std::endl;
+								rectangle_pointer_type tempA = m_db->vPatternBbox[*it];
+								rectangle_pointer_type tempB = m_db->vPatternBbox[*nei_poly];
+								std::cout << *it << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
+								std::cout << "\nwith\n" ;
+								std::cout << *nei_poly << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
+								*/
 								// if the rectangles are close to each other, it means corresponding polygons are neighbors
 								break;
 							}
@@ -1434,7 +1450,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 
 		// check the stitch positions' legalities
 		// if the position is very colse to the rectangle's boundary, it's illegal.
-		/*
+		
 		coordinate_type lower_boundary;
 		coordinate_type upper_boundary;
 		if (hor)
@@ -1447,7 +1463,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 			lower_boundary = gtl::yl(pRect);
 			upper_boundary = gtl::yh(pRect);
 		}
-		coordinate_type threshold = 0;
+		coordinate_type threshold = 50;
 		std::vector<coordinate_type> temp;
 		for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		{
@@ -1458,7 +1474,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		}
 		std::vector<coordinate_type>().swap(vstitches);
 		vstitches.swap(temp);
-		*/
+		
 	}
 	// split rectangles according to the stitch positions.
 	if (vstitches.size() <= 0)
