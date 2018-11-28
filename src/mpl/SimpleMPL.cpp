@@ -1188,7 +1188,7 @@ void SimpleMPL::runProjection()
 	m_db->refresh(new_rect_vec, rect_to_parent);
 
 	// Now, update the adjacency list, we still need original adjacency list
-	std::vector<std::vector<uint32_t> > new_mAdjVertex;
+	std::vector<std::set<uint32_t> > new_mAdjVertex;
 	new_mAdjVertex.resize(m_db->vPatternBbox.size());
 	uint32_t edge_num = 0;
 
@@ -1215,7 +1215,7 @@ void SimpleMPL::runProjection()
 		{
 			uint32_t nei_id = m_mAdjVertex[i][j];
 			if(!proj_target[nei_id] && !proj_target[i])
-				new_mAdjVertex[ori2new[i].front()].push_back(ori2new[nei_id].front());
+				new_mAdjVertex[ori2new[i].front()].insert(ori2new[nei_id].front());
 			else
 			{
 				for (std::vector<uint32_t>::iterator it = ori2new[nei_id].begin(); it != ori2new[nei_id].end(); it++)
@@ -1225,6 +1225,7 @@ void SimpleMPL::runProjection()
 		}
 		if(split_flag)
 		{
+			/*
 			// traverse all the newly-generated polygons in current polygon
 			for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
 			{
@@ -1243,7 +1244,7 @@ void SimpleMPL::runProjection()
 							if (distance < m_db->coloring_distance)
 							{
 								new_mAdjVertex[*it].push_back(*nei_poly);
-								/*
+								
 								std::cout << "minimal distance is " << m_db->coloring_distance << ", but this is " << distance << std::endl;
 								std::cout << *it << " --has neighbor-- " << *nei_poly << std::endl;
 								rectangle_pointer_type tempA = m_db->vPatternBbox[*it];
@@ -1251,7 +1252,7 @@ void SimpleMPL::runProjection()
 								std::cout << *it << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
 								std::cout << "\nwith\n" ;
 								std::cout << *nei_poly << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
-								*/
+								
 								// if the rectangles are close to each other, it means corresponding polygons are neighbors
 								done = true;
 								break;
@@ -1261,29 +1262,61 @@ void SimpleMPL::runProjection()
 							break;
 					}
 				}
+				*/
+				// traverse all the newly-generated polygons in current polygon
+				for (std::vector<uint32_t>::iterator it = ori2new[i].begin(); it != ori2new[i].end(); it++)
+				{
+					// std::cout << *it << " : " << gtl::xl(*m_db->vPatternBbox[*it]) << ", " << gtl::yl(*m_db->vPatternBbox[*it]) << ", " << gtl::xh(*m_db->vPatternBbox[*it]) << ", " << gtl::yh(*m_db->vPatternBbox[*it]) << std::endl;
+					// std::cout << "\n\n=========== new polygon " << *it << " possible neighbors: " << std::endl;
+					uint32_t start_idx = new_poly_rect_begin[*it];
+					uint32_t end_idx = new_poly_rect_end[*it];
+					// traverse all rectangles in current newly-generated polygon.
+					for (uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
+					{
+						// traverse all possible newly-generated neighbor polygons
+						for (std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
+						{
+							uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
+							uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
+							// traverse all rectangles in current newly-generated neighbor polygon
+							for (uint32_t nei_rect = nei_start_idx; nei_rect <= nei_end_idx; nei_rect++)
+							{
+								uint32_t nei_rect_pid = new_rect_vec[nei_rect]->pattern_id();
+								coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
+								if (distance < m_db->coloring_distance)
+								{
+									new_mAdjVertex[*it].insert(*nei_poly);
+									// if the rectangles are close to each other, it means corresponding polygons are neighbors
+									break;
+								}
+							}
+						}
+					}
+				}
+
 			}
-		}
 	}
 	clock_t new_relation_end = clock();
 	mplPrint(kINFO, "Generate new relationships takes %f seconds.\n", (double)(new_relation_end - new_relation_start)/CLOCKS_PER_SEC );
 
-	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
-	m_mAdjVertex.swap(new_mAdjVertex);
+	// m_mAdjVertex.swap(new_mAdjVertex);
+	/*
 	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
 	{
 		edge_num += m_mAdjVertex[i].size();
 	}
-	/*
+	*/
+	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex.resize(new_mAdjVertex.size());
-	for(uint32_t i = 0; i < new_mAdjVertex.size(); i++)
+	for (uint32_t i = 0; i < new_mAdjVertex.size(); i++)
 	{
-		for(std::set<uint32_t>::iterator it = new_mAdjVertex[i].begin(); it != new_mAdjVertex[i].end(); it++)
+		for (std::set<uint32_t>::iterator it = new_mAdjVertex[i].begin(); it != new_mAdjVertex[i].end(); it++)
 		{
 			edge_num++;
 			m_mAdjVertex[i].push_back(*it);
 		}
 	}
-	*/
+	
 
 	if(m_db->gen_stitch())
 	{
