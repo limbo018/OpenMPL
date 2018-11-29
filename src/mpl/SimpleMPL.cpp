@@ -174,11 +174,8 @@ void SimpleMPL::gen_proj_target()
 				for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(), ite = vSimpl2Orig.end(); it != ite; ++it)
 					vSim2OriTotal[*it] = true;
 			}
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(m_db->thread_num())
-#endif 
-			std::map<uint32_t, uint32_t>::iterator it = mGlobal2Local.begin(), ite = mGlobal2Local.end();
-			for(; it != ite; ++it)
+
+			for(std::map<uint32_t, uint32_t>::iterator it = mGlobal2Local.begin(); it != mGlobal2Local.end(); it++)
 			{
 				if(vSim2OriTotal[it->second])
 				{
@@ -618,7 +615,7 @@ uint32_t SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type
 	std::vector<std::vector<vertex_descriptor> > mSimpl2Orig(gs.num_component());
 	double acc_obj_value = 0;
 	// std::cout << "solve_graph_coloring !" << std::endl;
-
+	
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
 		clock_t sub_comp_start = clock();
