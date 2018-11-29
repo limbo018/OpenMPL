@@ -8,6 +8,7 @@ obj
 *.bk
 lib/*
 
+obj/*
 bin/.out
 bin/OpenMPL
 bin/.log
