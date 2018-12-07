@@ -28,7 +28,7 @@
 ./OpenMPL  \
     -shape POLYGON \
     -in bench/total_c5.gds  \
-    -out benchout/total_c5 \
+    -out benchout/total_c5_11 \
     -simplify_level	3 \
 	-coloring_distance 120 \
 	-uncolor_layer 1 \

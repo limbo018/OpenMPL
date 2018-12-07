@@ -172,7 +172,17 @@ void SimpleMPL::gen_proj_target()
 				std::vector<vertex_descriptor> vSimpl2Orig;
 				gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 				for(std::vector<vertex_descriptor>::iterator it = vSimpl2Orig.begin(), ite = vSimpl2Orig.end(); it != ite; ++it)
-					vSim2OriTotal[*it] = true;
+				{
+					if(!gs.articulation_point(*it))
+					{
+						vSim2OriTotal[*it] = true;
+						std::cout << "not articulation point." << std::endl;
+					}
+					else
+					{
+						std::cout << "articulation_point!" << std::endl;
+					}
+				}
 			}
 
 			for(std::map<uint32_t, uint32_t>::iterator it = mGlobal2Local.begin(); it != mGlobal2Local.end(); it++)
@@ -186,7 +196,7 @@ void SimpleMPL::gen_proj_target()
 			}
 		}
 	}
-	std::cout << "(I) number of projection : " << std::count(proj_target.begin(), proj_target.end(), true) << std::endl;
+	
 }
 
 void SimpleMPL::write_gds()
@@ -249,8 +259,11 @@ void SimpleMPL::solve()
 
 	if(m_db->stitch() || m_db->gen_stitch())
 	{
+		clock_t stitch_start = clock();
 		gen_proj_target();
 		runProjection();
+		clock_t stitch_end = clock();
+		mplPrint(kINFO, "Stitch generation totally takes %f seconds.\n", (double)(stitch_end - stitch_start)/CLOCKS_PER_SEC);
 	}	
 	
 	if(m_db->gen_stitch())
@@ -1059,12 +1072,14 @@ void SimpleMPL::runProjection()
 	mplSPrint(kINFO, buf, "stitch generation takes %%t seconds CPU, %%w seconds real\n");
 	boost::timer::auto_cpu_timer timer(buf);
 
+	// proj_target.assign(m_db->vPatternBbox.size(), true);
+	std::cout << "(I) number of projection : " << std::count(proj_target.begin(), proj_target.end(), true) << std::endl;
+
 	// initialization
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 	std::vector<uint32_t> new_vCompId_vec;
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();
 	std::vector<uint32_t> poly_rect_begin = m_db->polyrectBgnId();
-	mplAssertMsg(poly_rect_begin.size() == vertex_num, "polyrectBgnId.size() must be equal to polyrect_patterns.size()");
 
 	// generate poly_rect_end, which stores the end rectangle index when querying from parent polygon id
 	std::vector<uint32_t> poly_rect_end;
@@ -1099,26 +1114,34 @@ void SimpleMPL::runProjection()
 		std::vector<uint32_t> & nei_Vec = m_mAdjVertex[pid];
 		uint32_t start_idx = poly_rect_begin[pid];
 		uint32_t end_idx = poly_rect_end[pid];
-
+		// std::vector<uint32_t> parent_polygon_list;
 		// We should generate stitches for this polygon.
 		if(proj_target[pid])
 		{
+			// std::cout << "pid " << pid << " splited." << std::endl;
 			// use poss_nei_vec to obtain all the possible neighbor rectangles from neighbor polygons
 			std::vector<rectangle_pointer_type> poss_nei_vec;
 			for (std::vector<uint32_t>::iterator it = nei_Vec.begin(); it != nei_Vec.end(); it++)
 			{
 				uint32_t s_idx = poly_rect_begin[*it];
 				uint32_t e_idx = poly_rect_end[*it];
+				poss_nei_vec.insert(poss_nei_vec.end(), rect_vec.begin() + s_idx, rect_vec.begin() + e_idx + 1);
+				// parent_polygon_list.insert(parent_polygon_list.end(), e_idx - s_idx + 1, *it);
+				/*
 				for (uint32_t a = s_idx; a <= e_idx; a++)
+				{
 					poss_nei_vec.push_back(rect_vec[a]);
+					parent_polygon_list.push_back(*it);
+				}*/
 			}
 
 			std::vector<std::pair<rectangle_pointer_type, uint32_t> > poly_split; 
-			std::vector<uint32_t> new_polygon_id_list;
 			// traverse all the rectangles in polygon v, to generate the intersections
 			for (uint32_t j = start_idx; j <= end_idx; j++)
 			{
+				std::cout << "\n\nnow for rect " << j << " : " << std::endl; 
 				rectangle_type rect(*rect_vec[j]);
+				std::cout << gtl::xl(rect) << ", " << gtl::yl(rect) << ", " << gtl::xh(rect) << ", " << gtl::yh(rect) << std::endl;
 				// the generated split patterns
 				std::vector<rectangle_pointer_type> split;
 				clock_t each_pro = clock();
@@ -1130,7 +1153,7 @@ void SimpleMPL::runProjection()
 					poly_split.push_back(std::make_pair(*it, rect.pattern_id()));
 			}
 			uint32_t pivot = new_polygon_id;
-
+			std::vector<uint32_t>  new_polygon_id_list;
 			clock_t each_re = clock();
 			// generate new polygons and stitch relations, update 'StitchRelation'
 			reconstruct_polygon(new_polygon_id, new_polygon_id_list, poly_split);
@@ -1242,13 +1265,6 @@ void SimpleMPL::runProjection()
 							{
 								new_mAdjVertex[*it].push_back(*nei_poly);
 								
-								std::cout << "minimal distance is " << m_db->coloring_distance << ", but this is " << distance << std::endl;
-								std::cout << *it << " --has neighbor-- " << *nei_poly << std::endl;
-								rectangle_pointer_type tempA = m_db->vPatternBbox[*it];
-								rectangle_pointer_type tempB = m_db->vPatternBbox[*nei_poly];
-								std::cout << *it << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
-								std::cout << "\nwith\n";
-								std::cout << *nei_poly << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
 								
 								// if the rectangles are close to each other, it means corresponding polygons are neighbors
 								done = true;
@@ -1269,10 +1285,13 @@ void SimpleMPL::runProjection()
 				uint32_t start_idx = new_poly_rect_begin[*it];
 				uint32_t end_idx = new_poly_rect_end[*it];
 				// traverse all rectangles in current newly-generated polygon.
-				for (uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
+				
+				// traverse all possible newly-generated neighbor polygons
+				for (std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
 				{
-					// traverse all possible newly-generated neighbor polygons
-					for (std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
+					if(*nei_poly > *it)
+						continue;
+					for (uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
 					{
 						uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
 						uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
@@ -1283,13 +1302,25 @@ void SimpleMPL::runProjection()
 							coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
 							if (distance < m_db->coloring_distance)
 							{
+
 								new_mAdjVertex[*it].insert(*nei_poly);
+								new_mAdjVertex[*nei_poly].insert(*it);
+
+								std::cout << "minimal distance is " << m_db->coloring_distance << ", but this is " << distance << std::endl;
+								std::cout << *it << " --has neighbor-- " << *nei_poly << std::endl;
+								rectangle_pointer_type tempA = m_db->vPatternBbox[*it];
+								rectangle_pointer_type tempB = m_db->vPatternBbox[*nei_poly];
+								std::cout << *it << " : " << gtl::xl(*tempA) << ", " << gtl::yl(*tempA) << ", " << gtl::xh(*tempA) << ", " << gtl::yh(*tempA);
+								std::cout << "\nwith\n";
+								std::cout << *nei_poly << " : " << gtl::xl(*tempB) << ", " << gtl::yl(*tempB) << ", " << gtl::xh(*tempB) << ", " << gtl::yh(*tempB) << std::endl << std::endl;
+								
 								// if the rectangles are close to each other, it means corresponding polygons are neighbors
 								break;
 							}
 						}
 					}
 				}
+				
 			}
 			
 		}
@@ -1313,7 +1344,7 @@ void SimpleMPL::runProjection()
 			m_mAdjVertex[i].push_back(*it);
 		}
 	}
-	
+	edge_num /= 2;
 
 	if(m_db->gen_stitch())
 	{
@@ -1455,8 +1486,8 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 
 		// check the stitch positions' legalities
 		// if the position is very colse to the rectangle's boundary, it's illegal.
-		
-		coordinate_type threshold = 0;
+
+		coordinate_type threshold = 20;
 		std::vector<coordinate_type> temp;
 		for (std::vector<coordinate_type>::iterator it = vstitches.begin(); it != vstitches.end(); it++)
 		{
@@ -1467,7 +1498,7 @@ void SimpleMPL::projection(rectangle_type & pRect, std::vector<rectangle_pointer
 		}
 		std::vector<coordinate_type>().swap(vstitches);
 		vstitches.swap(temp);
-		
+
 	}
 	// split rectangles according to the stitch positions.
 	if (vstitches.size() <= 0)
@@ -1585,13 +1616,14 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 			{
 				if (left < gtl::xl(vInterSect[j])) continue;
 				if (right > gtl::xh(vInterSect[j])) continue;
+				vStages[i].second++;
 			}
 			else
 			{
 				if (left < gtl::yl(vInterSect[j])) continue;
 				if (right > gtl::yh(vInterSect[j])) continue;
+				vStages[i].second++;
 			}
-			vStages[i].second++;
 		}
 	}
 	
@@ -1628,6 +1660,7 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 			if (find == false)
 				continue;
 			coordinate_type position = (vStages[2].first.first + vStages[2].first.second) / 2;
+			std::cout << i << " : " << vStages[2].first.first << " -- " << vStages[2].first.second << " : " << position << std::endl;
 			vstitches.push_back(position);
 		}
 		else if (pos1 == vStages.size() - 3)
@@ -1643,14 +1676,16 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 			else if (0 != vStages[pos1 - 2].second) find = true;
 			if (find == false) continue;
 			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
+			std::cout << i << " : " <<  vStages[pos1].first.first << " -- " << vStages[pos1].first.second << " : " << position << std::endl;
 			vstitches.push_back(position);
 		}
 		else
 		{
 			coordinate_type position = (vStages[pos1].first.first + vStages[pos1].first.second) / 2;
+			std::cout << i << " : " <<  vStages[pos1].first.first << " -- " << vStages[pos1].first.second << " : " << position << std::endl;
 			vstitches.push_back(position);
 		}
-
+		
 		// search lost stitch in vStages[pos1 --> pos2]
 		double maxValue = 0.9;
 		uint32_t posLost = pos1 + 2;
@@ -1659,8 +1694,8 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 		{
 			if (vStages[i - 1].second <= vStages[i].second) continue;
 			if (vStages[i + 1].second <= vStages[i].second) continue;
-			uint32_t mind = std::min(vStages[i - 1].second - vStages[i].second, vStages[i + 1].second - vStages[i].second);
-			uint32_t diff = std::abs(static_cast<int>(vStages[i + 1].second - vStages[i - 1].second));
+			int mind = std::min(vStages[i - 1].second - vStages[i].second, vStages[i + 1].second - vStages[i].second);
+			int diff = std::abs(static_cast<int>(vStages[i + 1].second - vStages[i - 1].second));
 			double value = (double)mind + (double)diff * 0.1;
 			if (value > maxValue)
 			{
@@ -1670,9 +1705,11 @@ void SimpleMPL::GenerateStitchPosition_Bei(const rectangle_type pRect, std::vect
 		}
 		if (maxValue > 0.9)
 		{
-			uint32_t position = (vStages[posLost].first.first + vStages[posLost].first.second) / 2;
+			coordinate_type position = (vStages[posLost].first.first + vStages[posLost].first.second) / 2;
+			std::cout << i << " lost : " <<  vStages[posLost].first.first << " -- " << vStages[posLost].first.second << " : " << position << std::endl;
 			vstitches.push_back(position);
 		}
+		
 	}
 	sort(vstitches.begin(), vstitches.end());
 	return;
@@ -1694,7 +1731,7 @@ void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t> 
 	std::vector<bool> visited(rect_list_size, false);
 
 	std::vector<uint32_t>().swap(new_polygon_id_list);
-	new_polygon_id_list.resize(rect_list_size, std::numeric_limits<uint32_t>::max());
+	new_polygon_id_list.assign(rect_list_size, std::numeric_limits<uint32_t>::max());
 
 	for(uint32_t i = 0; i< rect_list_size; i++)
 	{
