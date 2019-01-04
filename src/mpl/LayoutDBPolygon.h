@@ -57,8 +57,8 @@ struct LayoutDBPolygon : public LayoutDB
 	virtual void initialize_data();
     /// return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPolyRectPattern;}
-	/// \return vPolyRectBeginId
-	virtual std::vector<uint32_t> const& polyrectBgnId() const { return vPolyRectBeginId; }
+
+	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const { return vPolyRectBeginId; }
     /// set color for patterns 
     /// \param pattern_id is the index of vPatternBbox
     virtual void set_color(uint32_t pattern_id, int8_t color);
@@ -80,8 +80,8 @@ struct LayoutDBPolygon : public LayoutDB
     /// check vParentPolygonId for parent id 
     /// \return the euclidean distance of two patterns 
     virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const; 
-	/// update vParentPolygonId, vPolyRectPattern and vPatternBbox after stitch insertion
-	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>&  rect_to_parent);
+
+	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent);
 };
 
 SIMPLEMPL_END_NAMESPACE

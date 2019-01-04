@@ -6,7 +6,6 @@
  ************************************************************************/
 
 #include "LayoutDBPolygon.h"
-#include <boost/timer/timer.hpp>
 #include <stack>
 
 SIMPLEMPL_BEGIN_NAMESPACE
@@ -106,12 +105,9 @@ void LayoutDBPolygon::initialize_data()
 void LayoutDBPolygon::set_color(uint32_t pattern_id, int8_t color)
 {
     rectangle_pointer_type pPattern = vPatternBbox[pattern_id];
-#ifdef QDEBUG
-//	std::cout << "set_color : " <<  pPattern->pattern_id()  << " has color " << +unsigned(pPattern->color()) << " and new color is " << +unsigned(color)<< std::endl;
-#endif
-	//if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
-    //    mplAssert(pPattern->color() == color);
-    //else // assign color to uncolored pattern 
+    if (pPattern->color() >= 0 && pPattern->color() < color_num()) // check precolored pattern 
+        mplAssert(pPattern->color() == color);
+    else // assign color to uncolored pattern 
         pPattern->color(color);
     for (uint32_t i = vPolyRectBeginId[pattern_id], ie = vParentPolygonId.size(); i != ie && vParentPolygonId[i] == pattern_id; ++i)
         vPolyRectPattern[i]->color(color);
@@ -263,27 +259,8 @@ void LayoutDBPolygon::report_data_kernel() const
     mplPrint(kINFO, "# polygon rectangles = %lu\n", vPolyRectPattern.size());
 }
 
-// more techniques may be needed to improve the storage performance and reduce the peak memory.
 void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent)
 {
-/*
-#ifdef QDEBUG
-	std::cout << "===== REFRESH =====" << std::endl;
-	std::cout << "rect_to_parent : " << std::endl;
-	std::cout << "size : " << rect_to_parent.size() << std::endl;
-	//for(uint32_t i = 0; i < rect_to_parent.size(); i++)
-	//	std::cout << rect_to_parent[i] << " ";
-	std::cout << "new_rect_vec : " << std::endl;
-	std::cout << "size : " << new_rect_vec.size() << std::endl;
-	//for(uint32_t j = 0; j < new_rect_vec.size(); j++)
-	//	std::cout << new_rect_vec[j]->pattern_id() << " ";
-	std::cout << "===================" <<  std::endl;
-#endif
-*/
-    char buf[256];
-    mplSPrint(kINFO, buf, "refresh graph takes %%t seconds CPU, %%w seconds real\n");
-    boost::timer::auto_cpu_timer timer(buf);
-
 	vParentPolygonId.clear();
 	vParentPolygonId.assign(rect_to_parent.begin(), rect_to_parent.end());
 
@@ -309,7 +286,7 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 
 	// vPatternBbox is the bounding box of a polygon 
 	vPatternBbox.assign(num_polygons, NULL);
-	
+
 	for (uint32_t i = 0, ie = vPolyRectPattern.size(); i != ie; ++i)
 	{
 		const rectangle_pointer_type &pPolyRectPattern = vPolyRectPattern[i];
@@ -322,18 +299,20 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 		}
 		else
 		{
-	//		mplAssert(pPattern->color() == pPolyRectPattern->color());
+			//		mplAssert(pPattern->color() == pPolyRectPattern->color());
 			gtl::encompass(*pPattern, *pPolyRectPattern);
 		}
 		mplAssert(vPolyRectBeginId[parentPolygonId] <= i);
 	}
- 
+
 	// no need to store tPatternBbox again, since we don't need to compute the distance between two Polyons again,
 	// Also, due to the stitch insertion, the distanaces in rtree are invalid. I'm not sure whether to delete this.
 	tPatternBbox.clear(); // tPatternBbox is used to store vPatternBbox construction with packing algorithm 
 	rtree_type tTmp(vPatternBbox.begin(), vPatternBbox.end());
 	tPatternBbox.swap(tTmp);
-    return;
+	return;
 }
 
+
 SIMPLEMPL_END_NAMESPACE
+

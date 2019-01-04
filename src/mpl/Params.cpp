@@ -13,6 +13,8 @@ bool CmdParser::operator()(int argc, char** argv)
 {
     ControlParameter defaultParms; // get default value from default constructor 
     bool help = false;
+	bool use_stitch = true;
+	bool gen_stitch = false;
     std::string algo_str;
     std::string shape_str;
     // append options here 
@@ -31,10 +33,10 @@ bool CmdParser::operator()(int argc, char** argv)
         .add_option(Value<std::set<int32_t> >("-uncolor_layer", &parms.sUncolorLayer, "an integer indicating layer for coloring"))
         .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK|LP|SDP >").default_value(std::string(defaultParms.algo)))
         .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
-        .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controlling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
-        .add_option(Value<bool>("-gen_stitch",  &parms.gen_stitch,  "toggle controlling stitch generation, used to test generation algorithms, default is false").toggle(true).default_value(defaultParms.gen_stitch).toggle_value(true))
-		.add_option(Value<bool>("-stitch",  &parms.stitch,	"toggle controlling whether use stitch in coloring, default is false").toggle(true).default_value(defaultParms.stitch).toggle_value(true))
-        .add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
+        .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
+        .add_option(Value<bool>("-use_stitch", &parms.use_stitch, "whether use stitch projection").toggle(true).default_value(defaultParms.use_stitch).toggle_value(true))
+		.add_option(Value<bool>("gen_stitch", &parms.gen_stitch, "control whether only generate and output stitches").toggle(true).default_value(defaultParms.gen_stitch).toggle(true))
+		.add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
         ;
     try
     {

@@ -3,9 +3,9 @@
 # ==========================================================================
 
 # recommend make command: make -j CSDP=1 
-
+# be careful that no additional space is allowed
 # default DBG is off
-DBG = 1 
+DBG = 1
 # default GPROF is off, used to enable runtime profiling
 GPROF = 0
 # default GUROBI is off 
@@ -23,11 +23,11 @@ ifeq ($(UNAME_S), Darwin)
 	-include ../Darwin.mk
 endif 
 
-#ifeq ($(DBG), 1)
-#	CXXFLAGS = $(CXXFLAGS_DEBUG)  #-DDEBUG_SDPCOLORING -DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING 
-#else
+ifeq ($(DBG), 1)
+	CXXFLAGS = $(CXXFLAGS_DEBUG) #-D_DGOUT -DDEBUG_SDPCOLORING -DDEBUG_ILPCOLORING  -DDEBUG_LPCOLORING 
+else
 	CXXFLAGS = $(CXXFLAGS_RELEASE) #-DCOMPONENTS -DDEBUG_NONINTEGERS -DDEBUG_NOANCHOR
-#endif
+endif
 
 ifeq ($(GPROF), 1)
 	CXXFLAGS += -pg
