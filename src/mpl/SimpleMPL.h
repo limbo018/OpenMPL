@@ -7,7 +7,9 @@
 
 #ifndef SIMPLEMPL_SIMPLEMPL_H
 #define SIMPLEMPL_SIMPLEMPL_H
-
+#define LIWEI_BEFORE 0
+#define LIWEI_DEBUG 1
+#define _DGOUT
 #include <iostream>
 #include <stack>
 #include <limbo/algorithms/coloring/Coloring.h>
@@ -69,7 +71,7 @@ class SimpleMPL
 		void GenerateStitchPosition(const rectangle_type pRect, std::vector<rectangle_type> vInterSect, std::vector<coordinate_type>& vPossibleStitches, std::vector<coordinate_type>& vstitches);
 		
 		void setVddGnd();
-
+		void cal_boundaries();
 		void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
 		
 		void updateConflictRelation();

@@ -13,7 +13,7 @@ GUROBI = 1
 # default LEMONCBC is off 
 LEMONCBC = 0
 # default CSDP is off 
-CSDP = 1
+CSDP = 0
 
 UNAME_S = $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -57,7 +57,7 @@ INCLUDE = \
 LIBS = $(STATIC_LINK_FLAG) \
 	   -L $(LIMBO_DIR)/lib -lgdsparser -lprogramoptions \
 	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -lboost_chrono -lboost_iostreams \
-	   -L $(ZLIB_DIR)/lib -lz
+	   -L $(ZLIB_DIR) -lz
 
 # boost chrono links to to librt.a under Linux
 ifeq ($(UNAME_S), Linux)
@@ -70,7 +70,7 @@ ifeq ($(GUROBI), 1)
 INCLUDE += -I $(GUROBI_HOME)/include
 LIBS += -L $(GUROBI_HOME)/lib \
 		$(STATIC_LINK_FLAG) -lgurobi_c++ \
-		$(DYNAMIC_LINK_FLAG) -lgurobi70
+		$(DYNAMIC_LINK_FLAG) -lgurobi81
 endif 
 # Cbc lemon api (Cbc must be installed with static flag and lemon must be installed with Cbc as MIP solver)
 ifeq ($(LEMONCBC), 1)

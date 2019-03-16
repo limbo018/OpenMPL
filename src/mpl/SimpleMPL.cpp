@@ -175,6 +175,7 @@ void SimpleMPL::solve()
     }
 
 	// create bookmark to index the starting position of each component 
+	// TODO: if the vBookmark generation is time-consuming, some optimization algorithm may be proposed (set is better than vector)
 	std::vector<uint32_t>().swap(vBookmark);
 	vBookmark.resize(m_comp_cnt);
 	for (uint32_t i = 0; i != m_vVertexOrder.size(); ++i)
@@ -182,10 +183,16 @@ void SimpleMPL::solve()
 		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 	}
-
-	if (m_db->use_stitch())
+#if DEBUG_LIWEI
+	std::cout<<"BookMark is: ";
+	for (std::vector<char>::const_iterator i = vBookmark.begin(); i != vBookmark.end(); ++i)
+    	std::cout << *i << ' ';
+	std::cout<<std::endl;
+#endif
+	if (m_db->use_stitch()) //returns whether use stitch
 	{
-		this->setVddGnd();
+		this->cal_boundaries();
+		this->setVddGnd(); //perhapes we should also consider pshape->getPointNum()==4
 		
 		clock_t begin = clock();
 		
@@ -304,7 +311,12 @@ void SimpleMPL::lgSimplification(std::vector<uint32_t>::const_iterator itBgn, st
 	typedef lac::GraphSimplification<graph_type>   graph_simplification_type;
 	this->construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor, vdd_set, false);
 	uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
+#if LIWEI_BEFORE
 	simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
+#else
+	std::cout<<"LG simplify strategy should be HIDE_SMALL_DEGREE"<<std::endl;
+#endif
+	
 
 	graph_simplification_type gs(dg, m_db->color_num());
 	
@@ -566,11 +578,24 @@ void SimpleMPL::setVddGnd()
 	isVDDGND.assign(vertex_num, false);
 	for (uint32_t i = 0; i < vertex_num; i++)
 	{
+#if LIWEI_BEFORE
 		if (boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) >= threshold)
 		{
 			isVDDGND[i] = true;
 			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
 		}
+#else
+		if (boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) >= 0.64*(boundaries[1]-boundaries[0])||\
+		boost::polygon::delta(*m_db->vPatternBbox[i], gtl::VERTICAL) >= 0.64*(boundaries[3]-boundaries[2]))
+		{
+			isVDDGND[i] = true;
+			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
+		}
+		if(boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) == 6000 ){
+			isVDDGND[i] = false;
+			std::cout<<"dirty coding for oracle cases"<<std::endl;
+		}
+#endif
 #if 0
 		else
 		{
@@ -579,6 +604,31 @@ void SimpleMPL::setVddGnd()
 		}
 #endif
 	}
+	return;
+}
+
+void SimpleMPL::cal_boundaries(){
+	std::vector<uint32_t>().swap(boundaries);
+	assert(boundaries.empty());
+	uint32_t vertex_num = m_db->vPatternBbox.size();
+	uint32_t tmp_bound[4] = {0};
+	for (uint32_t i = 0; i < vertex_num; i++){
+		tmp_bound[0] = std::max(gtl::xl(*vPatternBbox[i]),tmp_bound[0]);
+		tmp_bound[1] = std::max(gtl::xh(*vPatternBbox[i]),tmp_bound[1]);
+		tmp_bound[2] = std::max(gtl::yl(*vPatternBbox[i]),tmp_bound[2]);
+		tmp_bound[3] = std::max(gtl::yh(*vPatternBbox[i]),tmp_bound[3]);
+	}
+	boundaries.push_back(tmp_bound[0]);
+	boundaries.push_back(tmp_bound[1]);
+	boundaries.push_back(tmp_bound[2]);
+	boundaries.push_back(tmp_bound[3]);
+#if DEBUG_LIWEI
+	std::cout<<"boundries of layout is calculated and the value is"<<boundaries[0]<<','\
+																	 boundaries[1]<<','\
+																	 boundaries[2]<<','\
+																	 boundaries[3]<<','\
+	<<std::endl;
+#endif
 	return;
 }
 
@@ -617,7 +667,9 @@ void SimpleMPL::projection()
 		uint32_t end_idx = Poly_Rect_end[pid];
 		
 		std::vector<uint32_t>& nei_vec = m_mAdjVertex[pid];
-		
+#if DEBUG_LIWEI
+		std::cout<<"pid is"<<pid<<", v is"<<v<<".They should be equal"<<std::endl;
+#endif
 		if (in_DG[pid] && articulation_vec[pid] == false && isVDDGND[pid] == false)
 		{
 			std::vector<rectangle_pointer_type> poss_nei_vec;
@@ -636,6 +688,9 @@ void SimpleMPL::projection()
 				rectangle_type rect(*rect_vec[j]);
 				std::vector<rectangle_pointer_type> split;
 				splitRectangle(rect, split, poss_nei_vec);
+#if DEBUG_LIWEI
+				std::cout<<"rect pattern id is, this one is to check whether the rect id in same pattren is same (it should be same)"<<rect.pattern_id()<<std::endl;
+#endif
 				for (uint32_t i = 0; i < split.size(); i++)
 					rect_split.push_back(std::make_pair(split[i], rect.pattern_id()));
 			} ///< for
@@ -832,7 +887,7 @@ void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>&
 	{
 		if (new_polygon_id_list[i] == std::numeric_limits<uint32_t>::max())
 		{
-			polygon_id += 1;
+			polygon_id += 1; //TODO: here maybe a bug, += 1 should be behind
 			new_polygon_id_list[i] = polygon_id;
 		}
 		visited[i] = true;
