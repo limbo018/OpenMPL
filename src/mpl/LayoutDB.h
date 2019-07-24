@@ -34,6 +34,7 @@ struct LayoutDB : public rectangle_data<int32_t>
 	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
 	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
+    
     /// necessary for gtl::rectangle_traits
     using base_type::interval_type; 
 
@@ -61,7 +62,9 @@ struct LayoutDB : public rectangle_data<int32_t>
 	rtree_type tPatternBbox;                       ///< rtree for components that intersects the LayoutDB
 	std::vector<rectangle_pointer_type> vPatternBbox;   ///< uncolored and precolored patterns 
 	std::vector<std::pair<uint32_t, std::vector<rectangle_pointer_type> > > additional_split;	///< additional splited rectangles, used in color recovery and rectangle resplit 
-
+    std::vector<uint32_t> vParentPolygonId;
+    std::vector<rectangle_pointer_type> vPolyRectPattern;
+    std::vector<uint32_t> vPolyRectBeginId;
 	struct compare_rectangle_type 
 	{
 		// by x and then by y

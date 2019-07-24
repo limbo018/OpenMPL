@@ -45,6 +45,7 @@ struct LayoutDBRect : public LayoutDB
 		uint32_t vertex_num = this->vPatternBbox.size();
 		for (uint32_t i = 0; i < vertex_num; i++)
 			m.push_back(i);
+		std::cout<<"LIWEI: the size of m should be: "<<m.size()<<", and first number is "<< m[0]<<std::endl;			
 		return m; 
 	}
     /// set color for patterns 
@@ -59,7 +60,14 @@ struct LayoutDBRect : public LayoutDB
     /// \return the euclidean distance of two patterns 
     virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const {return gtl::euclidean_distance(r1, r2);}
 
-	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent) { return; }
+	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent) 
+	{ 
+		std::vector<rectangle_pointer_type>().swap(vPatternBbox);
+		vPatternBbox.assign(new_rect_vec.size(), NULL);
+		for(int i = 0; i<new_rect_vec.size();i++ ){
+			vPatternBbox[i] = new_rect_vec[i];
+		}
+		return; }
     /// always return false as each rectangle is its own parent 
     //virtual bool same_parent(uint32_t, uint32_t) const {return false;}
 };

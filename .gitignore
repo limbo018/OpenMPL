@@ -6,6 +6,7 @@ obj
 *.ilp
 *tags
 *.bk
+*.o
 lib/*
 
 obj/*

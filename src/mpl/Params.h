@@ -25,6 +25,7 @@ struct ControlParameter
 	std::set<int32_t> sPrecolorLayer;          ///< layers that represent precolored features, they should have the same number of colors 
 	std::set<int32_t> sPathLayer;              ///< path layers that represent conflict edges 
 	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
+    double weight_stitch;                      ///< a floating point number indicating the weight of stitch
 	int32_t color_num;                         ///< number of colors available, only support 3 or 4
 	int32_t simplify_level;                    ///< simplification level 0|1|2|3, default is 3
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
@@ -54,8 +55,9 @@ inline ControlParameter::ControlParameter()
     color_num                = 3;
     simplify_level           = 3;
     thread_num               = 1;
+    weight_stitch            = 0.1;
     verbose                  = false;
-	use_stitch				 = true;
+	use_stitch				 = false;
 	gen_stitch				 = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";

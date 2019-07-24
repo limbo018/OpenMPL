@@ -3,11 +3,13 @@
 #include<fstream>
 #include<string>
 #include<vector>
+#include<stdexcept>
 #include<set>
 #include<exception>
 #include<list>
 #include<map>
 #include<limits.h>
+#include <assert.h>    
 #define MAX INT_MAX
 
 struct Cell {
@@ -34,11 +36,74 @@ struct Edge {
 	int No;
 };
 
+struct Vertex {
+	bool Is_Parent = true;
+	Vertex* parent = NULL;
+	int No = 0;
+	std::set<Vertex*> Conflicts;
+	std::set<Vertex*> Conflicts_in_LG;
+	std::vector<Vertex*> Childs;
+	void parentOf(Vertex* child){
+		/*
+		three cases of child:
+		1. parent and real node
+		2. parent and fake node (represent one feature in layout)
+		3. child and real node
+		 */
+		// case 3
+		if(child->Is_Parent == false){
+			std::cout<<"case 3"<<std::endl;
+			assert(!child->parent->Childs.empty());
+			this->parentOf(child->parent);
+		}
+		else{
+			//insert conflicts into this conflicts if no repeatation
+			//case 2
+			if(!child->Childs.empty()){
+				std::cout<<"case 2"<<std::endl;
+				this->Childs.insert(this->Childs.end(),child->Childs.begin(),child->Childs.end());
+				for(std::vector<Vertex*>::iterator it = child->Childs.begin(); it != child->Childs.end(); ++it) {
+					assert((*it)->Is_Parent == false);
+					assert((*it)->parent == child);
+					(*it)->parent = this;
+				}
+				delete child;
+			}
+			//case 1
+			else{
+				std::cout<<"case 1"<<std::endl;
+				child->Is_Parent = false;
+				child->parent = this;
+				this->Childs.push_back(child);
+			}
+
+		}
+
+	}
+	//this function is needed cause latter conflicts will be generated when new line reads in
+	void updateConflicts(){
+		for(std::vector<Vertex*>::iterator it = this->Childs.begin(); it != this->Childs.end(); ++it) {
+			this->Conflicts.insert((*it)->Conflicts.begin(),(*it)->Conflicts.end());
+		}
+		for(std::set<Vertex*>::iterator it = this->Conflicts.begin(); it != this->Conflicts.end(); ++it) {
+			if((*it)->Is_Parent){
+				this->Conflicts_in_LG.insert((*it));
+			}
+			else{
+				this->Conflicts_in_LG.insert((*it)->parent);
+			}
+		}
+	}
+};
+
+
 struct Edge_Simple {
 	int target;
 	int No;
 };
 
+
+// Set a vertex 
 // Set the Up and Down links to Cell 'c' itself.
 void UD_self(Cell &c);
 

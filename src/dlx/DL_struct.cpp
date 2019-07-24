@@ -17,8 +17,14 @@ void UD_remove(Cell & c)
 
 void LR_remove(Cell & c)
 {
+	// std::cout<<c.InDLX<<std::endl;
+	// std::cout<<c.Children_Number<<std::endl;
+	// std::cout<<c.Row<<","<<c.Col<<std::endl;
+	// std::cout<<c.Left->Row<<","<<c.Left->Col<<","<<std::endl;
+	// std::cout<<c.Right->Row<<","<<c.Left->Col<<","<<std::endl;
 	c.Left->Right = c.Right;
 	c.Right->Left = c.Left;
+
 }
 
 void LR_recover(Cell & c) {
@@ -96,6 +102,10 @@ void print(DancingLink & dl)
 */
 
 void Cell_Insert(DancingLink & dl, int row, int col) {
+	Cell *r = &dl.Row_Header_Table[row];
+	for (Cell *i = r->Right; i != r; i = i->Right) {
+		if(i->Col == col) return;
+	}
 	Cell *c = new Cell;
 	c->Row = row;
 	c->Col = col;
@@ -120,7 +130,7 @@ void Cell_Insert(DancingLink & dl, int row, int col) {
 }
 
 void DL_Load(DancingLink & dl, std::string filename) {
-	std::ifstream filein(filename);
+	std::ifstream filein(filename.c_str());
 	try {
 		if (!filein)
 			throw std::runtime_error("No such file.");

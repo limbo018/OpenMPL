@@ -13,7 +13,7 @@ bool CmdParser::operator()(int argc, char** argv)
 {
     ControlParameter defaultParms; // get default value from default constructor 
     bool help = false;
-	bool use_stitch = true;
+	bool use_stitch = false;
 	bool gen_stitch = false;
     std::string algo_str;
     std::string shape_str;
@@ -37,6 +37,7 @@ bool CmdParser::operator()(int argc, char** argv)
         .add_option(Value<bool>("-use_stitch", &parms.use_stitch, "whether use stitch projection").toggle(true).default_value(defaultParms.use_stitch).toggle_value(true))
 		.add_option(Value<bool>("gen_stitch", &parms.gen_stitch, "control whether only generate and output stitches").toggle(true).default_value(defaultParms.gen_stitch).toggle(true))
 		.add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
+        .add_option(Value<double>("-weighted_stitch", &parms.weight_stitch, "a floating point number indicating the weight of stitch").default_value(defaultParms.weight_stitch))
         ;
     try
     {
@@ -86,6 +87,8 @@ bool CmdParser::operator()(int argc, char** argv)
         }
         else if (limbo::iequals(algo_str, "BACKTRACK"))
             parms.algo = AlgorithmTypeEnum::BACKTRACK;
+        else if (limbo::iequals(algo_str, "DL"))
+            parms.algo = AlgorithmTypeEnum::DANCING_LINK;
         else mplPrint(kWARN, "Unknown algorithm type %s, set to default algorithm\n", algo_str.c_str());
 
         // post processing shape_str

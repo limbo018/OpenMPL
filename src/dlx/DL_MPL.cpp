@@ -1,9 +1,10 @@
 #include"DL_MPL.h"
+#include <algorithm>
+#include<vector>
 
-
-std::vector<std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers)
+std::vector<std::list<Edge_Simple> >  Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers)
 {
-	std::ifstream filein(filename);
+	std::ifstream filein(filename.c_str());
 	// std::cout << "filename : " << filename << std::endl;
 	filein >> vertex_numbers >> edge_numbers; // >> mask_numbers;
 	/*
@@ -13,7 +14,7 @@ std::vector<std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & 
 	*/
 
 	int source, target;
-	std::vector<std::list<Edge_Simple>> edge_list;
+	std::vector<std::list<Edge_Simple> > edge_list;
 	edge_list.resize(vertex_numbers + 1);
 	for (int i = 1; i <= edge_numbers; i++)
 	{
@@ -25,7 +26,102 @@ std::vector<std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & 
 	return edge_list;
 }
 
-std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple>> & edge_list)
+std::vector<std::list<Edge_Simple> >  Read_Stitch_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers)
+{
+	std::ifstream filein(filename.c_str());
+	int total_vertex_numbers;
+	// std::cout << "filename : " << filename << std::endl;
+	filein >> total_vertex_numbers; // >> mask_numbers;
+	/*
+	std::cout << "vertex_numbers : " << vertex_numbers << std::endl;
+	std::cout << "edge_numbers : " << edge_numbers << std::endl;
+	std::cout << "mask_numbers : " << mask_numbers << std::endl;
+	*/
+
+
+	int source, target;
+	double weight;
+	std::vector<Vertex*> node_list;
+	node_list.resize(total_vertex_numbers);
+	vertex_numbers = 0;
+	edge_numbers = 0;
+	while (filein >> source >> target >> weight){
+		//if node source and node target is not created. New one/
+		if(!node_list[source]){
+			Vertex* source_vertex = new Vertex;
+			assert(source_vertex->Conflicts.empty());
+			node_list[source] = source_vertex;
+			vertex_numbers ++;
+		}
+		if(!node_list[target]){
+			Vertex* target_vertex = new Vertex;
+			node_list[target] = target_vertex;
+			vertex_numbers ++;
+		}
+
+		//if two nodes are stitch relationships and both of them are parent
+		if(weight < 0){
+			Vertex* parent_vertex = new Vertex;
+			assert(parent_vertex->Childs.empty());
+			parent_vertex->parentOf(node_list[source]);
+			parent_vertex->parentOf(node_list[target]);
+			vertex_numbers -= 1;
+			continue;
+		}
+		node_list[source]->Conflicts.insert(node_list[target]);
+	}
+	filein.close();
+
+	//need to store node list, which does not contain child node
+	std::set<Vertex*> node_wo_stitch_list;
+	int index = 1;
+	for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) {
+		//if the node in parent node, means it has no stitch relations
+		if((*it)->Is_Parent){
+			node_wo_stitch_list.insert((*it));
+			(*it)->updateConflicts();
+			(*it)->No = index;
+			index ++;
+		}
+		//else, add its parent node if it has not been added into node_wo_stitch_list
+		else{
+			assert((*it)->parent->Is_Parent);
+			if(node_wo_stitch_list.find((*it)->parent) == node_wo_stitch_list.end()){
+				node_wo_stitch_list.insert((*it)->parent);
+				(*it)->parent->updateConflicts();
+				(*it)->parent->No = index;
+				index ++;
+			}
+
+		}
+	}
+	assert(node_wo_stitch_list.size() == vertex_numbers);
+
+	std::vector<std::list<Edge_Simple> >  edge_list;
+	edge_list.resize(vertex_numbers + 1);
+	for(std::set<Vertex*>::iterator it = node_wo_stitch_list.begin(); it != node_wo_stitch_list.end(); ++it) {
+		assert((*it)->No != 0);
+		for(std::set<Vertex*>::iterator itconflict = (*it)->Conflicts_in_LG.begin(); itconflict != (*it)->Conflicts_in_LG.end(); ++itconflict) {
+			if((*itconflict)->Is_Parent){
+				assert((*itconflict)->No != 0);
+				edge_numbers++;
+				edge_list[(*it)->No].push_back(Edge_Simple{ (*itconflict)->No, edge_numbers });
+				edge_list[(*itconflict)->No].push_back(Edge_Simple{ (*it)->No, edge_numbers });	
+			}
+			else{
+				assert((*itconflict)->parent->Is_Parent);
+				//avoid repeat (conflicts of stitch realation nodes may represent same conflict)
+				edge_numbers++;	
+				edge_list[(*it)->No].push_back(Edge_Simple{ (*itconflict)->parent->No, edge_numbers });
+				edge_list[(*itconflict)->parent->No].push_back(Edge_Simple{ (*it)->No, edge_numbers });
+			}
+		}
+		}
+	std::cout<<"EDGE list generated with size: "<<edge_numbers<<std::endl;
+	return edge_list;
+}
+
+std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> >  & edge_list)
 {
 	std::vector<int> result_vector;
 	std::queue<int> intermediate_queue;
@@ -83,7 +179,7 @@ void Convert_to_Exat_Cover(int & row_numbers, int & col_numbers, std::string inf
 {
 	std::ofstream fileout(Exact_Cover_Filename);
 
-	std::vector<std::list<Edge_Simple>> edge_list = Read_Graph_File(infilename, vertex_numbers, edge_numbers); //, mask_numbers);
+	std::vector<std::list<Edge_Simple> >  edge_list = Read_Stitch_Graph_File(infilename, vertex_numbers, edge_numbers); //, mask_numbers);
 
 	if (whether_BFS)
 		MPLD_search_vector = BFS_Order(edge_list);
@@ -94,11 +190,17 @@ void Convert_to_Exat_Cover(int & row_numbers, int & col_numbers, std::string inf
 	fileout << row_numbers << std::endl;
 	fileout << col_numbers << std::endl;
 	int count = 0;
+	int total_edge = 0;
 	for (auto it = edge_list.begin(); it != edge_list.end(); it++)
 	{
-		int temp = (it->size() + 1) * mask_numbers;
+		if(it == edge_list.begin()){continue;}
+		std::cout<<it->size()<<std::endl;
+		total_edge += it->size();
+ 		int temp = (it->size() + 1) * mask_numbers;
 		count += temp;
 	}
+	std::cout<<total_edge<<std::endl;
+	assert(total_edge == 2 * edge_numbers );
 	count += edge_numbers*mask_numbers;
 
 	fileout << count << std::endl;
@@ -137,7 +239,7 @@ bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers)
 
 void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & row_set,
 								std::vector<int> & Delete_the_Row_in_which_Col,
-								std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col)
+								std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col)
 {
 	for (auto row_it = row_set.begin(); row_it != row_set.end(); ++row_it) {
 		Delete_the_Row_in_which_Col[*row_it] = this_col;
@@ -148,7 +250,7 @@ void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & 
 
 void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
 								std::vector<int> & Delete_the_Row_in_which_Col,
-								std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col)
+								std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col)
 {
 	for (auto row_it = row_set.begin(); row_it != row_set.end(); ++row_it)
 	{
@@ -158,10 +260,10 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
 	}
 }
 
-bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set, 
+bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int> >  & conflict_set, 
 			int vertex_numbers, int mask_numbers,
 			std::vector<int> & Delete_the_Row_in_which_Col,
-			std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string result_file)
+			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string result_file)
 {
 	// If there is no columns left or all the verteices are covered, then the algorithm terminates.
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
@@ -210,7 +312,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std
 	return false;
 }
 
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>> conflict_set, std::string filename)
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename)
 {
 	std::map<int, int> Final_Color;
 	std::ofstream fileout(filename);
@@ -248,12 +350,12 @@ void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, b
 	int row_numbers;
 	int col_numbers;
 	std::vector<int> result_vec;
-	std::set<std::pair<int, int>> conflict_set;
+	std::set<std::pair<int, int> >  conflict_set;
 	std::vector<int> Delete_the_Row_in_which_Col;
-	std::vector<std::list<int>> Order_of_Row_Deleted_in_Col;
+	std::vector<std::list<int> >  Order_of_Row_Deleted_in_Col;
 	std::vector<int> MPLD_search_vector;
 	DancingLink dl;
-	
+	std::cout<<"Ready to generate cover matrix"<<std::endl;
 	Convert_to_Exat_Cover(row_numbers, col_numbers, Graph_Filename, Exact_Cover_Filename, whether_BFS, vertex_numbers, edge_numbers, mask_numbers, MPLD_search_vector);
 	Order_of_Row_Deleted_in_Col.resize(col_numbers + 1);
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);

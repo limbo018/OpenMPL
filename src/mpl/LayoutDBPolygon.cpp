@@ -271,9 +271,12 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 	std::vector<uint32_t>().swap(vPolyRectBeginId);
 	uint32_t base = vParentPolygonId[0];
 	vPolyRectBeginId.push_back(0);
-
 	for (uint32_t i = 1, ie = vParentPolygonId.size(); i < ie; i++)
 	{
+        if(vParentPolygonId[i] - vParentPolygonId[i-1]>1){
+            std::cout<<"i, vParentPolygonId[i] ,vParentPolygonId[i-1] "<<i<<" "<<vParentPolygonId[i] <<" "<<vParentPolygonId[i-1]<<std::endl;
+        }
+        //mplAssert(vParentPolygonId[i] - vParentPolygonId[i-1]<=1);
 		if (vParentPolygonId[i] != base)
 		{
 			base = vParentPolygonId[i];
@@ -302,6 +305,9 @@ void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec,
 			//		mplAssert(pPattern->color() == pPolyRectPattern->color());
 			gtl::encompass(*pPattern, *pPolyRectPattern);
 		}
+        #ifdef DEBUG_LIWEI
+            std::cout<<"parentPolygonId, i, vPolyRectBeginId[parentPolygonId] is "<<parentPolygonId<<" "<<i<<" "<<vPolyRectBeginId[parentPolygonId]<<std::endl;
+        #endif
 		mplAssert(vPolyRectBeginId[parentPolygonId] <= i);
 	}
 

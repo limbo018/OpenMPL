@@ -1,4 +1,5 @@
 #include"DL_struct.h"
+#include<vector>
 #include<queue>
 
 /*
@@ -14,8 +15,23 @@
  *			is a struct object storing the target vertex and edge No. For a undirected graph, each edge has two duplicates in the map,
  *			while their indices are source and target respectively.
  */
-std::vector<std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers);
+std::vector<std::list<Edge_Simple> > Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers);
 
+
+/*
+ * @brief: This function read the graph file which contains stitch candidate information and return the relevant information to help solving the MPLD problem.
+ *
+ * @param	filename:		the name of the file storing the graph 
+ * @param	vertex_numbers:	number of vertices in the graph
+ * @param	edge_numbers:	number of edges in the graph
+ * @param	mask_numbers:	number of masks in the MPLD problem
+ *
+ * @return	std::map<int, std::list<Edge_Simple>>
+ *			A map storing the graph. The index element of the map is source vertex, and the correspongding value 
+ *			is a struct object storing the target vertex and edge No. For a undirected graph, each edge has two duplicates in the map,
+ *			while their indices are source and target respectively.
+ */
+std::vector<std::list<Edge_Simple> > Read_Stitch_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers);
 /*
  * @brief:	This function calculates and returns the column covering order by BFS traversal. 
  * @param	edge_list:		a map storing the graph information obtained from Read_Graph_File()
@@ -24,7 +40,7 @@ std::vector<std::list<Edge_Simple>> Read_Graph_File(std::string filename, int & 
  *			a vector in which the elements are stored in order of BFS, each element means the column No. 
  */
 
-std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple>> & edge_list);
+std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> > & edge_list);
 
 /*
  * @brief:	This function returns a simple order for next-column selecting in the order of vertex index.
@@ -86,14 +102,14 @@ bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers);
  */
 void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & row_set,
 	std::vector<int> & Delete_the_Row_in_which_Col,
-	std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col);
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col);
 
 /*
  * @brief:	This function is the reverse process of store_intermediate_process()
  */
 void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
 	std::vector<int> & Delete_the_Row_in_which_Col,
-	std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col);
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col);
 
 /*
  * @brief:	The recursive implementation of Algortihm X*. 
@@ -110,10 +126,10 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
  *											the children's row No. in the order of removement.
  * @param	result_file:	the file storing the final result
  */
-bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int>> & conflict_set,
+bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std::pair<int, int> > & conflict_set,
 	int vertex_numbers, int mask_numbers,
 	std::vector<int> & Delete_the_Row_in_which_Col,
-	std::vector<std::list<int>> & Order_of_Row_Deleted_in_Col, 
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
 	int depth, std::vector<int> & MPLD_search_vector, std::string result_file);
 
 
@@ -124,7 +140,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int> & result_vec, std::set<std
  * @param	result_vec:			a vector storing the all the chosen rows
  * @param	filename:			the file storing the result
  */
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int>>  conflict_set, std::string filename);
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> >  conflict_set, std::string filename);
 
 /*
  * @brief:	MPLD_Solver
