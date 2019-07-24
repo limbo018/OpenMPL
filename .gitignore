@@ -37,3 +37,6 @@ cal
 *.xml
 *.iml
 *.DS_Store
+src/bak
+build
+install
