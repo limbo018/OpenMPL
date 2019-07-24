@@ -71,8 +71,6 @@ A table of options :
 gen_stitch					 generate stitch candidate
 ```
 
-Now Dancing Links is an independent component, and the source code is in /src/dlx. One example is in DL_main.cpp. 
-
 One exmaple : /bin/run.sh.
 
 ### Possible Compiler Problems

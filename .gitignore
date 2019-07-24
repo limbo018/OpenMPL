@@ -8,7 +8,9 @@ obj
 *.bk
 *.o
 lib/*
-
+*.json
+*.zip
+*.gds
 obj/*
 bin/.out
 bin/OpenMPL
