@@ -229,6 +229,26 @@ int Next_Column(std::vector<int> & MPLD_search_vector, int depth)
 	return MPLD_search_vector[depth];
 }
 
+int Next_Column_stitch(DancingLink & dl,std::vector<int> & MPLD_search_vector, std::vector<bool>& col_cover_vector)
+{
+	bool not_find_last_uncovered_col = true;
+	int last_col = 0;
+	for(int i = 0; i< MPLD_search_vector.size(); i++){
+		if(col_cover_vector[MPLD_search_vector[i]])	continue;
+		else{
+			if(not_find_last_uncovered_col){
+				last_col = MPLD_search_vector[i];
+				not_find_last_uncovered_col = false;
+			}
+		}
+		Cell *col = &dl.Col_Header_Table[MPLD_search_vector[i]];
+		if(col-> Children_Number == 1){
+			return MPLD_search_vector[i];
+		}
+	}
+	assert(not_find_last_uncovered_col == false);
+	return last_col;
+}
 bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers)
 {
 	if (dl.DL_Header.Right->Col > vertex_numbers)
@@ -263,7 +283,7 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
 bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vector<int> & result_vec, std::set<std::pair<int, int> >  & conflict_set, 
 			int vertex_numbers, int mask_numbers,
 			std::vector<int> & Delete_the_Row_in_which_Col,
-			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string result_file)
+			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector)
 {
 	// If there is no columns left or all the verteices are covered, then the algorithm terminates.
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
@@ -279,16 +299,20 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	else
 	{
 	*/
-	std::cout << "depth : " << depth << std::endl;
-	int this_col = Next_Column(MPLD_search_vector, depth);
-	std::cout << "this_col : " << this_col << std::endl;
-	Cell *col = &dl.Col_Header_Table[this_col];
+	//std::cout << "depth : " << depth << std::endl;
+	Cell *col;
+	//TODO: this depth should be a bug cause sometimes it is not by order (need a bool vector to record the col cover information)
+	int this_col = Next_Column_stitch(dl,MPLD_search_vector, col_cover_vector);
+
+	//std::cout << "this_col : " << this_col << std::endl;
+	col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
+	col_cover_vector[this_col] = true;
 	if (col->Children_Number == 0)
 	{
 		int last_row = Order_of_Row_Deleted_in_Col[this_col].back();
 		int conflict_col = Delete_the_Row_in_which_Col[last_row];
-		std::cout<<"last row is "<<last_row<<std::endl;
+		//std::cout<<"last row is "<<last_row<<std::endl;
 		conflict_set.insert(std::make_pair(conflict_col, this_col));
 		// if (MPLD_X_Solver(dl, color_vector,result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector, result_file))
 		// 	return true;
@@ -302,7 +326,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 		store_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 
 		Remove_Rows_Cols(dl, row_set, col_set);
-		if (MPLD_X_Solver(dl, color_vector,result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector, result_file))
+		if (MPLD_X_Solver(dl, color_vector,result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, MPLD_search_vector, result_file,col_cover_vector))
 			return true;
 
 		result_vec.pop_back();
@@ -310,6 +334,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 		Recover_Rows_Cols(dl, row_set, col_set);
 	}
 	LR_recover(*col);
+	col_cover_vector[this_col] = false;
 	return false;
 }
 
@@ -386,6 +411,6 @@ void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, b
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);
 	DL_Load(dl, Exact_Cover_Filename);
 	int depth = 1;
-	MPLD_X_Solver(dl, color_vec,result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector, result_file);
+	//MPLD_X_Solver(dl, color_vec,result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector, result_file,col_cover_vector);
 }
 

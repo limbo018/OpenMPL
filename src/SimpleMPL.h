@@ -70,6 +70,7 @@ class SimpleMPL
 		void liweidgSimplColoring(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::map<vertex_descriptor, std::set<uint32_t> >& m_ArtiPoint, std::vector<std::vector<vertex_descriptor> >& m_CompVertex);
 		void printVector(std::vector<uint32_t>& vector);
 		void writeJson();
+		void writeJson(graph_type const& sg,std::string graph_count,std::vector<int8_t>& Colors );
 		//write Graph in .txt format for Dancing link input generation and 19 Contest Problem preparation
 		void writeGraph(graph_type const& sg,std::string const filename, double& cost);
 		void projection();
@@ -152,7 +153,9 @@ class SimpleMPL
 		
 		//for dancing link solver of stitch graph
 		void solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector);
-	
+
+		//for dancing link solver of GPU version
+		void solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
 		//calculate cost, used in dancing link
 		double calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> const& vColor);
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 

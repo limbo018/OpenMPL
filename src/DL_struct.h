@@ -211,6 +211,15 @@ void Select_All_Rows_Cols(DancingLink & dl, int target_row, std::set<int> & row_
 void Remove_Single_Row(DancingLink & dl, int row);
 
 /*
+ * @brief : Remove one row from the dlx problem in the present iteration temporarily, 
+ *			according to the row No. (it may be recovered in the subsequent iterations.)
+ *
+ * @param dl	the dancing link problem instance
+ * @param row	the No. of the row we remove in this iteration.
+*/
+void Remove_Single_Col(DancingLink & dl, int col);
+
+/*
  * @brief : Remove all the rows we select in one iteration, also modify the headers of the corresponding columns.
  *			This function relys on the result of 'Select_All_Rows_Cols()'.
  *			This function calls 'Remove_Single_Row()' repeatedly to remove all the rows.

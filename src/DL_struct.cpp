@@ -193,6 +193,16 @@ void Remove_Single_Row(DancingLink & dl, int row) {
 	}
 }
 
+void Remove_Single_Col(DancingLink & dl, int col) {
+	Cell *c = &dl.Col_Header_Table[col];
+	c->Children_Number = 0;
+	// UD_remove(f);
+	for (Cell *j = c->Down; j != c; j = j->Down) {
+		LR_remove(*j);
+		dl.Row_Header_Table[j->Row].Children_Number--;
+	}
+}
+
 void Remove_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col_set) {
 	std::set<int>::iterator it;
 	for (it = row_set.begin(); it != row_set.end(); it++)

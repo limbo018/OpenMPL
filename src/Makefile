@@ -5,7 +5,7 @@
 # recommend make command: make -j CSDP=1 
 # be careful that no additional space is allowed
 # default DBG is off
-DBG = 1
+DBG = 0
 # default GPROF is off, used to enable runtime profiling
 GPROF = 0
 # default GUROBI is off 
@@ -36,6 +36,7 @@ ifeq ($(GPROF), 1)
 endif
 
 CXXFLAGS += -g -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC) -DCSDP=$(CSDP)
+#CXXFLAGS += -DGUROBI=$(GUROBI) -DLEMONCBC=$(LEMONCBC) -DCSDP=$(CSDP)
 
 ifeq ($(UNAME_S), Linux)
 ifeq ($(GUROBI), 0)

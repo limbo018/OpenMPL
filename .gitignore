@@ -6,11 +6,12 @@ obj
 *.ilp
 *tags
 *.bk
-*.o
-lib/*
-*.json
 *.zip
-*.gds
+*.txt
+*.json
+*.bak
+lib/*
+
 obj/*
 bin/.out
 bin/OpenMPL
@@ -39,6 +40,3 @@ cal
 *.xml
 *.iml
 *.DS_Store
-src/bak
-build
-install

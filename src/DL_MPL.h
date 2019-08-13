@@ -78,7 +78,13 @@ void Convert_to_Exat_Cover(int & row_numbers, int & col_numbers, std::string inf
  *			the column No.
  */
 int Next_Column(std::vector<int> & MPLD_search_vector, int depth);
-
+/*
+ * @brief:	Fetch the corresponding column from MPLD_search_vector in stitch_enabled version
+ * @param	
+ * @return	int
+ *			the column No.
+ */
+int Next_Column_stitch(DancingLink & dl,std::vector<int> & MPLD_search_vector, std::vector<bool>& col_cover_vector);
 /*
  * @brief:	Whether all the corresponding columns of vertices in the graph are covered is one of the termination conditions.
  *			If all are covered, return true, else false.
@@ -130,7 +136,7 @@ bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vect
 	int vertex_numbers, int mask_numbers,
 	std::vector<int> & Delete_the_Row_in_which_Col,
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
-	int depth, std::vector<int> & MPLD_search_vector, std::string result_file);
+	int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector);
 
 
 /*
