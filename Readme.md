@@ -67,11 +67,22 @@ A table of options :
 -verbose (false)             toggle controlling screen messages
 -stitch (false)              toggle controlling stitch insertion, default is false
 -dbg_comp_id (4294967295)    debug component id
+-use_stitch 				 use stitch to avoid conflict
+gen_stitch					 generate stitch candidate
 ```
 
-Now Dancing Links is an independent component, and the source code is in /src/dlx. One example is in DL_main.cpp. 
-
 One exmaple : /bin/run.sh.
+
+### Possible Compiler Problems
+
++ default CFLAGS of boost and gurobi are different in newest version
+  + downgrade the boost version
+
++ ```
+  SimpleMPL.cpp:461:5: error: ‘graph_simplification_type’ has no member named ‘set_isVDDGND’
+  ```
+
+  + checkout to ***stitch*** branch in your limbo directory
 
 ### License
 

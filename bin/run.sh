@@ -36,4 +36,4 @@
     -color_num 3 \
     -algo SDP \
     -thread_num 8 \
-	-stitch
+	-stitch True

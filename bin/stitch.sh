@@ -12,14 +12,16 @@
 #  -path_layer                  an integer indicating layer for conflict edges
 #  -precolor_layer              an integer indicating layer for pre-colored patterns
 #  -uncolor_layer               an integer indicating layer for coloring
-#  -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP >
+#  -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP|DL >
 #  -shape (RECTANGLE)           shape mode < RECTANGLE|POLYGON >
 #  -verbose (false)             toggle controlling screen messages
 #  -stitch (false)              toggle controlling stitch insertion
+#  -use_stitch
+#  gen_stitch
 #  -dbg_comp_id (4294967295)    debug component id
 # ========================================================================
 
-#-uncolor_layer  100  \
+#-uncolor_layer  100  \ 
 #-uncolor_layer 201  \
 #-uncolor_layer 202  \
 #-uncolor_layer 203 \
@@ -27,12 +29,13 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/total_c5.gds  \
-    -out benchout/total_c5_sti.gds  \
+    -in bench/sim_c5.gds \
+    -out benchout/sim_c1_sti.gds  \
     -coloring_distance 120 \
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo ILP \
+    -algo DL\
     -thread_num 8 \
-	-gen_stitch
+    -use_stitch \
+    gen_stitch
