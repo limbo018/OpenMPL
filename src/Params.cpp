@@ -13,8 +13,6 @@ bool CmdParser::operator()(int argc, char** argv)
 {
     ControlParameter defaultParms; // get default value from default constructor 
     bool help = false;
-	bool use_stitch = false;
-	bool gen_stitch = false;
     std::string algo_str;
     std::string shape_str;
     // append options here 

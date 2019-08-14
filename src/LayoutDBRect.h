@@ -39,13 +39,13 @@ struct LayoutDBRect : public LayoutDB
     /// \return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPatternBbox;}
 
-	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const 
+	virtual std::vector<uint32_t> PolyRectBgnLoc() const 
 	{
 		std::vector<uint32_t> m; 
 		uint32_t vertex_num = this->vPatternBbox.size();
 		for (uint32_t i = 0; i < vertex_num; i++)
 			m.push_back(i);
-		std::cout<<"LIWEI: the size of m should be: "<<m.size()<<", and first number is "<< m[0]<<std::endl;			
+        mplPrint(kDEBUG, "LIWEI: the size of m should be: %lu, and first number is %u\n", m.size(), m[0]);
 		return m; 
 	}
     /// set color for patterns 
@@ -64,10 +64,11 @@ struct LayoutDBRect : public LayoutDB
 	{ 
 		std::vector<rectangle_pointer_type>().swap(vPatternBbox);
 		vPatternBbox.assign(new_rect_vec.size(), NULL);
-		for(int i = 0; i<new_rect_vec.size();i++ ){
+		for(unsigned int i = 0; i<new_rect_vec.size();i++ )
+        {
 			vPatternBbox[i] = new_rect_vec[i];
 		}
-		return; }
+    }
     /// always return false as each rectangle is its own parent 
     //virtual bool same_parent(uint32_t, uint32_t) const {return false;}
 };

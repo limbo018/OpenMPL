@@ -95,7 +95,7 @@ std::vector<std::list<Edge_Simple> >  Read_Stitch_Graph_File(std::string filenam
 
 		}
 	}
-	assert(node_wo_stitch_list.size() == vertex_numbers);
+    mplAssert(node_wo_stitch_list.size() == (unsigned int)vertex_numbers);
 
 	std::vector<std::list<Edge_Simple> >  edge_list;
 	edge_list.resize(vertex_numbers + 1);
@@ -161,8 +161,8 @@ std::vector<int> Simple_Order(int size)
 
 int Sorting_Queue(DancingLink & dl)
 {
-	int col_no;
-	int max = INT_MAX;
+	int col_no = std::numeric_limits<int>::max();
+	int max = std::numeric_limits<int>::max();
 	for (auto c = dl.DL_Header.Right; c != &dl.DL_Header; c = c->Right)
 	{
 		if (c->Children_Number < max)
@@ -204,7 +204,7 @@ void Convert_to_Exat_Cover(int & row_numbers, int & col_numbers, std::string inf
 	count += edge_numbers*mask_numbers;
 
 	fileout << count << std::endl;
-	for (int it = 1; it < edge_list.size(); ++it)
+	for (unsigned int it = 1; it < edge_list.size(); ++it)
 	{
 		for (int i = 1; i <= mask_numbers; ++i)
 		{
@@ -233,7 +233,7 @@ int Next_Column_stitch(DancingLink & dl,std::vector<int> & MPLD_search_vector, s
 {
 	bool not_find_last_uncovered_col = true;
 	int last_col = 0;
-	for(int i = 0; i< MPLD_search_vector.size(); i++){
+	for(unsigned int i = 0; i< MPLD_search_vector.size(); i++){
 		if(col_cover_vector[MPLD_search_vector[i]])	continue;
 		else{
 			if(not_find_last_uncovered_col){
@@ -268,8 +268,8 @@ void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & 
 	}
 }
 
-void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
-								std::vector<int> & Delete_the_Row_in_which_Col,
+void recover_intermediate_process(DancingLink & dl, int /*this_col*/, std::set<int> row_set,
+								std::vector<int> & /*Delete_the_Row_in_which_Col*/,
 								std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col)
 {
 	for (auto row_it = row_set.begin(); row_it != row_set.end(); ++row_it)
@@ -338,7 +338,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	return false;
 }
 
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename)
+void Decode(int /*vertex_numbers*/, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename)
 {
 	std::map<int, int> Final_Color;
 	std::ofstream fileout(filename);
@@ -369,7 +369,7 @@ void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, s
 	fileout.close();
 } 
 
-void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename)
+void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > /*conflict_set*/, std::string const& /*filename*/)
 {
 	for (auto i = result_vec.begin(); i != result_vec.end(); i++)
 	{
@@ -392,7 +392,7 @@ void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& c
 	// }
 } 
 
-void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string result_file)
+void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string const& /*result_file*/)
 {
 	int vertex_numbers;
 	int edge_numbers;
@@ -410,7 +410,7 @@ void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, b
 	Order_of_Row_Deleted_in_Col.resize(col_numbers + 1);
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);
 	DL_Load(dl, Exact_Cover_Filename);
-	int depth = 1;
+	//int depth = 1;
 	//MPLD_X_Solver(dl, color_vec,result_vec, conflict_set, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector, result_file,col_cover_vector);
 }
 
