@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <algorithm>
+#include <iostream>
 //exact cover matrix
 //cols are vertices and all possible conflicts
 //row are all vertices with possible coloring options
@@ -74,7 +75,10 @@ void recover_deleted_cols(int **dl_matrix, int *deleted_cols, int search_depth, 
 void recover_results(int *results, int search_depth, int total_dl_matrix_row_num);
 
 //
-int get_conflict_col(int *row_group, int search_depth, int vertex_num, int total_dl_matrix_col_num);
+int get_conflict_node_id(int *deleted_rows, int *row_group, int search_depth, int total_dl_matrix_row_num);
+
+//
+int get_conflict_col(int **dl_matrix, int *deleted_rows, int *deleted_cols, int *row_group, int conflict_node_id, int search_depth, int vertex_num, int total_dl_matrix_row_num, int total_dl_matrix_col_num);
 
 //
 void mc_solver(int **dl_matrix, int *results, int *deleted_cols, int *col_group, int vertex_num, int total_dl_matrix_row_num, int total_dl_matrix_col_num);

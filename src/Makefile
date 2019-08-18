@@ -52,13 +52,13 @@ endif
 
 INCLUDE = \
 		  -I $(BOOST_DIR)/include \
-		  -I $(LIMBO_DIR)/include
+		  -I $(NEW_LIMBO_DIR)/include
 
 # only gurobi60 is dynamically linked 
 # static libraries have .a as suffix in both unix and darwin 
 # but dynamic libraries have different suffixes 
 LIBS = $(STATIC_LINK_FLAG) \
-	   -L $(LIMBO_DIR)/lib -lgdsparser -lprogramoptions \
+	   -L $(NEW_LIMBO_DIR)/lib -lgdsparser -lprogramoptions \
 	   -L $(BOOST_DIR)/lib -lboost_system -lboost_timer -lboost_chrono -lboost_iostreams \
 	   -L $(ZLIB_DIR) -lz
 
@@ -87,8 +87,8 @@ endif
 # Csdp api (OpenBLAS and Fortran library are necessary)
 # it looks like pthead must be linked dynamically when GUROBI is also on 
 ifeq ($(CSDP), 1)
-LIBS += -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -L $(CSDP_DIR)/lib -lsdp \
-	   -L $(LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -L $(BLAS_DIR)/lib -lopenblas-st -lm 
+LIBS += -L $(NEW_LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -L $(CSDP_DIR)/lib -lsdp \
+	   -L $(NEW_LIMBO_DIR)/lib $(STATIC_LINK_FLAG) -L $(BLAS_DIR)/lib -lopenblas -lm 
 # CSDP links to Fortran under Linux 
 ifeq ($(UNAME_S), Linux)
 LIBS += $(DYNAMIC_LINK_FLAG) -lrt -lgfortran 
