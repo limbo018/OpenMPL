@@ -268,13 +268,14 @@ void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & 
 	}
 }
 
-void recover_intermediate_process(DancingLink & dl, int /*this_col*/, std::set<int> row_set,
-								std::vector<int> & /*Delete_the_Row_in_which_Col*/,
+void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
+								std::vector<int> & Delete_the_Row_in_which_Col,
 								std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col)
 {
+	(void)this_col;
 	for (auto row_it = row_set.begin(); row_it != row_set.end(); ++row_it)
 	{
-		// Delete_the_Row_in_which_Col[*row_it] = 0;
+		 Delete_the_Row_in_which_Col[*row_it] = 0;
 		for (auto row_ele = dl.Row_Header_Table[*row_it].Right; row_ele != &dl.Row_Header_Table[*row_it]; row_ele = row_ele->Right)
 			Order_of_Row_Deleted_in_Col[row_ele->Col].pop_back();
 	}
@@ -285,10 +286,11 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 			std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector)
 {
+	(void) color_vector;
 	// If there is no columns left or all the verteices are covered, then the algorithm terminates.
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
-		Decode_OpenMPL(vertex_numbers, mask_numbers, color_vector,result_vec, conflict_set, result_file);
+		Decode(vertex_numbers, mask_numbers,result_vec, conflict_set, result_file);
 		return true;
 	}
 	/* 
@@ -338,8 +340,11 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	return false;
 }
 
-void Decode(int /*vertex_numbers*/, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename)
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename)
 {
+	(void)conflict_set;
+	(void)filename;
+	(void)vertex_numbers;
 	std::map<int, int> Final_Color;
 	std::ofstream fileout(filename);
 	fileout << "Solution : " << std::endl;
@@ -369,8 +374,10 @@ void Decode(int /*vertex_numbers*/, int mask_numbers, std::vector<int> result_ve
 	fileout.close();
 } 
 
-void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > /*conflict_set*/, std::string const& /*filename*/)
+void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string const& filename)
 {
+	(void)filename;
+	(void)conflict_set;
 	for (auto i = result_vec.begin(); i != result_vec.end(); i++)
 	{
 		std::cout << *i << std::endl;
@@ -392,8 +399,9 @@ void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& c
 	// }
 } 
 
-void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string const& /*result_file*/)
+void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string const& result_file)
 {
+	(void)result_file;
 	int vertex_numbers;
 	int edge_numbers;
 	int row_numbers;

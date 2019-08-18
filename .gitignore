@@ -11,7 +11,8 @@ obj
 *.json
 *.bak
 lib/*
-
+.gitignore
+src/Makefile
 obj/*
 bin/.out
 bin/OpenMPL
