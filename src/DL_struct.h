@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -9,6 +9,7 @@
 #include<list>
 #include<map>
 #include<limits.h>
+#include "Msg.h"
 #include <assert.h>
 
 struct Cell {

@@ -14,6 +14,7 @@
 #include <fstream>
 #include <stack>
 #include <string> 
+
 #include <limbo/algorithms/coloring/Coloring.h>
 #include "GdsiiIO.h"
 #include "boost/config.hpp"
@@ -144,18 +145,18 @@ class SimpleMPL
         /// \param g is mutable because edge properties for boost::dynamic_properties need mutable graph 
         /// \param filename should not contain extension 
         void write_graph(graph_type& g, std::string const& filename) const;
-
-
+		//print graph information for debug
+		void printGraph(SimpleMPL::graph_type& g);
 		// for dancing link solver
 		// \param g is the input graph for colorings
 		// \param color_vector is the vector which stores the coloring results of each node. sizeof(color_vector) == num_vertices(g)
 		void solve_by_dancing_link(graph_type& g,std::vector<int8_t>& color_vector);
 		
 		//for dancing link solver of stitch graph
-		void solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector);
+		double solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector);
 
 		//for dancing link solver of GPU version
-		void solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
+		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
 		//calculate cost, used in dancing link
 		double calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> const& vColor);
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 

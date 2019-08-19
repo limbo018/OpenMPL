@@ -1,4 +1,5 @@
 #include"DL_struct.h"
+#include "Msg.h"
 #include<vector>
 #include<queue>
 
