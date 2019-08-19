@@ -2992,7 +2992,7 @@ double SimpleMPL::solve_by_dancing_link_with_stitch(SimpleMPL::graph_type& g,std
 	for (auto i = result_vec.begin(); i != result_vec.end(); i++)
 	{
 		// std::cout << *i << std::endl;
-		if((*i) > (vertex_numbers * (uint32_t)(m_db->color_num()) + (uint32_t)1)){
+		if((uint32_t)(*i) > (vertex_numbers * (uint32_t)(m_db->color_num()) + (uint32_t)1)){
 			std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[(*i)- vertex_numbers * m_db->color_num() -2];
 			for(std::vector<std::pair<uint32_t,uint32_t>>::iterator it = row_decoder.begin(); it != row_decoder.end(); ++it) {
 				color_vector[(*it).first] = (*it).second;

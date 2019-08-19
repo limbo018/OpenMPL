@@ -43,6 +43,7 @@ int get_largest_value(int *vec, int vec_length)
             return i;
         }
     }
+    return std::numeric_limits<int>::max();
 }
 
 void init_vectors_reserved(int *vec, int vec_length, int value = 0)
@@ -91,6 +92,7 @@ int select_row(int *deleted_rows, int *row_group, int search_depth, int total_dl
             return i;
         }
     }
+    return std::numeric_limits<int>::max();
 }
 
 void recover_deleted_rows(int *deleted_rows, int search_depth, int total_dl_matrix_row_num)
@@ -193,7 +195,7 @@ void mc_solver(
     int *vertices_covered = new int[vertex_num];
     int *row_group = new int[total_dl_matrix_row_num];
     //int *col_group = new int[total_dl_matrix_col_num];
-    int selected_row_id_in_previous_search;
+    //int selected_row_id_in_previous_search;
     int conflict_node_id;
     int conflict_col_id;
     int hard_conflict_threshold = 2;
