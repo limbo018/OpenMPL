@@ -1,0 +1,566 @@
+, comp_id: 0, sub_comp_id: 8, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1, obj_value: 1
+, comp_id: 108, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 248, sub_comp_id: 1, obj_value: 1
+, comp_id: 271, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 288, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 393, sub_comp_id: 5, obj_value: 1
+, comp_id: 434, sub_comp_id: 1, obj_value: 1
+, comp_id: 457, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 507, sub_comp_id: 1, obj_value: 1
+, comp_id: 593, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 654, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 655, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 699, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 723, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 748, sub_comp_id: 1, obj_value: 1
+, comp_id: 944, sub_comp_id: 0, obj_value: 1
+, comp_id: 973, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1141, sub_comp_id: 0, obj_value: 1
+, comp_id: 1161, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1211, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 3, obj_value: 0.1
+, comp_id: 1322, sub_comp_id: 2, obj_value: 0.1
+, comp_id: 1338, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1375, sub_comp_id: 2, obj_value: 0.1
+, comp_id: 1421, sub_comp_id: 1, obj_value: 1
+, comp_id: 1469, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1492, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1533, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1637, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 1656, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1672, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 1769, sub_comp_id: 1, obj_value: 1
+, comp_id: 1780, sub_comp_id: 1, obj_value: 1
+, comp_id: 1819, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1849, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1896, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1975, sub_comp_id: 1, obj_value: 1
+, comp_id: 1993, sub_comp_id: 0, obj_value: 1
+, comp_id: 2033, sub_comp_id: 1, obj_value: 1
+, comp_id: 2034, sub_comp_id: 1, obj_value: 1
+, comp_id: 2042, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2091, sub_comp_id: 0, obj_value: 1
+, comp_id: 2263, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2314, sub_comp_id: 1, obj_value: 1
+, comp_id: 2319, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2388, sub_comp_id: 0, obj_value: 1
+, comp_id: 2533, sub_comp_id: 0, obj_value: 1
+, comp_id: 2580, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2708, sub_comp_id: 0, obj_value: 1.1
+, comp_id: 2850, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2853, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2868, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2889, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 2979, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 2992, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3011, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3019, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3026, sub_comp_id: 1, obj_value: 1
+, comp_id: 3034, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3084, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3092, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3110, sub_comp_id: 0, obj_value: 1
+, comp_id: 3139, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3312, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3333, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3344, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3390, sub_comp_id: 1, obj_value: 1
+, comp_id: 3522, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3533, sub_comp_id: 1, obj_value: 1
+, comp_id: 3591, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3711, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3725, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 3920, sub_comp_id: 0, obj_value: 1
+, comp_id: 3929, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 3990, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 4007, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4011, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4012, sub_comp_id: 1, obj_value: 1
+, comp_id: 4062, sub_comp_id: 0, obj_value: 1
+, comp_id: 4094, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4111, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 4227, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4267, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4363, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4497, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4509, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4616, sub_comp_id: 1, obj_value: 1
+, comp_id: 4622, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4775, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 4851, sub_comp_id: 2, obj_value: 0.1
+, comp_id: 4940, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 4943, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 0, sub_comp_id: 8, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1, obj_value: 2
+, comp_id: 108, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 248, sub_comp_id: 1, obj_value: 1
+, comp_id: 271, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 288, sub_comp_id: 0, obj_value: 0.2
+, comp_id: 393, sub_comp_id: 5, obj_value: 1
+, comp_id: 434, sub_comp_id: 1, obj_value: 1
+, comp_id: 457, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 507, sub_comp_id: 1, obj_value: 1
+, comp_id: 593, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 654, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 655, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 699, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 723, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 748, sub_comp_id: 1, obj_value: 3
+, comp_id: 944, sub_comp_id: 0, obj_value: 1
+, comp_id: 973, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1141, sub_comp_id: 0, obj_value: 2
+, comp_id: 1161, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1211, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 3, obj_value: 0.2
+, comp_id: 1322, sub_comp_id: 2, obj_value: 0.1
+, comp_id: 1338, sub_comp_id: 0, obj_value: 0.2
+, comp_id: 1375, sub_comp_id: 2, obj_value: 0.1
+, comp_id: 1421, sub_comp_id: 1, obj_value: 1
+, comp_id: 1469, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1492, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1533, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1637, sub_comp_id: 1, obj_value: 0.2
+, comp_id: 1656, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1672, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 1769, sub_comp_id: 1, obj_value: 1
+, comp_id: 1780, sub_comp_id: 1, obj_value: 3
+, comp_id: 1819, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1849, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 1896, sub_comp_id: 0, obj_value: 0.2
+, comp_id: 0, sub_comp_id: 8, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1, obj_value: 4
+, comp_id: 108, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 248, sub_comp_id: 1, obj_value: 4
+, comp_id: 271, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 288, sub_comp_id: 0, obj_value: 0.2
+, comp_id: 393, sub_comp_id: 5, obj_value: 6
+, comp_id: 434, sub_comp_id: 1, obj_value: 2
+, comp_id: 457, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 507, sub_comp_id: 1, obj_value: 2
+, comp_id: 593, sub_comp_id: 1, obj_value: 0.1
+, comp_id: 632, sub_comp_id: 3, obj_value: 0.3
+, comp_id: 654, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 655, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 699, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 723, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 748, sub_comp_id: 1, obj_value: 2
+, comp_id: 944, sub_comp_id: 0, obj_value: 2
+, comp_id: 973, sub_comp_id: 0, obj_value: 0.1
+, comp_id: 0, sub_comp_id: 8,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 4
+, comp_id: 108, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 248, sub_comp_id: 1,num_vertices(sg) 32, obj_value: 4
+, comp_id: 271, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 288, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.2
+, comp_id: 393, sub_comp_id: 5,num_vertices(sg) 22, obj_value: 6
+, comp_id: 434, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 457, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 507, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 593, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 632, sub_comp_id: 3,num_vertices(sg) 23, obj_value: 0.3
+, comp_id: 654, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 655, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 699, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 723, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 748, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 944, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 2
+, comp_id: 973, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1141, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 7
+, comp_id: 1161, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 1211, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1220, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 3,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 1322, sub_comp_id: 2,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 1338, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 0.2
+, comp_id: 1375, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1421, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 1
+, comp_id: 1469, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1492, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1533, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1637, sub_comp_id: 1,num_vertices(sg) 16, obj_value: 0.2
+, comp_id: 1656, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 1672, sub_comp_id: 1,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 1769, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 1
+, comp_id: 1780, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 3
+, comp_id: 1819, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1849, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 1896, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 1975, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 3
+, comp_id: 1993, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 2
+, comp_id: 2033, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 1
+, comp_id: 2034, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 2042, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 2091, sub_comp_id: 0,num_vertices(sg) 28, obj_value: 2
+, comp_id: 2263, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 2314, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 2319, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2388, sub_comp_id: 0,num_vertices(sg) 22, obj_value: 6
+, comp_id: 2533, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 6
+, comp_id: 2580, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2708, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 1.3
+, comp_id: 2850, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2853, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.2
+, comp_id: 2868, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2889, sub_comp_id: 1,num_vertices(sg) 19, obj_value: 0.2
+, comp_id: 2979, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.2
+, comp_id: 2992, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 0.1
+, comp_id: 3011, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 3019, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 0.2
+, comp_id: 3026, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 3034, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 0.2
+, comp_id: 3084, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 3092, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 3110, sub_comp_id: 0,num_vertices(sg) 25, obj_value: 8
+, comp_id: 3139, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3312, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3333, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 3344, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3390, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 3522, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 3533, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 3591, sub_comp_id: 0,num_vertices(sg) 17, obj_value: 0.1
+, comp_id: 3711, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 3725, sub_comp_id: 1,num_vertices(sg) 27, obj_value: 0.1
+, comp_id: 3920, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 2
+, comp_id: 3929, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 3990, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 4007, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4011, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 0.1
+, comp_id: 4012, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 1
+, comp_id: 4062, sub_comp_id: 0,num_vertices(sg) 29, obj_value: 2
+, comp_id: 4094, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 4111, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 0.1
+, comp_id: 4227, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 4267, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 4363, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.2
+, comp_id: 4497, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 4509, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 4616, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 4622, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 4775, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 4851, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4940, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 4943, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 0, sub_comp_id: 8,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 4
+, comp_id: 108, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 248, sub_comp_id: 1,num_vertices(sg) 32, obj_value: 4
+, comp_id: 271, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 288, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.2
+, comp_id: 393, sub_comp_id: 5,num_vertices(sg) 22, obj_value: 6
+, comp_id: 434, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 457, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 507, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 593, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 632, sub_comp_id: 3,num_vertices(sg) 23, obj_value: 0.3
+, comp_id: 654, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 655, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 699, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 723, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 748, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 944, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 2
+, comp_id: 973, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1141, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 7
+, comp_id: 1161, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 1211, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1220, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 3,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 1322, sub_comp_id: 2,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 1338, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 0.2
+, comp_id: 1375, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1421, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 1
+, comp_id: 1469, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1492, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1533, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1637, sub_comp_id: 1,num_vertices(sg) 16, obj_value: 0.2
+, comp_id: 1656, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 1672, sub_comp_id: 1,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 1769, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 1
+, comp_id: 1780, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 3
+, comp_id: 1819, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1849, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 1896, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 1975, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 3
+, comp_id: 1993, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 2
+, comp_id: 2033, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 1
+, comp_id: 2034, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 2042, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 2091, sub_comp_id: 0,num_vertices(sg) 28, obj_value: 2
+, comp_id: 2263, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 2314, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 2319, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2388, sub_comp_id: 0,num_vertices(sg) 22, obj_value: 6
+, comp_id: 2533, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 6
+, comp_id: 2580, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2708, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 1.3
+, comp_id: 2850, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2853, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.2
+, comp_id: 2868, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2889, sub_comp_id: 1,num_vertices(sg) 19, obj_value: 0.2
+, comp_id: 2979, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.2
+, comp_id: 2992, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 0.1
+, comp_id: 3011, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 3019, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 0.2
+, comp_id: 3026, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 3034, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 0.2
+, comp_id: 3084, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 3092, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 3110, sub_comp_id: 0,num_vertices(sg) 25, obj_value: 8
+, comp_id: 3139, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3312, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3333, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 3344, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3390, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 3522, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 3533, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 3591, sub_comp_id: 0,num_vertices(sg) 17, obj_value: 0.1
+, comp_id: 3711, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 3725, sub_comp_id: 1,num_vertices(sg) 27, obj_value: 0.1
+, comp_id: 3920, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 2
+, comp_id: 3929, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 3990, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 4007, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4011, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 0.1
+, comp_id: 4012, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 1
+, comp_id: 4062, sub_comp_id: 0,num_vertices(sg) 29, obj_value: 2
+, comp_id: 4094, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 4111, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 0.1
+, comp_id: 4227, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 4267, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 4363, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.2
+, comp_id: 4497, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 4509, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 4616, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 4622, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 4775, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 4851, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4940, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 4943, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 7, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 0.1
+, comp_id: 50, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 71, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 50, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 71, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 0.1
+, comp_id: 7, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 0.1
+, comp_id: 50, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.2
+, comp_id: 5, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.2
+, comp_id: 71, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 4
+, comp_id: 7, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 0.1
+, comp_id: 73, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 180, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 2
+, comp_id: 159, sub_comp_id: 1,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 108, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.2
+, comp_id: 27, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 85, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 121, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.2
+, comp_id: 238, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 2.1
+, comp_id: 22, sub_comp_id: 1,num_vertices(sg) 12, obj_value: 1.2
+, comp_id: 268, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 2580, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 2
+, comp_id: 1975, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 5
+, comp_id: 4497, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 3,num_vertices(sg) 14, obj_value: 2
+, comp_id: 654, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 4509, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 3920, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 1
+, comp_id: 655, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1322, sub_comp_id: 2,num_vertices(sg) 13, obj_value: 1
+, comp_id: 0, sub_comp_id: 8,num_vertices(sg) 10, obj_value: 2
+, comp_id: 3929, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 1993, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 1
+, comp_id: 3939, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 3312, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1338, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 0.2
+, comp_id: 1994, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 3333, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 3990, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.2
+, comp_id: 699, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 2
+, comp_id: 3344, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 4007, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4616, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 4622, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 5
+, comp_id: 2033, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 3
+, comp_id: 723, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 2
+, comp_id: 1375, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 2
+, comp_id: 2034, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 728, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 2042, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 2
+, comp_id: 4011, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 0.1
+, comp_id: 2708, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 1.3
+, comp_id: 4012, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 2
+, comp_id: 748, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 2
+, comp_id: 1421, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 3
+, comp_id: 3390, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 1
+, comp_id: 2091, sub_comp_id: 0,num_vertices(sg) 28, obj_value: 2
+, comp_id: 4062, sub_comp_id: 0,num_vertices(sg) 29, obj_value: 2
+, comp_id: 1421, sub_comp_id: 2,num_vertices(sg) 14, obj_value: 1
+, comp_id: 2850, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2853, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.2
+, comp_id: 4094, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1469, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4775, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 3
+, comp_id: 2868, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 108, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 2
+, comp_id: 1492, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4851, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4111, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 2
+, comp_id: 2889, sub_comp_id: 1,num_vertices(sg) 19, obj_value: 0.2
+, comp_id: 2263, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 1.2
+, comp_id: 3522, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.2
+, comp_id: 3533, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 1
+, comp_id: 1533, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 6
+, comp_id: 2314, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 2
+, comp_id: 2319, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 4940, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 3591, sub_comp_id: 0,num_vertices(sg) 17, obj_value: 0.1
+, comp_id: 4943, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2979, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 2
+, comp_id: 248, sub_comp_id: 1,num_vertices(sg) 32, obj_value: 3
+, comp_id: 857, sub_comp_id: 3,num_vertices(sg) 14, obj_value: 1
+, comp_id: 2992, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 0.1
+, comp_id: 4227, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1637, sub_comp_id: 1,num_vertices(sg) 16, obj_value: 1
+, comp_id: 944, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 2
+, comp_id: 3711, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 3011, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 1
+, comp_id: 271, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 3
+, comp_id: 2388, sub_comp_id: 0,num_vertices(sg) 22, obj_value: 1
+, comp_id: 973, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1656, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 4267, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 3725, sub_comp_id: 1,num_vertices(sg) 27, obj_value: 1
+, comp_id: 3019, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 7
+, comp_id: 1670, sub_comp_id: 2,num_vertices(sg) 22, obj_value: 2
+, comp_id: 288, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 5
+, comp_id: 1672, sub_comp_id: 1,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 3026, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 6
+, comp_id: 3034, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 4
+, comp_id: 2533, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 1
+, comp_id: 3811, sub_comp_id: 2,num_vertices(sg) 31, obj_value: 3.1
+, comp_id: 3040, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 4363, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 5
+, comp_id: 3084, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1114, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 335, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 3092, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.2
+, comp_id: 1769, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 2
+, comp_id: 3110, sub_comp_id: 0,num_vertices(sg) 25, obj_value: 4
+, comp_id: 1141, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 1
+, comp_id: 3139, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1161, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 1780, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 3
+, comp_id: 1211, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 393, sub_comp_id: 5,num_vertices(sg) 22, obj_value: 1
+, comp_id: 1819, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1220, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 1
+, comp_id: 397, sub_comp_id: 0,num_vertices(sg) 31, obj_value: 1
+, comp_id: 1849, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 407, sub_comp_id: 1,num_vertices(sg) 14, obj_value: 1
+, comp_id: 1896, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 2
+, comp_id: 434, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 457, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 2
+, comp_id: 507, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 2
+, comp_id: 593, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 2580, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 4497, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 654, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 3920, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 1
+, comp_id: 1311, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1975, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 655, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3929, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 1311, sub_comp_id: 3,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 4509, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1
+, comp_id: 0, sub_comp_id: 8,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3312, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 1322, sub_comp_id: 2,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 1993, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 1
+, comp_id: 3990, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 699, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 5, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 3333, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4007, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1338, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 0.1
+, comp_id: 3344, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 4616, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 723, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 4011, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 0.1
+, comp_id: 4622, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 2708, sub_comp_id: 0,num_vertices(sg) 30, obj_value: 1.1
+, comp_id: 2033, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 1
+, comp_id: 4012, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 1
+, comp_id: 1375, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2034, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 748, sub_comp_id: 1,num_vertices(sg) 21, obj_value: 1
+, comp_id: 3390, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 1
+, comp_id: 2042, sub_comp_id: 0,num_vertices(sg) 7, obj_value: 0.1
+, comp_id: 4062, sub_comp_id: 0,num_vertices(sg) 29, obj_value: 1
+, comp_id: 2850, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2853, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 1421, sub_comp_id: 1,num_vertices(sg) 20, obj_value: 1
+, comp_id: 4094, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 2868, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 4775, sub_comp_id: 1,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 2091, sub_comp_id: 0,num_vertices(sg) 28, obj_value: 1
+, comp_id: 108, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 2889, sub_comp_id: 1,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 4851, sub_comp_id: 2,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 4111, sub_comp_id: 1,num_vertices(sg) 24, obj_value: 0.1
+, comp_id: 1469, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2979, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1492, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 944, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 1
+, comp_id: 3522, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 248, sub_comp_id: 1,num_vertices(sg) 32, obj_value: 1
+, comp_id: 2992, sub_comp_id: 0,num_vertices(sg) 15, obj_value: 0.1
+, comp_id: 4940, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 4943, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 973, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3533, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 1
+, comp_id: 4227, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1533, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 3591, sub_comp_id: 0,num_vertices(sg) 17, obj_value: 0.1
+, comp_id: 2263, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 271, sub_comp_id: 0,num_vertices(sg) 11, obj_value: 0.1
+, comp_id: 4267, sub_comp_id: 0,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 3011, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 2314, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 1
+, comp_id: 1637, sub_comp_id: 1,num_vertices(sg) 16, obj_value: 0.1
+, comp_id: 288, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 2319, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 3019, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 0.1
+, comp_id: 3711, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1656, sub_comp_id: 0,num_vertices(sg) 19, obj_value: 0.1
+, comp_id: 3026, sub_comp_id: 1,num_vertices(sg) 23, obj_value: 1
+, comp_id: 1672, sub_comp_id: 1,num_vertices(sg) 13, obj_value: 0.1
+, comp_id: 3034, sub_comp_id: 0,num_vertices(sg) 20, obj_value: 0.1
+, comp_id: 4363, sub_comp_id: 0,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 3725, sub_comp_id: 1,num_vertices(sg) 27, obj_value: 0.1
+, comp_id: 1141, sub_comp_id: 0,num_vertices(sg) 23, obj_value: 1
+, comp_id: 1161, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 3084, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 2388, sub_comp_id: 0,num_vertices(sg) 22, obj_value: 1
+, comp_id: 393, sub_comp_id: 5,num_vertices(sg) 22, obj_value: 1
+, comp_id: 3092, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 1211, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 3110, sub_comp_id: 0,num_vertices(sg) 25, obj_value: 1
+, comp_id: 1769, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 1
+, comp_id: 434, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 1
+, comp_id: 3139, sub_comp_id: 0,num_vertices(sg) 10, obj_value: 0.1
+, comp_id: 2533, sub_comp_id: 0,num_vertices(sg) 21, obj_value: 1
+, comp_id: 457, sub_comp_id: 0,num_vertices(sg) 12, obj_value: 0.1
+, comp_id: 1780, sub_comp_id: 1,num_vertices(sg) 25, obj_value: 1
+, comp_id: 1819, sub_comp_id: 0,num_vertices(sg) 9, obj_value: 0.1
+, comp_id: 507, sub_comp_id: 1,num_vertices(sg) 22, obj_value: 1
+, comp_id: 1849, sub_comp_id: 0,num_vertices(sg) 8, obj_value: 0.1
+, comp_id: 593, sub_comp_id: 1,num_vertices(sg) 18, obj_value: 0.1
+, comp_id: 1896, sub_comp_id: 0,num_vertices(sg) 14, obj_value: 0.1

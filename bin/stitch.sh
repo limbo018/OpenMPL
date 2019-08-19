@@ -35,6 +35,6 @@
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo DL\
+    -algo ILP\
     -thread_num 8 \
      -use_stitch gen_stitch
