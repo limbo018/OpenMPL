@@ -149,7 +149,10 @@ bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vect
  */
 void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> >  conflict_set, std::string filename);
 
-void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string filename);
+#ifndef DECODE_MPL__
+#define DECODE_MPL__
+void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string const& filename);
+#endif /* FDECODE_MPL__ */
 /*
  * @brief:	MPLD_Solver
  * 

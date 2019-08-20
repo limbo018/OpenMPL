@@ -286,11 +286,10 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 			std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector)
 {
-	(void) color_vector;
 	// If there is no columns left or all the verteices are covered, then the algorithm terminates.
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
-		Decode(vertex_numbers, mask_numbers,result_vec, conflict_set, result_file);
+		Decode_OpenMPL(vertex_numbers, mask_numbers,color_vector,result_vec, conflict_set, result_file);
 		return true;
 	}
 	/* 

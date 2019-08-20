@@ -61,11 +61,18 @@ void SimpleMPL::run(int argc, char** argv)
 
 
 	this->reset(false);
-#if RECORD == 1
+#if RECORD > 0
 	std::ofstream myfile;
 	myfile.open ("record.txt", std::ofstream::app);
 	myfile << argv[4]<<" " << argv[16]<<"\n";
 	myfile.close();
+#endif
+
+#if RECORD > 1
+	std::ofstream myfile_small;
+	myfile_small.open ("small_results.txt", std::ofstream::app);
+	myfile_small << argv[4]<<" " << argv[16]<<"\n";
+	myfile_small.close();
 #endif
 	this->read_cmd(argc, argv);
 	this->read_gds();
@@ -500,7 +507,7 @@ void SimpleMPL::solve()
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
 	}
-#if RECORD == 1
+#if RECORD > 0
 	if(m_db->use_stitch()){
 		std::ofstream myfile,color_time,total_time;
 		myfile.open ("record.txt", std::ofstream::app);
@@ -1877,7 +1884,7 @@ void SimpleMPL::report() const
 				stitch_count++;
 		}
 	}
-#if RECORD == 1
+#if RECORD > 0
 	std::ofstream myfile;
 	myfile.open ("record.txt", std::ofstream::app);
 	myfile << "Conflict number: "<<conflict_num()<<"\n";
@@ -2444,7 +2451,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 				cost = solve_by_dancing_link_GPU(sg,vSubColor);
 				}
 			else{ cost = solve_by_dancing_link_GPU(sg,vSubColor);}
-	#if RECORD == 1
+	#if RECORD > 1
 		if(cost != 0){
 			std::ofstream myfile;
 			myfile.open ("small_results.txt", std::ofstream::app);
@@ -2481,7 +2488,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		// 	this->writeGraph(sg,std::to_string(comp_id),obj_value1);
 		// 	std::cout<<"Write Component "<<comp_id<<", Sub component "<<sub_comp_id<<std::endl;
 		// }
-#if RECORD == 1
+#if RECORD > 1
 	if(obj_value1 != 0){
 		std::ofstream myfile;
 		myfile.open ("small_results.txt", std::ofstream::app);

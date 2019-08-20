@@ -235,7 +235,7 @@ void mc_solver(
             {
             	conflict_node_id = get_conflict_node_id(deleted_rows, row_group, search_depth, total_dl_matrix_row_num);
                 conflict_col_id = get_conflict_col(dl_matrix, deleted_rows, deleted_cols, row_group, conflict_node_id, search_depth, vertex_num, total_dl_matrix_row_num, total_dl_matrix_col_num); // get conflict edge
-                std::cout<<"conflict col id is "<<conflict_col_id<<std::endl;
+                //std::cout<<"conflict col id is "<<conflict_col_id<<std::endl;
                 conflict_count[conflict_col_id]++;                                                                   //update conflict edge count
                 recover_deleted_rows(deleted_rows, search_depth, total_dl_matrix_row_num);                           //recover deleted rows  previously selected rows
                 recover_deleted_cols(deleted_cols, search_depth, total_dl_matrix_col_num);                           //recover deleted cols except afftected by previously selected rows
