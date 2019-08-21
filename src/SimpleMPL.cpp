@@ -2428,7 +2428,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 						for(int j = 0; j<vSimpl2Orig.size();j++){
 							std::cout<<vSimpl2Orig[j]<<" ";
 						}
-						std::cout<<"LIWEI: vertex 2: color by fast color trial "<<vSubColor[i]<<std::endl;
+						std::cout<<"LIWEI: vertex 2: color by fast color trial "<<vSubCol+or[i]<<std::endl;
 					}
 				}
 				if(find_debug){
@@ -2447,10 +2447,10 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK){
 			double cost = 0;
 			if(m_db->use_stitch()){
-				//cost = solve_by_dancing_link_with_stitch(sg,vSubColor);
-				cost = solve_by_dancing_link_GPU(sg,vSubColor);
+				cost = solve_by_dancing_link_with_stitch(sg,vSubColor);
+				//cost = solve_by_dancing_link_GPU(sg,vSubColor);
 				}
-			else{ cost = solve_by_dancing_link_GPU(sg,vSubColor);}
+			else{ cost = solve_by_dancing_link_with_stitch(sg,vSubColor);}
 	#if RECORD > 1
 		if(cost != 0){
 			std::ofstream myfile;

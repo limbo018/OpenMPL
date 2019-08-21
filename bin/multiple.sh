@@ -190,45 +190,45 @@
 
 
 ###########                NON_STITCH      BIG CASE          ###########
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo LP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo MIS -thread_num 8 
-#./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo LP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo MIS -thread_num 8 
+./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 
 
 
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo LP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo MIS -thread_num 8 
-#./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo LP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo MIS -thread_num 8 
+./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 
 
 
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo LP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo MIS -thread_num 8 
-#./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo LP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo MIS -thread_num 8 
+./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 
+# ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 
 
 
-###########                STITCH       BIG CASE         ###########
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 -use_stitch gen_stitch
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 -use_stitch gen_stitch
-#./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 -use_stitch gen_stitch
-./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 -use_stitch gen_stitch
+# ###########                STITCH       BIG CASE         ###########
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 -use_stitch gen_stitch
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 -use_stitch gen_stitch
+# #./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 -use_stitch gen_stitch
+# ./OpenMPL  -shape POLYGON -in bench/sim_s5.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 -use_stitch gen_stitch
 
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 -use_stitch gen_stitch
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 -use_stitch gen_stitch
-#./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 -use_stitch gen_stitch
-./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 -use_stitch gen_stitch
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 -use_stitch gen_stitch
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 -use_stitch gen_stitch
+# #./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 -use_stitch gen_stitch
+# ./OpenMPL  -shape POLYGON -in bench/sim_s3.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 -use_stitch gen_stitch
 
 ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo ILP -thread_num 8 -use_stitch gen_stitch
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 -use_stitch gen_stitch
-#./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 -use_stitch gen_stitch
-./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 -use_stitch gen_stitch
+ ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo SDP -thread_num 8 -use_stitch gen_stitch
+# #./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo DL -thread_num 8 -use_stitch gen_stitch
+# ./OpenMPL  -shape POLYGON -in bench/sim_s4.gds  -out benchout/sim_c1_sti.gds  -coloring_distance 120 -uncolor_layer 1 -uncolor_layer 101 -color_num 3 -algo BACKTRACK -thread_num 8 -use_stitch gen_stitch
 
 
 
