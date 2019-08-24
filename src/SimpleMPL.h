@@ -57,7 +57,7 @@ class SimpleMPL
 		/// solve decomposition
 		void solve();
 		/// report statistics 
-		void report() const;
+		void report();
         /// print welcome information
         void print_welcome() const;
 	protected:
@@ -91,7 +91,7 @@ class SimpleMPL
 		bool canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2);
 		void liweireconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
 		void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
-		bool fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph_type const& sg);
+		bool fast_color_trial(std::vector<int8_t>& vSubColor,graph_type const& sg);
 		void updateConflictRelation();
 		
 		/// merge vdd, and conduct biconnected component devision once more, and simplify the graph further.
@@ -131,9 +131,13 @@ class SimpleMPL
 		/// report conflict number for a component 
 		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
 
+
+
+		//find all of the vertexes which are in the same polygon with selected vertex before stitch insertion
+		void find_all_stitches(uint32_t vertex, std::vector<uint32_t>& stitch_vec);
 		/// report conflict number for the whole layout 
 		/// collect conflict patterns to m_vConflict
-		uint32_t conflict_num() const;
+		uint32_t conflict_num();
         /// reset data members 
         /// \param init denote whether run in initialize mode 
         void reset(bool init);
@@ -146,19 +150,22 @@ class SimpleMPL
         /// \param filename should not contain extension 
         void write_graph(graph_type& g, std::string const& filename) const;
 		//print graph information for debug
-		void printGraph(SimpleMPL::graph_type& g);
+		void printGraph(graph_type& g);
 		// for dancing link solver
 		// \param g is the input graph for colorings
 		// \param color_vector is the vector which stores the coloring results of each node. sizeof(color_vector) == num_vertices(g)
 		void solve_by_dancing_link(graph_type& g,std::vector<int8_t>& color_vector);
 		
 		//for dancing link solver of stitch graph
-		double solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector);
+		double solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id);
 
 		//for dancing link solver of GPU version
 		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
+		void iterative_mark(graph_type& g,std::vector<uint32_t>& parent_node_ids, vertex_descriptor& v1);
 		//calculate cost, used in dancing link
-		double calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> const& vColor);
+		double new_calc_cost(graph_type& g,std::vector<int8_t>& color_vector);
+		//calculate cost, used in dancing link
+		double calc_cost(graph_type& g,std::vector<int8_t> const& vColor);
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
 		std::vector<uint32_t>					m_vVertexOrder;		///< vertex id, vertices in the same component are abutting,

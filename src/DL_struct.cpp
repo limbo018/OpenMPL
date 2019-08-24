@@ -207,8 +207,10 @@ void Remove_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col
 	std::set<int>::iterator it;
 	for (it = row_set.begin(); it != row_set.end(); it++)
 		Remove_Single_Row(dl, *it);
-	for (it = col_set.begin(); it != col_set.end(); it++)
-		LR_remove(dl.Col_Header_Table[*it]);
+	for (it = col_set.begin(); it != col_set.end(); it++){
+		 LR_remove(dl.Col_Header_Table[*it]);
+		 }
+		//Remove_Single_Col(dl,*it);
 	/*
 	std::cout << "Col_header : " << std::endl;
 	for (Cell *it = dl.DL_Header.Right; it != &dl.DL_Header; it = it->Right)

@@ -109,23 +109,23 @@ bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers);
  */
 void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & row_set,
 	std::vector<int> & Delete_the_Row_in_which_Col,
-	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col);
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col,std::vector<int>  &  conflict_col_table,std::vector<int>  &last_rows);
 
 /*
  * @brief:	This function is the reverse process of store_intermediate_process()
  */
 void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
 	std::vector<int> & Delete_the_Row_in_which_Col,
-	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col);
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col,std::vector<int>  &  conflict_col_table,std::vector<int>  &last_rows);
 
 /*
  * @brief:	The recursive implementation of Algortihm X*. 
  *			If all vertices in the graph are covered or the dlx has no column headers, then the function terminated.
- *			Whether this problem has a valid solution relies on the conflict_set. If there are conflict edges in conflict_set, 
+ *			Whether this problem has a valid solution relies on the conflict_pair. If there are conflict edges in conflict_pair, 
  *			then no valid solution has been found, while the items in result_vec are still valid.
  * @param	dl:		the dancinglink instance
  * @param	result_vec:		a vector storing the valid coloring till now.
- * @param	conflict_set:	a set storing the conflict edges till now.
+ * @param	conflict_pair:	a set storing the conflict edges till now.
  * @param	vertex_numbers:	the number of vertices in the graph.
  * @param	Delete_the_Row_in_which_Col:	a map whose index is the No. of a row and the corresponding value is the No. of column,
  *											which means this row is covered due to the selection of the column.
@@ -133,11 +133,13 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
  *											the children's row No. in the order of removement.
  * @param	result_file:	the file storing the final result
  */
-bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vector<int> & result_vec, std::set<std::pair<int, int> > & conflict_set,
+bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vector<int> & result_vec, std::pair<int, int> & conflict_pair,
 	int vertex_numbers, int mask_numbers,
 	std::vector<int> & Delete_the_Row_in_which_Col,
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
-	int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector);
+	int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector,std::vector<int>& row_select_vector,
+				std::vector<int> & partial_conflict_col_table,
+			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows);
 
 
 /*
@@ -147,11 +149,11 @@ bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vect
  * @param	result_vec:			a vector storing the all the chosen rows
  * @param	filename:			the file storing the result
  */
-void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::set<std::pair<int, int> >  conflict_set, std::string filename);
+void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::pair<int, int>  conflict_pair, std::string filename);
 
 #ifndef DECODE_MPL__
 #define DECODE_MPL__
-void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::set<std::pair<int, int> > conflict_set, std::string const& filename);
+void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::pair<int, int> conflict_pair, std::string const& filename);
 #endif /* FDECODE_MPL__ */
 /*
  * @brief:	MPLD_Solver
