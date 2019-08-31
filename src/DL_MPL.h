@@ -33,6 +33,35 @@ std::vector<std::list<Edge_Simple> > Read_Graph_File(std::string filename, int &
  *			while their indices are source and target respectively.
  */
 std::vector<std::list<Edge_Simple> > Read_Stitch_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers);
+
+
+
+
+/*
+ * @brief:	This function calculates and returns the maximal degree. 
+ * @param	edge_list:		a map storing the graph information obtained from Read_Graph_File()
+ * 
+ * @return	int max_degree
+ */
+
+int  find_max_degree(std::vector<std::list<Edge_Simple> >  & edge_list);
+/*
+ * @brief:	This function calculates and returns the node of maximal degree. 
+ * @param	edge_list:		a map storing the graph information obtained from Read_Graph_File()
+ * 
+ * @return	int node: the node with maximal degree 
+ */
+int find_max_degree_node(std::vector<std::list<Edge_Simple> >  & edge_list);
+
+
+
+/*
+ * @brief:	This function calculates and returns the degree_of_each_node
+ * @param	edge_list:		a map storing the graph information obtained from Read_Graph_File()
+ * @param node_degree: a vector indicating each node's degree
+ * @return	int node: the node with minimal degree 
+ */
+int calcualte_degree_of_each_node(std::vector<std::list<Edge_Simple> >  & edge_list, std::vector<int> & node_degree);
 /*
  * @brief:	This function calculates and returns the column covering order by BFS traversal. 
  * @param	edge_list:		a map storing the graph information obtained from Read_Graph_File()
@@ -40,6 +69,7 @@ std::vector<std::list<Edge_Simple> > Read_Stitch_Graph_File(std::string filename
  * @return	std::vector<int>
  *			a vector in which the elements are stored in order of BFS, each element means the column No. 
  */
+
 
 std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> > & edge_list);
 
@@ -94,7 +124,7 @@ int Next_Column_stitch(DancingLink & dl,std::vector<int> & MPLD_search_vector, s
  * @param	vertex_numbers:	number of vertices in the graph
  *
  */
-bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers);
+bool Vertices_All_Covered(DancingLink & dl, int& vertex_numbers);
 
 /*
  * @brief:	In order to find the conflict edges in the graph, we employ two intermediate maps to store the operation process.
@@ -110,14 +140,19 @@ bool Vertices_All_Covered(DancingLink & dl, int vertex_numbers);
 void store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & row_set,
 	std::vector<int> & Delete_the_Row_in_which_Col,
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col,std::vector<int>  &  conflict_col_table,std::vector<int>  &last_rows);
+void efficient_store_intermediate_process(DancingLink & dl, int this_col, std::set<int> & row_set,
+	std::vector<int> & Delete_the_Row_in_which_Col,
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col);
 
 /*
  * @brief:	This function is the reverse process of store_intermediate_process()
  */
-void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> row_set,
+void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int>& row_set,
 	std::vector<int> & Delete_the_Row_in_which_Col,
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col,std::vector<int>  &  conflict_col_table,std::vector<int>  &last_rows);
-
+void efficient_recover_intermediate_process(DancingLink & dl, int this_col, std::set<int>& row_set,
+	std::vector<int> & Delete_the_Row_in_which_Col,
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col);
 /*
  * @brief:	The recursive implementation of Algortihm X*. 
  *			If all vertices in the graph are covered or the dlx has no column headers, then the function terminated.
@@ -134,13 +169,34 @@ void recover_intermediate_process(DancingLink & dl, int this_col, std::set<int> 
  * @param	result_file:	the file storing the final result
  */
 bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vector<int> & result_vec, std::pair<int, int> & conflict_pair,
-	int vertex_numbers, int mask_numbers,
+	int  vertex_numbers, int  mask_numbers,
 	std::vector<int> & Delete_the_Row_in_which_Col,
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
-	int depth, std::vector<int> & MPLD_search_vector, std::string result_file,std::vector<bool>& col_cover_vector,std::vector<int>& row_select_vector,
+	int depth, std::vector<int> & MPLD_search_vector,  const char*  result_file,std::vector<bool>& col_cover_vector,std::vector<int>& row_select_vector,
 				std::vector<int> & partial_conflict_col_table,
-			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows);
+			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows, bool & need_debug);
 
+bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vector<int> & result_vec, std::pair<int, int> & conflict_pair,
+	int  vertex_numbers, int  mask_numbers,
+	std::vector<int> & Delete_the_Row_in_which_Col,
+	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
+	int depth, std::vector<int> & MPLD_search_vector,  const char*  result_file,std::vector<int>& row_select_vector,
+				std::vector<int> & partial_conflict_col_table,
+			std::vector<int>  &  conflict_col_table,bool & need_debug);
+
+
+bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec, std::pair<int, int>  & conflict_pair, 
+			int vertex_numbers, std::vector<int> & Delete_the_Row_in_which_Col,
+			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector,
+			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results, bool & need_debug);
+
+//The core function to solve one dl.
+std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simple> > & edge_list,  int  row_numbers,  int  col_numbers,
+ int  vertex_numbers, int mask_number,  bool & need_debug);
+
+//The function to decode and calculate the cost of the results of DL.
+void decode_row_results(std::vector<int> & final_result, std::vector<int8_t> & color_vector, int  vertex_number,
+int  mask_number, std::vector<std::vector<std::pair<uint32_t,uint32_t>>>& decode_mat, std::vector<Vertex*> & node_list );
 
 /*
  * @brief:	This function decode the result and convert the exact cover problem to origin coloring problem.
@@ -151,10 +207,9 @@ bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vect
  */
 void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::pair<int, int>  conflict_pair, std::string filename);
 
-#ifndef DECODE_MPL__
-#define DECODE_MPL__
-void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::pair<int, int> conflict_pair, std::string const& filename);
-#endif /* FDECODE_MPL__ */
+
+void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& color_vector,std::vector<int> result_vec, std::pair<int, int> conflict_pair,  const char*  filename);
+
 /*
  * @brief:	MPLD_Solver
  * 

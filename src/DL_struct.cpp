@@ -11,8 +11,12 @@ void LR_self(Cell & c) {
 
 void UD_remove(Cell & c)
 {
+	if(c.InDLX){
 	c.Up->Down = c.Down;
 	c.Down->Up = c.Up;
+	c.InDLX = false;
+	}
+
 }
 
 void LR_remove(Cell & c)
@@ -22,22 +26,31 @@ void LR_remove(Cell & c)
 	// std::cout<<c.Row<<","<<c.Col<<std::endl;
 	// std::cout<<c.Left->Row<<","<<c.Left->Col<<","<<std::endl;
 	// std::cout<<c.Right->Row<<","<<c.Left->Col<<","<<std::endl;
-	c.Left->Right = c.Right;
-	c.Right->Left = c.Left;
-
+	if(c.InDLX){
+		c.Left->Right = c.Right;
+		c.Right->Left = c.Left;
+		c.InDLX = false;
+	}
 }
 
 void LR_recover(Cell & c) {
-	c.Left->Right = &c;
-	c.Right->Left = &c;
+	if(c.InDLX == false){
+		c.Left->Right = &c;
+		c.Right->Left = &c;
+		c.InDLX = true;
+	}
 }
 
 void UD_recover(Cell & c) {
-	c.Up->Down = &c;
-	c.Down->Up = &c;
+	if(c.InDLX == false){
+		c.Up->Down = &c;
+		c.Down->Up = &c;
+		c.InDLX = true;
+	}
+
 }
 
-void Print_Result(std::vector<int> result_vec) {
+void Print_Result(std::vector<int> & result_vec) {
 	std::vector<int>::iterator it;
 	std::cout << "Result : ";
 	for (it = result_vec.begin(); it != result_vec.end(); it++)
@@ -45,7 +58,7 @@ void Print_Result(std::vector<int> result_vec) {
 	std::cout << std::endl;
 }
 
-void DL_Init(DancingLink & dl, int row, int col)
+void DL_Init(DancingLink & dl, int & row, int & col)
 {
 	dl.Row_Number_Now = dl.Row_Number_All = row;
 	dl.Col_Number_All = dl.Col_Number_Now = col;
@@ -101,14 +114,14 @@ void print(DancingLink & dl)
 }
 */
 
-void Cell_Insert(DancingLink & dl, int row, int col) {
+void Cell_Insert(DancingLink & dl, uint32_t  row, uint32_t  col) {
 	Cell *r = &dl.Row_Header_Table[row];
 	for (Cell *i = r->Right; i != r; i = i->Right) {
 		if(i->Col == col) return;
 	}
 	Cell *c = new Cell;
-	c->Row = row;
-	c->Col = col;
+	c->Row = (int)row;
+	c->Col = (int)col;
 	assert(row>0);
 	assert(col>0);
 	// std::cout << "Row : " << row << " Col : " << col << std::endl;
@@ -131,7 +144,7 @@ void Cell_Insert(DancingLink & dl, int row, int col) {
 	dl.Row_Header_Table[row].Left = c;
 }
 
-void DL_Load(DancingLink & dl, std::string filename) {
+void DL_Load(DancingLink & dl, std::string & filename) {
 	std::ifstream filein(filename.c_str());
 	try {
 		if (!filein)
@@ -170,7 +183,7 @@ int Select_Next_Column_Simply(DancingLink & dl) {
 	return dl.DL_Header.Right->Col;
 }
 
-void Select_All_Rows_Cols(DancingLink & dl, int target_row, std::set<int> & row_set, std::set<int> & col_set) {
+void Select_All_Rows_Cols(DancingLink & dl, int & target_row, std::set<int> & row_set, std::set<int> & col_set) {
 	Cell *r = &dl.Row_Header_Table[target_row];
 	col_set.insert(r->Right->Col);
 	row_set.insert(target_row);
@@ -183,8 +196,9 @@ void Select_All_Rows_Cols(DancingLink & dl, int target_row, std::set<int> & row_
 	}
 }
 
-void Remove_Single_Row(DancingLink & dl, int row) {
+void Remove_Single_Row(DancingLink & dl,const int & row) {
 	Cell *r = &dl.Row_Header_Table[row];
+	UD_remove(*r);
 	r->Children_Number = 0;
 	// UD_remove(f);
 	for (Cell *j = r->Right; j != r; j = j->Right) {
@@ -193,8 +207,9 @@ void Remove_Single_Row(DancingLink & dl, int row) {
 	}
 }
 
-void Remove_Single_Col(DancingLink & dl, int col) {
+void Remove_Single_Col(DancingLink & dl,const int & col) {
 	Cell *c = &dl.Col_Header_Table[col];
+	LR_remove(*c);
 	c->Children_Number = 0;
 	// UD_remove(f);
 	for (Cell *j = c->Down; j != c; j = j->Down) {
@@ -203,7 +218,7 @@ void Remove_Single_Col(DancingLink & dl, int col) {
 	}
 }
 
-void Remove_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col_set) {
+void Remove_Rows_Cols(DancingLink & dl, std::set<int> & row_set, std::set<int> & col_set) {
 	std::set<int>::iterator it;
 	for (it = row_set.begin(); it != row_set.end(); it++)
 		Remove_Single_Row(dl, *it);
@@ -222,8 +237,9 @@ void Remove_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col
 	*/
 }
 
-void Recover_Single_Row(DancingLink & dl, int row) {
+void Recover_Single_Row(DancingLink & dl, const int & row) {
 	Cell * f = &dl.Row_Header_Table[row];
+	UD_recover(*f);
 	// UD_recover(*f);
 	// dl.Col_Header_Table[f->Col].Children_Number++;
 	for(Cell * i = f->Right; i != f; i = i->Right){
@@ -232,7 +248,7 @@ void Recover_Single_Row(DancingLink & dl, int row) {
 	}
 }
 
-void Recover_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col_set) {
+void Recover_Rows_Cols(DancingLink & dl, std::set<int> & row_set, std::set<int>  & col_set) {
 	std::set<int>::iterator it;
 	for (it = row_set.begin(); it != row_set.end(); it++)
 		Recover_Single_Row(dl, *it);

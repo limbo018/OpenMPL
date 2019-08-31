@@ -159,8 +159,14 @@ class SimpleMPL
 		//for dancing link solver of stitch graph
 		double solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id);
 
+		double solve_by_dancing_link_with_one_stitch(graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id );
+
 		//for dancing link solver of GPU version
 		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
+		
+		//find the node with maximal degree,
+		//return: the node id with maximal degree
+		//iteratively mark the nodes which locate in some polygon (for new_calc_cost function)
 		void iterative_mark(graph_type& g,std::vector<uint32_t>& parent_node_ids, vertex_descriptor& v1);
 		//calculate cost, used in dancing link
 		double new_calc_cost(graph_type& g,std::vector<int8_t>& color_vector);

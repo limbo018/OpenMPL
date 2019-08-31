@@ -38,4 +38,4 @@
     -algo DL\
     -thread_num 8 \
      -use_stitch gen_stitch\
-     -dbg_comp_id 1886
+    # -dbg_comp_id 1886

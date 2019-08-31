@@ -145,7 +145,7 @@ void LR_recover(Cell & c);
 void UD_recover(Cell & c);
 
 // Print the solution of this dlx problem.
-void Print_Result(std::vector<int> result_vec);
+void Print_Result(std::vector<int> & esult_vec);
 
 /* 
  * @brief : Initialize the dancing links problem.
@@ -154,7 +154,7 @@ void Print_Result(std::vector<int> result_vec);
  * @param col	number of columns in the dlx problem
  *
 */
-void DL_Init(DancingLink & dl, int row, int col);
+void DL_Init(DancingLink & dl, int & row, int & col);
 
 /*
 * Insert a cell into the specified location (row and column).
@@ -162,7 +162,7 @@ void DL_Init(DancingLink & dl, int row, int col);
 * @param col	the column label
 * @param dl		the dancing link problem instance 
 */
-void Cell_Insert(DancingLink & dl, int row, int col);
+void Cell_Insert(DancingLink & dl, uint32_t  row, uint32_t  col);
 
 /*
  * @brief : Finish the construction of DLX through calling Cell_Insert().
@@ -174,7 +174,7 @@ void Cell_Insert(DancingLink & dl, int row, int col);
  *					- The 2nd line : [N] .	N : the number of cells in the dlx.
  *					- The following [N] lines : [row_No, col_No] . The location of each cell. The index starts at 1.
  */
-void DL_Load(DancingLink &dl, std::string filename);
+void DL_Load(DancingLink &dl, std::string & filename);
 
 /*
  * @brief : Select the column with least cells and cover it in the next iteration.
@@ -200,7 +200,7 @@ int Select_Next_Column_Simply(DancingLink & dl);
  * @param col_set		a set containing all cols we should remove. We use <set> because each element in a set must be unique.
  * 
  */
-void Select_All_Rows_Cols(DancingLink & dl, int target_row, std::set<int> & row_set, std::set<int> & col_set);
+void Select_All_Rows_Cols(DancingLink & dl, int & target_row, std::set<int> & row_set, std::set<int> & col_set);
 
 /*
  * @brief : Remove one row from the dlx problem in the present iteration temporarily, 
@@ -209,7 +209,7 @@ void Select_All_Rows_Cols(DancingLink & dl, int target_row, std::set<int> & row_
  * @param dl	the dancing link problem instance
  * @param row	the No. of the row we remove in this iteration.
 */
-void Remove_Single_Row(DancingLink & dl, int row);
+void Remove_Single_Row(DancingLink & dl, const int & row);
 
 /*
  * @brief : Remove one row from the dlx problem in the present iteration temporarily, 
@@ -218,7 +218,7 @@ void Remove_Single_Row(DancingLink & dl, int row);
  * @param dl	the dancing link problem instance
  * @param row	the No. of the row we remove in this iteration.
 */
-void Remove_Single_Col(DancingLink & dl, int col);
+void Remove_Single_Col(DancingLink & dl, const int & col);
 
 /*
  * @brief : Remove all the rows we select in one iteration, also modify the headers of the corresponding columns.
@@ -229,7 +229,7 @@ void Remove_Single_Col(DancingLink & dl, int col);
  * @param row_set		a set containing all rows we should remove. We use <set> because each element in a set must be unique.
  * @param col_set		a set containing all cols we should remove. We use <set> because each element in a set must be unique.
  */
-void Remove_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col_set);
+void Remove_Rows_Cols(DancingLink & dl, std::set<int> & row_set, std::set<int> & col_set);
 
 /*
  * @brief : Recover one row. It's the reverse process of 'Remove_Single_Row()'.
@@ -237,13 +237,13 @@ void Remove_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col
  * @param dl	the dancing link problem instance
  * @param row	the No. of the row we remove
  */
-void Recover_Single_Row(DancingLink & dl, int row);
+void Recover_Single_Row(DancingLink & dl, const int & row);
 
 /*
  * @brief : Recover all the rows we select in the previous iteration, also recover the corresponding column headers.
  *			It's the reverse process of 'Remove_Rows_Cols()'.
  */
-void Recover_Rows_Cols(DancingLink & dl, std::set<int> row_set, std::set<int> col_set);
+void Recover_Rows_Cols(DancingLink & dl, std::set<int>  & row_set, std::set<int> & col_set);
 
 /*
  * @brief : The DLX solver, solves the dlx problem recursively.
