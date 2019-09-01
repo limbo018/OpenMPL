@@ -161,6 +161,8 @@ class SimpleMPL
 
 		double solve_by_dancing_link_with_one_stitch(graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id );
 
+		//push stitch adjacents nodes into same des_set used in solve_by_dancing_link_with_one_stitch.
+		void push_adj_into_set(vertex_descriptor & v1, SimpleMPL::graph_type & g, std::set<uint32_t> & des_set, std::set<uint32_t> & oppo_set);
 		//for dancing link solver of GPU version
 		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
 		
