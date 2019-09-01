@@ -73,6 +73,7 @@ int calcualte_degree_of_each_node(std::vector<std::list<Edge_Simple> >  & edge_l
 
 std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> > & edge_list);
 
+std::vector<int> BFS_Order_max_first(std::vector<std::list<Edge_Simple> >  & edge_list);
 /*
  * @brief:	This function returns a simple order for next-column selecting in the order of vertex index.
  */

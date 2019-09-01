@@ -161,6 +161,45 @@ std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> >  & edge_list)
 	return result_vector;
 }
 
+std::vector<int> BFS_Order_max_first(std::vector<std::list<Edge_Simple> >  & edge_list)
+{
+	std::vector<int> result_vector;
+	std::queue<int> intermediate_queue;
+	std::set<int> nonexistent;
+	std::vector<int> node_degree;
+	node_degree.assign(edge_list.size(),0); //edge_list.size() == vertex_number + 1
+	int first_vertex = find_max_degree_node(edge_list);
+	//int first_vertex = calcualte_degree_of_each_node(edge_list,node_degree);
+	intermediate_queue.push(first_vertex);
+	result_vector.push_back(first_vertex);
+
+	//int max_degree = find_max_degree(edge_list);
+	while (!intermediate_queue.empty())
+	{
+		int next = intermediate_queue.front();
+		intermediate_queue.pop();
+		if (nonexistent.find(next) == nonexistent.end())
+		{
+			nonexistent.insert(next);
+			result_vector.push_back(next);
+			for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++)
+				intermediate_queue.push(i->target);
+			//push the nodes to the queue by small-degree firstly order
+			// for(int d = 1; d<= max_degree;d++){
+			// 	for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++){
+			// 		if(node_degree[i->target] == d){
+			// 			intermediate_queue.push(i->target);
+			// 		}
+			// 	}
+			// }
+
+			continue;
+		}
+		else
+			continue;
+	}
+	return result_vector;
+}
 int  find_max_degree_node(std::vector<std::list<Edge_Simple> >  & edge_list){
 	int max_degree = 0;
 	int vertex_node = 1;
@@ -575,7 +614,7 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 	Order_of_Row_Deleted_in_Col.resize(col_numbers + 1);
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);
 	std::vector<int> MPLD_search_vector;
-	MPLD_search_vector = BFS_Order(edge_list);
+	MPLD_search_vector = BFS_Order_max_first(edge_list);
 	int depth = 1;
 	bool result = Efficient_MPLD_X_Solver_v2(dl, selected_rows, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, 
 		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,need_debug);
