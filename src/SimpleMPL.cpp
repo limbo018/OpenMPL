@@ -411,6 +411,7 @@ void SimpleMPL::solve()
     if (m_db->parms.sUncolorLayer.empty())
         return;
 	boost::timer::cpu_timer total_timer;
+	total_timer.start();
 	if (m_db->vPatternBbox.empty())
 	{
         mplPrint(kWARN, "No patterns found in specified layers\n");
@@ -494,7 +495,7 @@ void SimpleMPL::solve()
 #endif
 
 	boost::timer::cpu_timer t;
-
+	t.start();
 	// thread number controled by user option 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(m_db->thread_num())
@@ -512,19 +513,15 @@ void SimpleMPL::solve()
 	if(m_db->use_stitch()){
 		std::ofstream myfile,color_time,total_time;
 		myfile.open ("record.txt", std::ofstream::app);
-		color_time.open("color_w_stitch.txt",std::ofstream::app);
-		total_time.open("total_w_stitch.txt",std::ofstream::app);
+		color_time.open("result_w_stitch.txt",std::ofstream::app);
 		myfile << t.format(2, "color time %ts(%p%), %ws real")<<"\n";
 		myfile << total_timer.format(2, "total time %ts(%p%), %ws real")<<"\n";
 		if(m_db->algo() == AlgorithmTypeEnum::ILP_GURBOI){
 			color_time<<"\\\\\n"<<m_db->input_gds();
-			total_time<<"\\\\\n"<<m_db->input_gds();
 		}
-		color_time<<t.format(2, "& %t  &  %w");
-		total_time<<total_timer.format(2, "& %t  &  %w");
+		color_time<<t.format(3, "&  %w") << total_timer.format(3, "(%w) ");
 		myfile.close();
 		color_time.close();
-		total_time.close();
 	}
 	else{
 		std::ofstream myfile,color_time,total_time;
@@ -1895,9 +1892,6 @@ void SimpleMPL::report()
 	std::ofstream result;
 	if(m_db->use_stitch()){
 		result.open("result_w_stitch.txt",std::ofstream::app);
-		if(m_db->algo() == AlgorithmTypeEnum::ILP_GURBOI){
-			result<<"\\\\\n"<<m_db->input_gds();
-		}
 		result<<"&"<<stitch_count/2<<"&"<<c_num<<"&"<<0.1*stitch_count/2 + c_num;
 	}
 	else{
@@ -2456,6 +2450,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 						std::cout<<"vertex "<<v<<" color is "<<(uint32_t)vSubColor[v]<<". "<<std::endl;
 					}
 				}
+				acc_obj_value += cost;
 			continue;
 		}
 		// solve coloring 
@@ -2574,12 +2569,15 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
     RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
-
+	// SimpleMPL::graph_type non_const_dg = dg;
+	// double total_obj = new_calc_cost(non_const_dg,vColor);
+	// mplAssert(total_obj == acc_obj_value);
 	//mplPrint(kINFO, "Component %u solved", comp_id);
 
 	//std::string name = std::to_string(comp_id) + "-" + std::to_string(sub_comp_id);
 	//std::string name = std::to_string(comp_id);
 	//this->writeJson(dg,(char*)name.c_str(),vColor);
+
     return acc_obj_value;
 }
 
@@ -2663,7 +2661,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 
 // 		}
 // 	}
-// 	mplAssert(node_wo_stitch_list.size() == vertex_numbers);
+// 	mplAssert(node_wo_stitch_list.size() == vertex_nmbers);
 
 
 // 	std::vector<std::list<Edge_Simple> >   edge_list;
@@ -3152,6 +3150,9 @@ double SimpleMPL::solve_by_dancing_link_with_stitch(SimpleMPL::graph_type& g,std
 double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id ){
 	// Due to graph does not contain a parent&child node system
 	// we simply redesign a node struct to achieve this kind of system
+	std::cout<<"comp_id is" <<comp_id<<std::endl;
+	//boost::timer::cpu_timer dancing_link_timer;
+	//dancing_link_timer.start();
 	mplAssert(num_vertices(g) == color_vector.size());
 	DancingLink dl; 
 	uint32_t color_num_uint32 = (uint32_t)m_db->color_num();
@@ -3252,7 +3253,7 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 			}
 		}
 		}
-	std::cout<<"EDGE list generated with size: "<<edge_numbers<<std::endl;
+	//std::cout<<"EDGE list generated with size: "<<edge_numbers<<std::endl;
 	std::vector<uint32_t> starting_indexes;
 	uint32_t starting_index = 0;
 
@@ -3278,6 +3279,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 			}
 		}
 	}
+	//std::cout<< "Graph build" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	//BUILD DL MATRIX WITHOUT STITCH
 	//Node structure done,  then build DL system
 	int row_numbers = vertex_numbers * m_db->color_num() + 1;
@@ -3285,7 +3288,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 	//std::cout<<"DL1: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
 	//std::cout<<"DL1: vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
 	DL_Init(dl, row_numbers, col_numbers);
-
+	//std::cout<< "FIRST DL initl" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	// Insert DL cells
 	
 	for (uint32_t it = 1; it < edge_list.size(); ++it)
@@ -3323,15 +3327,20 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 
 		}
 	}
-
+	//std::cout<< "FIRST DL insert" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	//Firstly solve dl without stitches
 	std::vector<int> selected_rows_by_dl1;
 	selected_rows_by_dl1 = core_solve_dl(dl,edge_list,row_numbers, col_numbers,(int)vertex_numbers,(int)m_db->color_num(),need_debug);
 	//decode_mat for transforming the selected row to represented color. First: node id, Second: color;
 	std::vector<std::vector<std::pair<uint32_t,uint32_t>>> decode_mat;
 	//cost 1 is the cost of non-stitch solver
+	//std::cout<< "FIRST DL SOLVE" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	decode_row_results(selected_rows_by_dl1, color_vector,(int)vertex_numbers, (int)m_db->color_num(), decode_mat,node_list);
 	double cost1 = new_calc_cost(g,color_vector);
+	//std::cout<< "FIRST DL GET RESULT" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	//std::cout<<"cost1 is "<<cost1<<std::endl;
 	if(cost1 > 0){
 		std::vector<int8_t> color_vector_dl2;
@@ -3370,12 +3379,14 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 					set2.insert(v2);
 					push_adj_into_set(v1,g,set1,set2);
 					push_adj_into_set(v2,g,set2,set1);
-					std::cout << node_list[v1]->parent->No <<std::endl;
+					//std::cout << node_list[v1]->parent->No <<std::endl;
 					std::pair<std::set<uint32_t>,std::set<uint32_t>> encode_mat_per_stitch = std::make_pair(set1,set2);
 					encode_mat[node_list[v1]->parent->No].push_back(encode_mat_per_stitch);
 				}
 			}
 		}
+		//std::cout<< "SECOND encode matrix" << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 		//Step 1.1 BUILD DL MATRIX WITH STITCH
 		//Node structure done,  then build DL system
 		DancingLink dl2; 
@@ -3386,7 +3397,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 		DL_Init(dl2, row_numbers, col_numbers);
 		
 		// Insert Non-stitch DL cells
-		
+		//std::cout<< "SECOND dl init" << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 		for (uint32_t it = 1; it < edge_list.size(); ++it)
 		{
 			for (int32_t i = 1; i <= m_db->color_num(); ++i)
@@ -3488,6 +3500,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 			//for each parent node, there are 9 * stitch_No stitch rows totally
 			starting_index += pow(m_db->color_num(),2) * (childs_num -1);
 		}
+		//std::cout<< "SECOND dl insert" << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 		// if(starting_index != pow(m_db->color_num(),2)* stitch_count){
 		// 	std::cout<<"BUG FOUND!"<<starting_index<<pow(m_db->color_num(),2)* stitch_count<<std::endl;
 		// }
@@ -3496,7 +3510,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 		std::vector<int> selected_rows_by_dl2;
 		selected_rows_by_dl2 = core_solve_dl(dl2,edge_list,row_numbers, col_numbers,(int)vertex_numbers,(int)m_db->color_num(),need_debug);
 		//cost 1 is the cost of non-stitch solver
-
+		//std::cout<< "SECOND dl slver" << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 		decode_row_results(selected_rows_by_dl2, color_vector_dl2,(int)vertex_numbers, (int)m_db->color_num(), decode_mat,node_list);
 		double cost2 = new_calc_cost(g,color_vector_dl2);
 		// if(comp_id == m_db->dbg_comp_id()){
@@ -3506,6 +3521,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 		if(cost1 > cost2){
 			cost1 = cost2;
 			color_vector.swap(color_vector_dl2);}
+		//std::cout<< "SECOND dl get result" << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 	}
 	return cost1;
 }
@@ -3859,6 +3876,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t>& vC
 	for (boost::tie(vi1, vie1) = boost::vertices(g); vi1 != vie1; ++vi1)
 	{	
 		vertex_descriptor v1 = *vi1;
+		mplAssert(vColor[v1]!=-1);
 		if(parent_node_ids[(uint32_t)v1] == -1){
 			parent_node_ids[(uint32_t)v1] = parent_node_id;
 			iterative_mark(g,parent_node_ids,v1);
@@ -4163,10 +4181,19 @@ uint32_t SimpleMPL::conflict_num()
 {
 	m_vConflict.clear();
 	std::vector<rectangle_pointer_type> const& vPatternBbox = m_db->vPatternBbox;
+	// std::vector<std::vector<bool>> is_counted;
+	// for (uint32_t v = 0; v != vPatternBbox.size(); ++v){
+	// 	std::vector<bool> v_th_counted;
+	// 	v_th_counted.assign(vPatternBbox[v].size(),false);
+	// 	is_counted.push_back(v_th_counted);
+	// }
 	for (uint32_t v = 0; v != vPatternBbox.size(); ++v)
 	{
 		std::vector<uint32_t> stitch_vec;
 		find_all_stitches(v,stitch_vec);
+		if(stitch_vec.size() == 0){
+			stitch_vec.push_back(v);
+		}
 		int8_t color1 = vPatternBbox[v]->color();
 		if (color1 >= 0 && color1 <= m_db->color_num())
 		{
@@ -4179,18 +4206,40 @@ uint32_t SimpleMPL::conflict_num()
 				// else{parent_indexes.insert(m_db->vParentPolygonId[u]);}
                 if (v < u) // avoid duplicate 
                 {
+
                     int8_t color2 = vPatternBbox[u]->color();
                     if (color2 >= 0 && color2 <= m_db->color_num())
                     {
                         if (color1 == color2) 
 							{
+								std::vector<uint32_t> stitch_vec2;
+								find_all_stitches(u,stitch_vec2);		
+								if(stitch_vec2.size() == 0){
+									stitch_vec2.push_back(u);
+								}		
 								bool need_count = true;
+								// for(uint32_t j = 0; j < stitch_vec.size();j++){
+								// 	std::cout<<" stitch_vec "<<j<<" "<<stitch_vec[j]<<", color is "<<(int)vPatternBbox[stitch_vec[j]]->color()<<std::endl;
+								// }
+								// for(uint32_t j2 = 0 ; j2 < stitch_vec2.size();j2++){
+								// 		std::cout<<" stitch_vec2 "<<j2<<" "<<stitch_vec2[j2]<<", color is "<<(int)vPatternBbox[stitch_vec2[j2]]->color()<<std::endl;
+								// }
 								for(uint32_t j = 0; j < stitch_vec.size();j++){
-									if(vPatternBbox[stitch_vec[j]]->color() == color1){
-										if(stitch_vec[j] >=  v)	continue; //avoid duplicate, for each 
-										need_count = false;
-										break;
+									for(uint32_t j2 = 0 ; j2 < stitch_vec2.size();j2++){
+										//if the nodes are in the conflict relation
+										if(std::find(m_mAdjVertex[stitch_vec[j]].begin(),m_mAdjVertex[stitch_vec[j]].end(),stitch_vec2[j2])!=m_mAdjVertex[stitch_vec[j]].end()){
+											if(vPatternBbox[stitch_vec[j]]->color() == vPatternBbox[stitch_vec2[j2]]->color()){
+												if(stitch_vec[j] <  v || stitch_vec2[j2] < u)	//avoid duplicate, for each 
+												{
+													// we only count conflict between two stitch sets(actually the original polygon) once
+													//therefore we default to count the conflict between smallest nodes No.
+													need_count = false;
+													break;
+												}
+											}
+										}
 									}
+									if(need_count == false) break;
 								}
 								if(need_count)	m_vConflict.push_back(std::make_pair(v, u));
 							}

@@ -63,14 +63,14 @@ int find_max_degree_node(std::vector<std::list<Edge_Simple> >  & edge_list);
  */
 int calcualte_degree_of_each_node(std::vector<std::list<Edge_Simple> >  & edge_list, std::vector<int> & node_degree);
 /*
- * @brief:	This function calculates and returns the column covering order by BFS traversal. 
+ * @brief:	This function calculates and returns the column covering order by BFS traversal and put the node with stitch nodes at final location
  * @param	edge_list:		a map storing the graph information obtained from Read_Graph_File()
  * 
  * @return	std::vector<int>
  *			a vector in which the elements are stored in order of BFS, each element means the column No. 
  */
 
-
+std::vector<int> BFS_Order_no_stitch_first(std::vector<std::list<Edge_Simple> >  & edge_list,DancingLink & dl );
 std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> > & edge_list);
 
 std::vector<int> BFS_Order_max_first(std::vector<std::list<Edge_Simple> >  & edge_list);
@@ -189,7 +189,8 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec, std::pair<int, int>  & conflict_pair, 
 			int vertex_numbers, std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector,
-			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results, bool & need_debug);
+			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results,
+			std::vector<std::vector<int>> &early_quit_count,bool & early_quit, bool & need_debug);
 
 //The core function to solve one dl.
 std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simple> > & edge_list,  int  row_numbers,  int  col_numbers,

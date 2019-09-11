@@ -1,7 +1,7 @@
 #include"DL_MPL.h"
 #include <algorithm>
 #include<vector>
-
+#include <boost/timer/timer.hpp>
 std::vector<std::list<Edge_Simple> >  Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers)
 {
 	std::ifstream filein(filename.c_str());
@@ -121,6 +121,81 @@ std::vector<std::list<Edge_Simple> >  Read_Stitch_Graph_File(std::string filenam
 	return edge_list;
 }
 
+std::vector<int> BFS_Order_no_stitch_first(std::vector<std::list<Edge_Simple> >  & edge_list,DancingLink & dl ){
+	std::vector<int> result_vector;
+	std::queue<int> intermediate_queue;
+	std::set<int> nonexistent;
+	std::vector<int> node_degree;
+	node_degree.assign(edge_list.size(),0); //edge_list.size() == vertex_number + 1
+	//int first_vertex = find_max_degree_node(edge_list);
+	calcualte_degree_of_each_node(edge_list,node_degree);
+	int max_degree = find_max_degree(edge_list);
+	std::vector<int> rows_num;
+	rows_num.assign(edge_list.size(),0); 
+	int max_rows = 0;
+	int min_rows = INT_MAX;
+	for(auto i = 1; i<(int)edge_list.size();i++){
+		rows_num[i] = dl.Col_Header_Table[i].Children_Number;
+		if(max_rows < dl.Col_Header_Table[i].Children_Number){max_rows = dl.Col_Header_Table[i].Children_Number;}
+		if(min_rows > dl.Col_Header_Table[i].Children_Number){min_rows = dl.Col_Header_Table[i].Children_Number;}
+	}
+	// std::cout<<"rows_num ";
+	// for (auto i = rows_num.begin(); i != rows_num.end(); ++i)
+	// 	std::cout << *i << ' ';
+	// std::cout<<std::endl;
+	//we calculate the case of each node as the root and return the smallest calculation costs
+	int smallest_cost = INT_MAX;
+	int smallest_cost_node = -1;
+	std::vector<int> tmp_result_vector;
+	for(auto root_node = 1; root_node < (int)edge_list.size(); root_node++){
+		tmp_result_vector.clear();
+		nonexistent.clear();
+		intermediate_queue.push(root_node);
+		tmp_result_vector.push_back(root_node);
+		while (!intermediate_queue.empty())
+		{
+			int next = intermediate_queue.front();
+			intermediate_queue.pop();
+			if (nonexistent.find(next) == nonexistent.end())
+			{
+				nonexistent.insert(next);
+				tmp_result_vector.push_back(next);
+				// for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++)
+				// 	intermediate_queue.push(i->target);
+				//push the nodes to the queue by small-degree firstly order
+				for(int row_num = min_rows; row_num <= max_rows; row_num++){
+					for(int d = 1; d<= max_degree;d++){
+						for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++){
+							if(node_degree[i->target] == d && rows_num[i->target] == row_num){
+								intermediate_queue.push(i->target);
+							}
+						}
+					}
+			}
+
+				continue;
+			}
+			else
+				continue;
+		}
+		//calculate the cost of each node : calculation function is \sum rows_num[node] * (node_num - index) (largest rows_num, we want to put it into the final location)
+		int total_cost = 0;
+		for(auto index = 1; index <edge_list.size();index++){
+			total_cost += rows_num[tmp_result_vector[index]] * (edge_list.size() - index);
+		}
+		if(total_cost < smallest_cost){
+			result_vector= tmp_result_vector;
+			smallest_cost = total_cost;
+			smallest_cost_node = root_node;
+		}
+		// std::cout<<"total_cost " <<total_cost<<std::endl;
+		// std::cout<<"TMP RESULT IS"<<std::endl;
+		// for (auto i = tmp_result_vector.begin(); i != tmp_result_vector.end(); ++i)
+    	// 	std::cout << *i << ' ';
+		// std::cout<<std::endl;
+	}
+	return result_vector;
+}
 std::vector<int> BFS_Order(std::vector<std::list<Edge_Simple> >  & edge_list)
 {
 	std::vector<int> result_vector;
@@ -172,8 +247,9 @@ std::vector<int> BFS_Order_max_first(std::vector<std::list<Edge_Simple> >  & edg
 	//int first_vertex = calcualte_degree_of_each_node(edge_list,node_degree);
 	intermediate_queue.push(first_vertex);
 	result_vector.push_back(first_vertex);
-
-	//int max_degree = find_max_degree(edge_list);
+	//int first_vertex = find_max_degree_node(edge_list);
+	calcualte_degree_of_each_node(edge_list,node_degree);
+	int max_degree = find_max_degree(edge_list);
 	while (!intermediate_queue.empty())
 	{
 		int next = intermediate_queue.front();
@@ -184,8 +260,10 @@ std::vector<int> BFS_Order_max_first(std::vector<std::list<Edge_Simple> >  & edg
 			result_vector.push_back(next);
 			for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++)
 				intermediate_queue.push(i->target);
-			//push the nodes to the queue by small-degree firstly order
-			// for(int d = 1; d<= max_degree;d++){
+			//push the nodes to the queue by max-degree firstly order
+
+
+			// for(int d = max_degree; d>= 1;d--){
 			// 	for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++){
 			// 		if(node_degree[i->target] == d){
 			// 			intermediate_queue.push(i->target);
@@ -193,6 +271,13 @@ std::vector<int> BFS_Order_max_first(std::vector<std::list<Edge_Simple> >  & edg
 			// 	}
 			// }
 
+			// for(int d = 1; d<= max_degree;d++){
+			// 	for (auto i = edge_list[next].begin(); i != edge_list[next].end(); i++){
+			// 		if(node_degree[i->target] == d){
+			// 			intermediate_queue.push(i->target);
+			// 		}
+			// 	}
+			// }
 			continue;
 		}
 		else
@@ -536,7 +621,8 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec, std::pair<int, int>  & conflict_pair, 
 			int vertex_numbers, std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector,
-			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results, bool & need_debug)
+			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results,
+			std::vector<std::vector<int>> &early_quit_count,bool & early_quit,bool & need_debug)
 {
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
@@ -560,6 +646,14 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 		partial_row_results.assign(result_vec.begin(),result_vec.end());
 		partial_row_results.push_back(last_row);
 		partial_col_results.assign(col_results.begin(), col_results.end());
+		early_quit_count[conflict_col][this_col] ++;
+		early_quit_count[this_col][conflict_col] ++;
+		if(early_quit_count[this_col][conflict_col] > 500 || early_quit_count[conflict_col][this_col]> 500){
+			early_quit = true;
+			LR_recover(*col);
+			col_results.pop_back();
+			return false;
+		}
 	}
 	
 	for (Cell *j = col->Down; j != col; j = j->Down)
@@ -571,8 +665,21 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 		efficient_store_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 		Remove_Rows_Cols(dl, row_set, col_set);
 		if (Efficient_MPLD_X_Solver_v2(dl, result_vec, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, 
-		MPLD_search_vector,partial_row_results,partial_col_results,col_results,need_debug))
+		MPLD_search_vector,partial_row_results,partial_col_results,col_results,early_quit_count,early_quit,need_debug))
 			return true;
+		else{
+			if(early_quit){
+				result_vec.pop_back();
+				efficient_recover_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
+				Recover_Rows_Cols(dl, row_set, col_set);
+				LR_recover(*col);
+				col_results.pop_back();
+				if(need_debug){
+					std::cout << "END by early stop: this_col : " << this_col << "depth : " << depth<<std::endl;
+				}
+				return false;
+			}	
+		}
 
 		result_vec.pop_back();
 		efficient_recover_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
@@ -595,6 +702,8 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simple> > & edge_list,  int  row_numbers,  int  col_numbers,
  int  vertex_numbers, int mask_number, bool & need_debug){
 	//the total conflict pairs 
+	// boost::timer::cpu_timer dancing_link_timer;
+	// //dancing_link_timer.start();
 	std::pair<int, int>  conflict_pair;
 	//the conflict pair if MPLD_X_Solver has NO a conflict-free solution
 	std::set<std::pair<int, int> >  final_conflict;
@@ -614,11 +723,25 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 	Order_of_Row_Deleted_in_Col.resize(col_numbers + 1);
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);
 	std::vector<int> MPLD_search_vector;
-	MPLD_search_vector = BFS_Order_max_first(edge_list);
+	//MPLD_search_vector = BFS_Order(edge_list);
+	MPLD_search_vector = BFS_Order_no_stitch_first(edge_list,dl);
+	for(auto i = 0; i<MPLD_search_vector.size(); i++){
+		std::cout<<MPLD_search_vector[i]<<" ";
+	}
+	std::cout<<std::endl;
 	int depth = 1;
+	std::vector<std::vector<int>> early_quit_count;
+	for(auto i = 0; i <= vertex_numbers; i++){
+		std::vector<int> row_early_quite_count;
+		row_early_quite_count.assign(vertex_numbers+1,0);
+		early_quit_count.push_back(row_early_quite_count);
+	}
+	bool early_quit = false;
 	bool result = Efficient_MPLD_X_Solver_v2(dl, selected_rows, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, 
-		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,need_debug);
+		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,early_quit_count, early_quit,need_debug);
 	int iteration = 1;
+	//std::cout<< "IN MPL:::::::::::::::::::::first try solve " << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	while(result==false && partial_selected_rows.size()< vertex_numbers){
 		mplAssert(partial_selected_rows.size() == partial_selected_cols.size());
 		iteration++;
@@ -643,6 +766,8 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 			//Cell *col = &dl.Col_Header_Table[this_col];
 			Remove_Single_Col(dl,this_col);
 		}
+		//std::cout<< "IN MPL:::::::::::::::::::::remove conflict cols " << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 		final_result.insert( final_result.end(), partial_selected_rows.begin(), partial_selected_rows.end() );
 		//NOTE that the order between the two parts (remove edges and recover partial results are important! Cause some rows won't be removed this time due to the exact conflict edge is removed)
 		for(int i = 0; i < partial_selected_rows.size(); i++){
@@ -653,12 +778,20 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 				efficient_store_intermediate_process(dl, partial_selected_cols[i], row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 				Remove_Rows_Cols(dl, row_set, col_set);
 		}
+		//std::cout<< "IN MPL:::::::::::::::::::::recover partial results " << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 		partial_selected_rows.clear();
 		partial_selected_cols.swap(selected_cols);
 		selected_cols.clear();
 		depth = 1;
+		for (auto &v: early_quit_count) {
+			std::fill(v.begin(), v.end(), 0);
+		}
+		early_quit = false;
 		result = Efficient_MPLD_X_Solver_v2(dl, selected_rows, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, 
-		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,need_debug);
+		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,early_quit_count, early_quit,need_debug);
+		//std::cout<< "IN MPL:::::::::::::::::::::second try solve " << dancing_link_timer.format(6)<<std::endl;
+		//dancing_link_timer.start();
 	}
 	if(selected_rows.size() != 0){
 		final_result.insert( final_result.end(), selected_rows.begin(), selected_rows.end() );

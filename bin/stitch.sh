@@ -29,13 +29,13 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/sim_s5.gds \
+    -in bench/sim_s2.gds \
     -out benchout/sim_c1_sti.gds  \
-    -coloring_distance 120 \
+    -coloring_distance 100 \
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo DL\
-    -thread_num 8 \
+    -algo SDP\
+    -thread_num 1\
      -use_stitch gen_stitch\
-    # -dbg_comp_id 1886
+  #   -dbg_comp_id 10096
