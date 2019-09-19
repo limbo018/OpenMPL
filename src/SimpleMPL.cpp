@@ -1038,12 +1038,12 @@ void SimpleMPL::projection()
 	uint32_t new_rectangle_id = -1;						///< new rectangle id
 	uint32_t stitch_edge_number = 0;    
 	//LIWEI: projection data preparetion finished"<<std::endl;
-// #ifdef _OPENMP
-// #pragma omp parallel num_threads(m_db->thread_num()) 
-// #endif
-// #ifdef _OPENMP
-// 	#pragma omp for ordered
-// #endif
+#ifdef _OPENMP
+#pragma omp parallel num_threads(m_db->thread_num()) 
+#endif
+#ifdef _OPENMP
+	#pragma omp for ordered
+#endif
 
 	for (uint32_t i = 0; i < vertex_num; i++)
 	{
@@ -1097,13 +1097,13 @@ void SimpleMPL::projection()
 				// reconstruct polygons, also generate stitch relationships
 				liweireconstruct_polygon(new_polygon_id, new_polygon_id_list, rect_split,i);
 				mplAssert(new_polygon_id_list.size() == rect_split.size());
-// #ifdef _OPENMP
-// #pragma omp ordered
-// #endif
+#ifdef _OPENMP
+#pragma omp ordered
+#endif
 {
-// #ifdef _OPENMP
-// #pragma omp critical
-// #endif
+#ifdef _OPENMP
+#pragma omp critical
+#endif
 			{
 
 				
@@ -1131,13 +1131,13 @@ void SimpleMPL::projection()
 		else
 		{
 			//LIWEI: NON-AVALIBLE vertex are being handled "<<v<<std::endl;
-// #ifdef _OPENMP
-// #pragma omp ordered
-// #endif
+#ifdef _OPENMP
+#pragma omp ordered
+#endif
 {
-// #ifdef _OPENMP
-// #pragma omp critical
-// #endif
+#ifdef _OPENMP
+#pragma omp critical
+#endif
 			{
 			new_polygon_id += 1;
 			for (uint32_t j = start_idx; j <= end_idx; j++)
@@ -1576,16 +1576,15 @@ std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t c
 	mplAssert(new_polygon_id_list.size() == num_vertices(G));
   	int component_num = connected_components(G, &new_polygon_id_list[0]);
 	uint32_t start;
-// #ifdef _OPENMP
-// #pragma omp ordered
-// #endif
+#ifdef _OPENMP
+#pragma omp ordered
+#endif
 {
-// #ifdef _OPENMP
-// #pragma omp critical
-// #endif
+#ifdef _OPENMP
+#pragma omp critical
+#endif
 {
 	start = polygon_id + 1;	
-	std::cout<<"start is, this one should be in sequence"<<start<<std::endl;
 	for(uint32_t i=0; i< new_polygon_id_list.size();i++){
 		new_polygon_id_list[i] += start;
 	}
@@ -1598,10 +1597,7 @@ std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t c
 		for (uint32_t j = i + 1; j < rect_list.size(); j++)
 		{
 			if(std::find(rec_stitch_list[i].begin(), rec_stitch_list[i].end(), j) != rec_stitch_list[i].end()){
-				if(new_polygon_id_list[i] == new_polygon_id_list[j]){
-					std::cout<<"LIWEI: warning: two recs with stitch relations locate in same poly: "<<start<<std::endl;
-				}
-				else{
+				if(new_polygon_id_list[i] != new_polygon_id_list[j]){
 					if(std::find(stitch_list[new_polygon_id_list[i] - start].begin(), stitch_list[new_polygon_id_list[i] - start].end(), new_polygon_id_list[j]) == stitch_list[new_polygon_id_list[i] - start].end())
 						{
 							stitch_list[new_polygon_id_list[i] - start].push_back(new_polygon_id_list[j]);    
@@ -1611,13 +1607,13 @@ std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t c
 			}
 		}
 	}
-// #ifdef _OPENMP
-// #pragma omp ordered
-// #endif
+#ifdef _OPENMP
+#pragma omp ordered
+#endif
 {
-// #ifdef _OPENMP
-// #pragma omp critical
-// #endif
+#ifdef _OPENMP
+#pragma omp critical
+#endif
 {
 	StitchRelation.insert(StitchRelation.end(), stitch_list.begin(), stitch_list.end());}}
 	// rectangles in the same polygon should be abutting
