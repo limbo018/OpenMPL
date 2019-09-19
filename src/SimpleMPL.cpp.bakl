@@ -1107,7 +1107,7 @@ void SimpleMPL::projection()
 			{
 
 				
-				uint32_t pivot = new_polygon_id_list[0] -1 ;
+				uint32_t pivot = new_polygon_id_list[0];
 				for (uint32_t i = 0; i < rect_split.size(); i++)
 				{
 					rect_split[i].first->pattern_id(++new_rectangle_id);

@@ -85,11 +85,36 @@ class SimpleMPL
 		
 		void setVddGnd();
 		void calBoundaries();
-		bool bIsBoundSlice(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2);
+		/// check the direction relationship of two rects,
+		/// \return direction num: (middle is the first rect)
+		// 7 | 3 | 6
+		// __|___|__
+		// 1 | 8 | 2
+		// __|___|__
+		// 4 | 0 | 5
+		uint32_t box2BoxDirection(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2);
+		/// check whether prec1 is boundary slice against prec2
+		/// \param conflict_set1 set of polygons which are in conflict with prec1
+		bool bIsBoundSlice(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2,std::vector<rectangle_pointer_type>& conflict_set1);
 		bool isLongEnough(rectangle_pointer_type& rec);
-		void findConflictRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& conflict_rects);
-		bool canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2);
-		void liweireconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
+
+		/// find conflicts polygons(not rectangles in this version) \conflict_rects of this rect \prec
+		void findConflictRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& conflict_rects,uint32_t current_poly_id);
+
+		/// find touch rectangles \stitch_rects of this rect \prec in the rect sets \rect_set
+		void findTouchRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& stitch_rects,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
+
+		/// dicide whether the stitch candidate should be a exact stitch edge between rec \prec1 and rec \prec2,
+		/// \param rect_list is the total rect list after stitch candidate generation of the parent poly
+		/// \param current_poly_id is the current old poly id
+		bool canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list,uint32_t current_poly_id);
+		
+		/// the original polygon is divided by stitches, the function calculates new corresponding polygon id after stitch insertion
+		/// typically, two rectangles splitted by a stitch edge should be assigned to different polygon id instead of same poly_id like before
+		/// \param 	polygon_id starting index of new polygon_id
+		/// \param	new_polygon_id_list new corresponding polygon_id of each rect in rect_list
+		/// \param	rect_list list of rects in previous polygon. first_element: rect pointer second: revious polygon_id
+		void liweireconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list,uint32_t current_poly_id);
 		void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list);
 		bool fast_color_trial(std::vector<int8_t>& vSubColor,graph_type const& sg);
 		void updateConflictRelation();
@@ -116,7 +141,7 @@ class SimpleMPL
         /// kernel for coloring a component 
         uint32_t coloring_component(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id);
         /// create solver and initialize 
-        /// \parm sg is the simplified graph 
+        /// \param sg is the simplified graph 
         /// \return a point of solver base type
         lac::Coloring<graph_type>* create_coloring_solver(graph_type const& sg) const;
         /// given a graph, solve coloring, contain nested call for itself 
