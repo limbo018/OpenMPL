@@ -35,7 +35,7 @@
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo ILP\
+    -algo DL\
     -thread_num 8\
-     -use_stitch gen_stitch\
+    #s -use_stitch gen_stitch\
   #   -dbg_comp_id 10096
