@@ -15,6 +15,9 @@ in conflict_num() : uncomment color mplAssertmessage
 #include "DL_MPL.h"
 #include "MatrixCover.h"
 #include <stack>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include <time.h>
 #include <boost/graph/graphviz.hpp>
 #include <boost/timer/timer.hpp>
@@ -1042,7 +1045,7 @@ void SimpleMPL::projection()
 #pragma omp parallel num_threads(m_db->thread_num()) 
 #endif
 #ifdef _OPENMP
-	#pragma omp for ordered
+	#pragma omp for ordered schedule(dynamic, 1)
 #endif
 
 	for (uint32_t i = 0; i < vertex_num; i++)
@@ -1095,7 +1098,7 @@ void SimpleMPL::projection()
 
 				std::vector<uint32_t> new_polygon_id_list;
 				// reconstruct polygons, also generate stitch relationships
-				liweireconstruct_polygon(new_polygon_id, new_polygon_id_list, rect_split,i);
+				liweireconstruct_polygon(new_polygon_id, new_polygon_id_list, rect_split,pid);
 				mplAssert(new_polygon_id_list.size() == rect_split.size());
 #ifdef _OPENMP
 #pragma omp ordered
@@ -1323,53 +1326,29 @@ void SimpleMPL::updateConflictRelation()
 
 
 void SimpleMPL::findConflictRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& conflict_rects,uint32_t current_poly_id){
-	rectangle_type rect(*prec);
-	gtl::bloat(rect, gtl::HORIZONTAL, m_db->coloring_distance);
-	gtl::bloat(rect, gtl::VERTICAL, m_db->coloring_distance);
-	//TODO:: this part can be accelareted by directly using m_mAdjVertex[prec->pattern_id()] (its parrent polygon id)
-	// and use (coordinate_difference)gtl::euclidean_distance(*(m_mAdjVertex[prec->pattern_id()][0]), *prec) to exactly calculate the distance
-	//
-	//Another option is that recording rects instead of polys (not recommended cause it may increase stitch numbers)
-	for (rtree_type::const_query_iterator itq = m_db->tPatternBbox.qbegin(bgi::intersects(rect));
-			itq != m_db->tPatternBbox.qend(); ++itq)
-	{
-		rectangle_pointer_type const& pAdjPattern = *itq;
-		if(gtl::xl(*(pAdjPattern))<=gtl::xl(*(prec)) && gtl::xh(*(pAdjPattern))>=gtl::xh(*(prec)) && gtl::yl(*(pAdjPattern))<=gtl::yl(*(prec)) && gtl::yh(*(pAdjPattern))>=gtl::yh(*(prec)))
-			continue;
-		std::vector<rectangle_pointer_type> vPolyRectPattern = m_db->polyrect_patterns();
-		std::vector<uint32_t> vPolyRectBeginId = m_db->PolyRectBgnLoc();
-		uint32_t num_polyrects = vPolyRectPattern.size();
-		uint32_t adj_id =  pAdjPattern->pattern_id();
+	const std::vector<rectangle_pointer_type>& vPolyRectPattern = m_db->polyrect_patterns();
+	const std::vector<uint32_t>& vPolyRectBeginId = m_db->PolyRectBgnLoc();
+	uint32_t num_polyrects = vPolyRectPattern.size();
+	//std::cout<<"prec->pattern_id() "<<prec->pattern_id()<<" m_mAdjVertex[current_poly_id].size() "<<m_mAdjVertex[current_poly_id].size()<<" current_poly_id "<<current_poly_id<<std::endl;
+	//we tranverse all of the conflict polys of its parent poly, so that reduce runtime to calculate intersecting polys
+	for(auto parentAdj = m_mAdjVertex[current_poly_id].begin(); parentAdj != m_mAdjVertex[current_poly_id].end(); ++parentAdj){
+		rectangle_pointer_type& AdjPoly = m_db->vPatternBbox[*parentAdj];
+		//when we calculate the distance between this rect and poly, we calculate the minimal distance between the rect and child rects of the poly
 		coordinate_difference distance = std::numeric_limits<coordinate_difference>::max();
-   	 	uint32_t polyRectId1e = (adj_id+1 == vPolyRectBeginId.size())? num_polyrects : vPolyRectBeginId[adj_id+1];
-		for (uint32_t polyRectId1 = vPolyRectBeginId[adj_id]; polyRectId1 != polyRectId1e; ++polyRectId1)
+   	 	uint32_t polyRectId1e = (*parentAdj+1 == vPolyRectBeginId.size())? num_polyrects : vPolyRectBeginId[*parentAdj+1];
+		for (uint32_t polyRectId1 = vPolyRectBeginId[*parentAdj]; polyRectId1 != polyRectId1e; ++polyRectId1)
+		{
+			//std::cout<<(coordinate_difference)gtl::euclidean_distance(*(vPolyRectPattern[polyRectId1]), *prec)<<std::endl;
 			distance = std::min(distance, (coordinate_difference)gtl::euclidean_distance(*(vPolyRectPattern[polyRectId1]), *prec) );
+		}
 		if(distance < m_db->coloring_distance)
-			conflict_rects.push_back(pAdjPattern);
-	}
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"LIWEI: find confilict patterning boxes with size "<<conflict_rects.size()<<std::endl;
-	#endif
-	// const std::vector<rectangle_pointer_type>& vPolyRectPattern = m_db->polyrect_patterns();
-	// const std::vector<uint32_t>& vPolyRectBeginId = m_db->PolyRectBgnLoc();
-	// uint32_t num_polyrects = vPolyRectPattern.size();
-	// //std::cout<<"prec->pattern_id() "<<prec->pattern_id()<<" m_mAdjVertex.size() "<<m_mAdjVertex.size()<<std::endl;
-	// //we tranverse all of the conflict polys of its parent poly, so that reduce runtime to calculate intersecting polys
-	// for(auto parentAdj = m_mAdjVertex[current_poly_id].begin(); parentAdj != m_mAdjVertex[current_poly_id].end(); ++parentAdj){
-	// 	rectangle_pointer_type& AdjPoly = m_db->vPatternBbox[*parentAdj];
-	// 	//when we calculate the distance between this rect and poly, we calculate the minimal distance between the rect and child rects of the poly
-	// 	coordinate_difference distance = std::numeric_limits<coordinate_difference>::max();
-   	//  	uint32_t polyRectId1e = (*parentAdj+1 == vPolyRectBeginId.size())? num_polyrects : vPolyRectBeginId[*parentAdj+1];
-	// 	for (uint32_t polyRectId1 = vPolyRectBeginId[*parentAdj]; polyRectId1 != polyRectId1e; ++polyRectId1)
-	// 		distance = std::min(distance, (coordinate_difference)gtl::euclidean_distance(*(vPolyRectPattern[polyRectId1]), *prec) );
-	// 	if(distance < m_db->coloring_distance)
-	// 		conflict_rects.push_back(AdjPoly);	
+			conflict_rects.push_back(AdjPoly);	
 
-	// }
+	}
 }
 
 void SimpleMPL::findTouchRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& touch_rects,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list){
-	for (auto index = 0 ; index < rect_list.size(); index++)
+	for (uint32_t index = 0 ; index < rect_list.size(); index++)
 	{
 		if(rect_list[index].first == prec) continue;
 		if((coordinate_difference)gtl::euclidean_distance(*rect_list[index].first,*prec) <= 0)	touch_rects.push_back(rect_list[index].first);	
@@ -1450,12 +1429,10 @@ bool SimpleMPL::canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_t
 	findConflictRects(prec2,vID2,current_poly_id);
 	findTouchRects(prec1,vTouch1,rect_list);
 	findTouchRects(prec2,vTouch2,rect_list);
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"LIWEI : find conflicts size "<<vID1.size()<<" "<<vID2.size()<<std::endl;
-	#endif
-	//if(vID1.size() == 0 || vID2.size() == 0) return false;
-	//TODO: use && and change recovery stratage
-	//TODO: boundslice and share diff dirt neighbor 
+
+	//std::cout<<"LIWEI : find conflicts size "<<vID1.size()<<" "<<vID2.size()<<std::endl;
+
+
 	//remove the stitches on vdd
   	if (isLongEnough(prec1) || isLongEnough(prec2)) {
 		uint32_t direction = box2BoxDirection(prec1,prec2);
@@ -1463,28 +1440,6 @@ bool SimpleMPL::canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_t
 	  }
 	//remove boundslice
 	coordinate_difference threshold = m_db->coloring_distance / (m_db->color_num() + 2 );
-	// coordinate_difference hard_code = -3850;
-	// coordinate_difference hard_code_y = -1730;
-	// if(gtl::xl(*(prec1)) == hard_code && gtl::yl(*(prec1)) == hard_code_y){
-	// 	for (uint32_t i=0; i<vID1.size(); i++)
-	// 	{
-	// 		rectangle_pointer_type id = vID1[i];
-	// 		std::cout<<gtl::xl(*(id))<<std::endl;
-	// 		std::cout<<gtl::yl(*(id))<<std::endl;
-	// 		std::cout<<gtl::xh(*(id))<<std::endl;
-	// 		std::cout<<gtl::yh(*(id))<<std::endl;
-	// 	}
-	// }
-	// if(gtl::xl(*(prec2)) == hard_code && gtl::yl(*(prec2)) == hard_code_y){
-	// 	for (uint32_t i=0; i<vID2.size(); i++)
-	// 	{
-	// 		rectangle_pointer_type id = vID2[i];
-	// 		std::cout<<gtl::xl(*(id))<<std::endl;
-	// 		std::cout<<gtl::yl(*(id))<<std::endl;
-	// 		std::cout<<gtl::xh(*(id))<<std::endl;
-	// 		std::cout<<gtl::yh(*(id))<<std::endl;
-	// 	}
-	// }
 	if((gtl::xh(*prec1) - gtl::xl(*prec1)) < threshold || (gtl::yh(*prec1) - gtl::yl(*prec1))< threshold)
 	{
 		if (true == bIsBoundSlice(prec1, prec2,vTouch1)) return false;
@@ -3210,7 +3165,7 @@ double SimpleMPL::solve_by_dancing_link_with_stitch(SimpleMPL::graph_type& g,std
 		}
 		final_result.insert( final_result.end(), row_select_vector.begin(), row_select_vector.end() );
 		//NOTE that the order between the two parts (remove edges and recover partial results are important! Cause some rows won't be removed this time due to the exact conflict edge is removed)
-		for(int i = 0; i < row_select_vector.size(); i++){
+		for(uint32_t i = 0; i < row_select_vector.size(); i++){
 			//if the row is selected ( in the partial result), recover the partial results
 				std::set<int> row_set;
 				std::set<int> col_set;
@@ -3238,11 +3193,11 @@ double SimpleMPL::solve_by_dancing_link_with_stitch(SimpleMPL::graph_type& g,std
 	for (auto i = final_result.begin(); i != final_result.end(); i++)
 	{
 		// std::cout << *i << std::endl;
-		if((*i) < vertex_numbers * m_db->color_num() + 1){
+		if((*i) < (int)vertex_numbers * m_db->color_num() + 1){
 		int No = ((*i) - 1) / m_db->color_num() + 1;
 		int mask = (*i + 2) % m_db->color_num();
 		color_results_wo_stitch[No-1] = mask; }
-		if((*i) > (vertex_numbers * (uint32_t)(m_db->color_num()) + (uint32_t)1)){
+		if((uint32_t)(*i) > (vertex_numbers * (uint32_t)(m_db->color_num()) + (uint32_t)1)){
 			std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[(*i)- vertex_numbers * m_db->color_num() -2];
 			for(std::vector<std::pair<uint32_t,uint32_t>>::iterator it = row_decoder.begin(); it != row_decoder.end(); ++it) {
 				color_vector[(*it).first] = (*it).second;
@@ -3476,7 +3431,7 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 		//2 nd dim: num_stitch of this parent node
 		//3 rd pair: deivided child node set by this stitch / conflict parent nodes set of the child nodes set
 		std::vector<std::vector<std::pair<std::set<uint32_t>,std::set<uint32_t>>>> encode_mat;
-		for(auto i = 0; i<=vertex_numbers; i++){
+		for(uint32_t i = 0; i<=vertex_numbers; i++){
 			std::vector<std::pair<std::set<uint32_t>,std::set<uint32_t>>> small_encode_mat;
 			encode_mat.push_back(small_encode_mat);
 		}
@@ -3555,7 +3510,7 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 			if(childs_num == 0){continue;}
 			mplAssert(childs_num > 1);
 			starting_indexes.push_back(starting_index);
-			for(auto stitch_no = 0; stitch_no < childs_num - 1; stitch_no++){
+			for(uint32_t stitch_no = 0; stitch_no < childs_num - 1; stitch_no++){
 				std::set<uint32_t>  first_set = encode_mat[parent_no][stitch_no].first;
 				std::set<uint32_t>  second_set = encode_mat[parent_no][stitch_no].second;
 				for(auto first_color = 0 ; first_color < m_db->color_num(); first_color ++){
@@ -3982,7 +3937,7 @@ void SimpleMPL::iterative_mark(SimpleMPL::graph_type& g,std::vector<uint32_t>& p
 		mplAssert(e12.second);
 	//if two nodes are stitch relationships 
 		if(boost::get(boost::edge_weight, g, e12.first) < 0){
-			if(parent_node_ids[(uint32_t)v2] == -1){
+			if(parent_node_ids[(uint32_t)v2] == (uint32_t)-1){
 				parent_node_ids[(uint32_t)v2] = parent_node_ids[(uint32_t)v1];
 				iterative_mark(g,parent_node_ids,v2);
 			}
@@ -4002,7 +3957,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t>& vC
 	{	
 		vertex_descriptor v1 = *vi1;
 		mplAssert(vColor[v1]!=-1);
-		if(parent_node_ids[(uint32_t)v1] == -1){
+		if(parent_node_ids[(uint32_t)v1] == (uint32_t)-1){
 			parent_node_ids[(uint32_t)v1] = parent_node_id;
 			iterative_mark(g,parent_node_ids,v1);
 			parent_node_id++;
