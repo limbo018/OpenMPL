@@ -959,7 +959,7 @@ void SimpleMPL::update_conflict_relation()
 	new_mAdjVertex.resize(m_db->vPatternBbox.size());
 	uint32_t edge_num = 0;
 	uint32_t dg_conflict = 0;
-	uint32_t dg_illegal_conflict = 0;
+	//uint32_t dg_illegal_conflict = 0;
 
 	//update in_DG
 	std::vector<bool> tmp_in_DG;
@@ -2003,8 +2003,8 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK){
 			double cost = 0;
 			if(m_db->use_stitch()){
-				cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);
-				//cost = solve_by_dancing_link_GPU(sg,vSubColor);
+				//cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);
+				cost = solve_by_dancing_link_GPU(sg,vSubColor);
 				}
 			else{ cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);}
 #if RECORD > 1
@@ -2590,14 +2590,12 @@ void SimpleMPL::push_adj_into_set(vertex_descriptor & v1, SimpleMPL::graph_type 
 
 
 double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector<int8_t>& color_vector){
-	//Due to graph does not contain a parent&child node system
-	// we simply redesign a node struct to achieve this kind of system
-	mplAssert(num_vertices(g) == color_vector.size());
-	DancingLink dl; 
-	std::vector<Vertex*> node_list;
-	node_list.resize(num_vertices(g));
 	uint32_t vertex_numbers = 0;
 	uint32_t edge_numbers = 0;
+	std::vector<std::vector<std::pair<uint32_t,uint32_t>>> decode_mat;
+	uint32_t color_num_uint32 = (uint32_t)m_db->color_num();
+	std::vector<Vertex*> node_list;
+	node_list.resize(num_vertices(g));
 	boost::graph_traits<graph_type>::vertex_iterator vi1, vie1;
 	for (boost::tie(vi1, vie1) = boost::vertices(g); vi1 != vie1; ++vi1)
 	{	
@@ -2611,7 +2609,8 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 			if (v1 >= v2) continue;
 			std::pair<edge_descriptor, bool> e12 = boost::edge(v1, v2, g);
 			mplAssert(e12.second);
-			std::cout<<v1<<" "<<v2<<" "<<boost::get(boost::edge_weight, g, e12.first)<<std::endl;
+			//std::cout<<v1<<" "<<v2<<" "<<boost::get(boost::edge_weight, g, e12.first)<<std::endl;
+
 			//if node source and node target is not created. New one/
 			if(!node_list[v1]){
 				Vertex* source_vertex = new Vertex;
@@ -2670,7 +2669,6 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 	}
 	mplAssert(node_wo_stitch_list.size() == vertex_numbers);
 
-
 	std::vector<std::list<Edge_Simple> >   edge_list;
 	edge_list.resize(vertex_numbers + 1);
 	for(std::set<Vertex*>::iterator it = node_wo_stitch_list.begin(); it != node_wo_stitch_list.end(); ++it) {
@@ -2691,28 +2689,56 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 			}
 		}
 		}
-	std::cout<<"EDGE list generated with size: "<<edge_numbers<<std::endl;
-	std::vector<uint32_t> starting_indexes;
-	uint32_t starting_index = 0;
+	//std::cout<<"EDGE list generated with size: "<<edge_numbers<<std::endl;
 
-	//Stitch Generation Step 1: recording strating index of each parent node block
-	for(std::set<Vertex*>::iterator it = node_wo_stitch_list.begin(); it != node_wo_stitch_list.end(); ++it){
-		uint32_t childs_num = ((*it)->Childs).size();
-		mplAssert(childs_num > 1 || childs_num == 0);
-		starting_indexes.push_back(starting_index);
-		if(childs_num > 1){
-			starting_index += pow(m_db->color_num(),childs_num);
+	//Step 1, encode matrix generation
+	//if cost1 is larger than 1, which means that there is one more conflicts, than we insert stitch in the node
+	//1 st dim: num_parent node + 1
+	//2 nd dim: num_stitch of this parent node
+	//3 rd pair: deivided child node set by this stitch / conflict parent nodes set of the child nodes set
+	std::vector<std::vector<std::pair<std::set<uint32_t>,std::set<uint32_t>>>> encode_mat;
+	for(uint32_t i = 0; i<=vertex_numbers; i++){
+		std::vector<std::pair<std::set<uint32_t>,std::set<uint32_t>>> small_encode_mat;
+		encode_mat.push_back(small_encode_mat);
+	}
+	uint32_t stitch_count = 0;
+	//I traverse all of the stitch edges for getting the encode matrix
+	for (boost::tie(vi1, vie1) = boost::vertices(g); vi1 != vie1; ++vi1)
+	{	
+		vertex_descriptor v1 = *vi1;
+		boost::graph_traits<graph_type>::adjacency_iterator vi2, vie2,next2;
+		boost::tie(vi2, vie2) = boost::adjacent_vertices(v1, g);
+		for (next2 = vi2; vi2 != vie2; vi2 = next2)
+		{
+			++next2; 
+			vertex_descriptor v2 = *vi2;
+			if (v1 >= v2) continue;
+			std::pair<edge_descriptor, bool> e12 = boost::edge(v1, v2, g);
+			mplAssert(e12.second);
+			//if two nodes are stitch relationships
+			if(boost::get(boost::edge_weight, g, e12.first) < 0){
+				stitch_count ++ ;
+				std::set<uint32_t> set1;
+				set1.insert(v1);
+				std::set<uint32_t> set2;
+				set2.insert(v2);
+				push_adj_into_set(v1,g,set1,set2);
+				push_adj_into_set(v2,g,set2,set1);
+				//std::cout << node_list[v1]->parent->No <<std::endl;
+				std::pair<std::set<uint32_t>,std::set<uint32_t>> encode_mat_per_stitch = std::make_pair(set1,set2);
+				encode_mat[node_list[v1]->parent->No].push_back(encode_mat_per_stitch);
+			}
 		}
 	}
-
-	//int row_numbers = vertex_numbers * m_db->color_num() + 1 + starting_index;
-	int row_numbers = vertex_numbers * m_db->color_num() + starting_index;
+	//std::cout<< "SECOND encode matrix" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
+	//Step 1.1 BUILD DL MATRIX WITH STITCH
+	//Node structure done,  then build DL system
+	DancingLink dl2; 
+	int row_numbers = vertex_numbers * m_db->color_num() + stitch_count * pow(m_db->color_num(),2);
 	int col_numbers = edge_numbers * m_db->color_num() + vertex_numbers;
-	std::cout<<"row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
-	std::cout<<"vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
-
-
-	//Step 1 of Haoyu GPU version .initilize several matrix/arrays required by Haoyu
+	// std::cout<<"DL2: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
+	// std::cout<<"DL2: vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
     int **dl_matrix;
 
     dl_matrix = new int *[row_numbers];
@@ -2737,92 +2763,112 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 		std::cout<<col_group[i]<<" ";
 	}
 	std::cout<<"END"<<std::endl;
-
-
-	//Step 3 of Haoyu GPU version . Insert ones in dl matrix
 	
+	// Insert Non-stitch DL cells
+	//std::cout<< "SECOND dl init" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
 	for (uint32_t it = 1; it < edge_list.size(); ++it)
 	{
-		for (int i = 1; i <= m_db->color_num(); ++i)
+		for (int32_t i = 1; i <= m_db->color_num(); ++i)
 		{
-			dl_matrix[(it - 1)*m_db->color_num() + i - 1][it -1 ] = 1;
+			//Insert elements representing nodes color ( first edge_num cols)
+			dl_matrix[(it - 1)*m_db->color_num() + i-1][it-1] = 1;
 			for (auto j = edge_list[it].begin(); j != edge_list[it].end(); ++j)
 			{
-				dl_matrix[(it - 1)*m_db->color_num() + i -1][vertex_numbers + (j->No - 1)*m_db->color_num() + i -1] = 1;
+				//Insert elements representing edge conflict
+				dl_matrix[(it - 1)*m_db->color_num() + i-1][vertex_numbers + (j->No - 1)*m_db->color_num() + i -1] = 1;
 			}
 		}
 	}
-	//ones representing singelon row
-	// for (uint32_t i = 0; i < edge_numbers; ++i)
-	// {
-	// 	for (int j = 1; j <= m_db->color_num(); ++j)
-	// 		dl_matrix[vertex_numbers * m_db->color_num() + 1 - 1][vertex_numbers + i * m_db->color_num() + j -1 ] = 1;
-	// }
 
-
-	for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) {
-		//if the node in parent node, means it has no stitch relations
-		(*it)->updateDuplicateLGConflicts();
-		if(!(*it)->Is_Parent)
-		//else, add its parent node if it has not been added into node_wo_stitch_list
-		{
-			mplAssert((*it)->parent->Is_Parent);
-			if(node_wo_stitch_list.find((*it)->parent) == node_wo_stitch_list.end()){
-				node_wo_stitch_list.insert((*it)->parent);
-				(*it)->parent->updateDuplicateLGConflicts();
-			}
-
-		}
-	}
-
-	uint32_t count = 0;
-	for(std::set<Vertex*>::iterator v = node_wo_stitch_list.begin(); v != node_wo_stitch_list.end(); ++v){
-		uint32_t childs_num = ((*v)->Childs).size();
-		//std::cout<<count<<"th node with child num "<<childs_num<<std::endl;
-		uint32_t child_count = 1;
-		for(std::vector<Vertex*>::iterator child = ((*v)->Childs).begin(); child != ((*v)->Childs).end(); ++child){
-			//c_conflit = child conflict
-			for(std::set<Vertex*>::iterator c_conflit = ((*child)->Conflicts_in_LG).begin(); c_conflit != ((*child)->Conflicts_in_LG).end(); ++c_conflit){
-				for(int i = 1;i<=pow(m_db->color_num(),childs_num);i++){
-					int col_edge = -1;
-					for(std::list<Edge_Simple>::iterator conflict_edge = edge_list[(*child)->parent->No].begin();conflict_edge != edge_list[(*child)->parent->No].end();++conflict_edge){
-						if((*conflict_edge).target == (*c_conflit)->No){
-							col_edge = (*conflict_edge).No;
-							break;
-						}
-					}
-					mplAssert(col_edge!=-1);
-					//dl_matrix[vertex_numbers * m_db->color_num()  + starting_indexes[count] + i][vertex_numbers + (col_edge -1)*(m_db->color_num()) + ((i-1)/(int)pow(m_db->color_num(),childs_num-child_count)%(int)(m_db->color_num()))] = 1;
-					dl_matrix[vertex_numbers * m_db->color_num()  + starting_indexes[count] + i - 1][vertex_numbers + (col_edge -1)*(m_db->color_num()) + ((i-1)/(int)pow(m_db->color_num(),childs_num-child_count)%(int)(m_db->color_num()))] = 1;
-				} 
-			}
-			child_count ++;
-		}
-		count++;
-	}
-
-	//Stitch Generation Step 3: Decode matrix generation. pair: 1st = stitch No, 2nd = color  
-	count = -1;
-	std::vector<std::vector<std::pair<uint32_t,uint32_t>>> decode_mat;
-	for(std::set<Vertex*>::iterator v = node_wo_stitch_list.begin(); v != node_wo_stitch_list.end(); ++v){
-		uint32_t childs_num = ((*v)->Childs).size();
+	// Step 2 Decode matrix generation and Stitch Rows Cell Insertion
+	int count = -1;
+	std::vector<uint32_t> starting_indexes;
+	uint32_t starting_index = 0;
+	for(auto parent_node = node_wo_stitch_list.begin(); parent_node != node_wo_stitch_list.end(); ++parent_node){
+		uint32_t childs_num = ((*parent_node)->Childs).size();
+		int parent_no = (*parent_node)->No;
 		count++;
 		if(childs_num == 0){continue;}
-		for(int i = 1;i<=pow(m_db->color_num(),childs_num);i++){
-			//std::cout<<i<<" "<<(*v)->No<<" "<<childs_num<<" "<<pow(m_db->color_num(),childs_num)<<std::endl;
-			std::vector<std::pair<uint32_t,uint32_t>> row_decoder;
-			uint32_t child_count =1;
-			for(std::vector<Vertex*>::iterator child = ((*v)->Childs).begin(); child != ((*v)->Childs).end(); ++child){
-				//std::cout<<(*child)->Stitch_No<<" "<<(i/(int)pow(m_db->color_num(),childs_num-count)%(int)(m_db->color_num())) <<std::endl;
-				row_decoder.push_back(std::make_pair((*child)->Stitch_No,((i-1)/(int)pow(m_db->color_num(),childs_num-child_count)%(int)(m_db->color_num()))));
-				child_count ++;
+		mplAssert(childs_num > 1);
+		starting_indexes.push_back(starting_index);
+		for(uint32_t stitch_no = 0; stitch_no < childs_num - 1; stitch_no++){
+			std::set<uint32_t>  first_set = encode_mat[parent_no][stitch_no].first;
+			std::set<uint32_t>  second_set = encode_mat[parent_no][stitch_no].second;
+			for(auto first_color = 0 ; first_color < m_db->color_num(); first_color ++){
+				for(auto second_color = 0 ; second_color < m_db->color_num(); second_color ++){
+					//row_decoder indicates the represented color of this row
+					std::vector<std::pair<uint32_t,uint32_t>> row_decoder;
+					//Cell insertion: Node indicator of stitch row
+					dl_matrix[vertex_numbers * color_num_uint32+ starting_index + (uint32_t)(stitch_no*pow(color_num_uint32,2)) +first_color *color_num_uint32 + second_color][parent_no-1] = 1;
+					for( auto first_set_element = first_set.begin(); first_set_element != first_set.end();first_set_element++){
+						row_decoder.push_back(std::make_pair(*first_set_element,first_color));
+					}
+					for(auto second_set_element = second_set.begin(); second_set_element !=second_set.end();second_set_element++){
+						row_decoder.push_back(std::make_pair(*second_set_element, second_color));
+					}
+					if(row_decoder.size() != childs_num){
+						std::cout<<"BUG FOUND! row_decoder.size()"<<row_decoder.size()<<", childs_num "<<childs_num<<std::endl;
+					}
+					mplAssert(row_decoder.size() == childs_num);
+					decode_mat.push_back(row_decoder);
+					//Cell insertion: conflict indicator of stitch row
+					//std::cout<<"FIRST SET "<<std::endl;
+					for( auto first_set_element = first_set.begin(); first_set_element != first_set.end();first_set_element++){
+						for(auto child_conflict =  (node_list[*first_set_element]->Conflicts_in_LG).begin(); child_conflict != 
+						(node_list[*first_set_element]->Conflicts_in_LG).end(); ++child_conflict){
+
+								int col_edge = -1;
+								for(std::list<Edge_Simple>::iterator conflict_edge = edge_list[node_list[*first_set_element]->parent->No].begin();conflict_edge != edge_list[node_list[*first_set_element]->parent->No].end();++conflict_edge){
+									if((*conflict_edge).target == (*child_conflict)->No){
+										col_edge = (*conflict_edge).No;
+										break;
+									}
+								}
+					// 			mplAssert(col_edge!=-1);
+					// 			mplAssert(node_list[*first_set_element]->Stitch_No == *first_set_element);
+					// 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
+					// 			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
+					// first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + first_color<<std::endl;
+								dl_matrix[vertex_numbers * color_num_uint32+ starting_index + (uint32_t)(stitch_no*pow(color_num_uint32,2)) + \
+					first_color *color_num_uint32 + second_color][vertex_numbers+(col_edge -1)*color_num_uint32 + first_color] = 1;
+							
+						}
+					}
+					//std::cout<<"SECOND SET "<<std::endl;
+					for(auto second_set_element = second_set.begin(); second_set_element !=second_set.end();second_set_element++){
+						for(auto child_conflict =  (node_list[*second_set_element]->Conflicts_in_LG).begin(); child_conflict != 
+						(node_list[*second_set_element]->Conflicts_in_LG).end(); ++child_conflict){
+								int col_edge = -1;
+								for(std::list<Edge_Simple>::iterator conflict_edge = edge_list[node_list[*second_set_element]->parent->No].begin();conflict_edge != edge_list[node_list[*second_set_element]->parent->No].end();++conflict_edge){
+									if((*conflict_edge).target == (*child_conflict)->No){
+										col_edge = (*conflict_edge).No;
+										break;
+									}
+								}
+								//mplAssert(col_edge!=-1);
+					// 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
+					// 			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
+					// first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + second_color<<std::endl;
+								dl_matrix[vertex_numbers * color_num_uint32+ starting_index + (uint32_t)(stitch_no*pow(color_num_uint32,2)) + \
+					first_color *color_num_uint32 + second_color][ vertex_numbers +(col_edge -1)*color_num_uint32 + second_color] = 1;
+						
+						}
+					}
+				}
 			}
-			//std::cout<<vertex_numbers * m_db->color_num() + 1 + starting_indexes[count] + i<<" "<<(*v)->No <<std::endl;
-			//dl_matrix[vertex_numbers * m_db->color_num() + starting_indexes[count] + i][(*v)->No-1] = 1;
-			dl_matrix[vertex_numbers * m_db->color_num() + starting_indexes[count] + i - 1][(*v)->No-1] = 1;
-			decode_mat.push_back(row_decoder);
 		}
+		//for each parent node, there are 9 * stitch_No stitch rows totally
+		starting_index += pow(m_db->color_num(),2) * (childs_num -1);
 	}
+	//std::cout<< "SECOND dl insert" << dancing_link_timer.format(6)<<std::endl;
+	//dancing_link_timer.start();
+	// if(starting_index != pow(m_db->color_num(),2)* stitch_count){
+	// 	std::cout<<"BUG FOUND!"<<starting_index<<pow(m_db->color_num(),2)* stitch_count<<std::endl;
+	// }
+	//mplAssert(starting_index == pow(m_db->color_num(),2)* stitch_count);
+	//solve dl with stitches
+	std::vector<int> selected_rows_by_dl2;
 
 	//print dl_matrix for debug
 #if RECORD > 1
@@ -2842,13 +2888,12 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 #endif
 
 	mc_solver(dl_matrix, results, deleted_cols, col_group, vertex_numbers, row_numbers, col_numbers);
-	std::vector<int8_t> color_results_wo_stitch (vertex_numbers);
+	std::vector<int> color_results_wo_stitch;
 	color_results_wo_stitch.assign(vertex_numbers,-1);
 	for (int i = 0; i <row_numbers ; i++)
 	{
 		if(results[i] != 0){
-			// if(i+1 > (int)vertex_numbers * m_db->color_num() +1){
-			// 	std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[i+1- vertex_numbers * m_db->color_num() -2];
+			// if the selected row indicates stitch row
 			if(i+1 > (int)vertex_numbers * m_db->color_num() ){
 				std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[i+1- vertex_numbers * m_db->color_num() -1];
 				for(std::vector<std::pair<uint32_t,uint32_t>>::iterator it = row_decoder.begin(); it != row_decoder.end(); ++it) {
