@@ -80,21 +80,6 @@ void SimpleMPL::run(int argc, char** argv)
 #endif
 	this->read_cmd(argc, argv);
 	this->read_gds();
-	// graph_type test_graph (2);
-	// std::pair<edge_descriptor, bool> e = add_edge(0,1,test_graph);
-	// mplAssert(e.second);
-	// boost::put(boost::edge_weight, test_graph, e.first, -1);
-	// typedef lac::Coloring<graph_type> coloring_solver_type;
-	// coloring_solver_type* pcs = create_coloring_solver(test_graph);
-	// double obj_value1 = (*pcs)();
-	// boost::graph_traits<graph_type>::vertex_iterator vi, vie;
-	// for (boost::tie(vi, vie) = vertices(test_graph); vi != vie; ++vi)
-	// {
-	// 	vertex_descriptor v = *vi;
-	// 	int8_t color = pcs->color(v);
-	// 	std::cout<<"LIWEI========== color is "<<(int)color<<std::endl;
-	// }
-	// std::cout<<"LIWEI ======, obj_value1 is "<<obj_value1<<std::endl;
 	this->solve();
 #ifdef _DGOUT
 	return;
@@ -185,7 +170,7 @@ void SimpleMPL::write_gds()
 	}
 }
 
-void SimpleMPL::writeJson(){
+void SimpleMPL::write_json(){
 	std::ofstream jsonFile;
 	char* tmp = const_cast<char *>(m_db->input_gds().c_str());
 	char* output_json =(char*)strcat(tmp,".json");
@@ -243,7 +228,7 @@ void SimpleMPL::writeJson(){
 } 
 
 
-void SimpleMPL::writeJson(graph_type const& sg,std::string graph_count,std::vector<int8_t>& Colors ){
+void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vector<int8_t>& Colors ){
 	std::ofstream jsonFile;
 	// char* tmp = const_cast<char *>(m_db->input_gds().c_str());
 	// char* tmp2 = (char*)strcat(tmp,graph_count);
@@ -352,7 +337,7 @@ void SimpleMPL::writeJson(graph_type const& sg,std::string graph_count,std::vect
 	jsonFile.close();
 } 
 
-void SimpleMPL::writeGraph(graph_type const& sg,std::string const filename, double& cost){
+void SimpleMPL::write_txt(graph_type const& sg,std::string const filename, double& cost){
 	std::ofstream out(("./graph/"+filename+"_"+std::to_string(cost)+".txt").c_str());
 	SimpleMPL::graph_type tmp_graph = sg;
 	out << num_vertices(tmp_graph)<<"\n";
@@ -376,18 +361,12 @@ void SimpleMPL::writeGraph(graph_type const& sg,std::string const filename, doub
 	}
 	out.close();
 }
-void SimpleMPL::outStat(){
+void SimpleMPL::out_stat(){
 	int TCE = 0;
 	int TSE = 0;
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"Now node size is "<<m_mAdjVertex.size()<<", dg size is "<<in_DG.size()<<std::endl;
-	#endif
     for (uint32_t i = 0; i != m_mAdjVertex.size(); i++)
     {
 		if(in_DG[i] == false) continue;
-		#ifdef DEBUG_LIWEI_DONE
-			std::cout<<"LIWEI: for DG node "<<i<<", there are "<<m_mAdjVertex[i].size()<<std::endl;
-		#endif
 		for(uint32_t j = 0; j != m_mAdjVertex[i].size(); j++)
 			{if(in_DG[m_mAdjVertex[i][j]] == false) continue;
 			TCE ++;}
@@ -446,20 +425,17 @@ void SimpleMPL::solve()
 		if (i == 0 || m_vCompId[m_vVertexOrder[i - 1]] != m_vCompId[m_vVertexOrder[i]])
 			vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
 	}
-	this->calBoundaries();
+	this->cal_boundaries();
 	this->setVddGnd(); //perhapes we should also consider pshape->getPointNum()==4
 	
 	clock_t begin = clock();
-	this->lgSimplification();
+	this->lg_simplification();
 
-	if (m_db->use_stitch()) //returns whether use stitch
+	if (m_db->use_stitch()) //if we use stitches, we need insert stitches through projection()
 	{
 
 		//GdsWriter writer;
-		//writer.write_Simplification(m_db->output_gds() + "_lgSimplification.gds", *m_db, m_vCompId, m_mAdjVertex, in_DG, isVDDGND, true);
-		#ifdef DEBUG_LIWEI_DONE
-			std::cout<<"LIWEI: projection starts"<<std::endl;
-		#endif
+		//writer.write_Simplification(m_db->output_gds() + "_lg_simplification.gds", *m_db, m_vCompId, m_mAdjVertex, in_DG, isVDDGND, true);
 		this->projection();		///< vBookmark has already been updated in projection()
 		
 		clock_t end = clock();
@@ -475,7 +451,7 @@ void SimpleMPL::solve()
 
 		
 		vdd_multi_comp.resize(m_db->vPatternBbox.size());
-		//this->dgSimplColoring(); 
+		//this->dg_simplification(); 
 		if (m_db->use_stitch())
 		{
 			GdsWriter writer;
@@ -545,8 +521,8 @@ void SimpleMPL::solve()
 	}
 
 #endif
-	this->outStat();
-	//this->writeJson();
+	this->out_stat();
+	//this->write_json();
 #ifdef DEBUG_NONINTEGERS
     mplPrint(kNONE, "vLP1NonInteger vLP1HalfInteger vLP2NonInteger vLP2HalfInteger vLPEndNonInteger vLPEndHalfInteger vLPNumIter\n"); 
     try 
@@ -574,7 +550,7 @@ void SimpleMPL::solve()
 #endif
 }
 
-void SimpleMPL::lgSimplification()
+void SimpleMPL::lg_simplification()
 {
 	std::vector<bool>().swap(in_DG);
 	std::vector<bool>().swap(articulation_vec);
@@ -589,15 +565,12 @@ void SimpleMPL::lgSimplification()
 		std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin() + vBookmark[comp_id];
 		std::vector<uint32_t>::iterator itEnd = (comp_id + 1 != m_comp_cnt) ? m_vVertexOrder.begin() + vBookmark[comp_id + 1] : m_vVertexOrder.end();
 		// projection on each component
-		this->lgSimplification(itBgn, itEnd, comp_id);
+		this->lg_simplification(itBgn, itEnd, comp_id);
 	}
 }
 
-void SimpleMPL::lgSimplification(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
+void SimpleMPL::lg_simplification(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id)
 {
-#ifdef DEBUG_LIWEI_DONE
-	std::cout << "Now in component " << comp_id << " projection.\n";
-#endif
 	(void)comp_id;
 	uint32_t pattern_cnt = itEnd - itBgn;
 	graph_type dg(pattern_cnt);
@@ -608,13 +581,7 @@ void SimpleMPL::lgSimplification(std::vector<uint32_t>::const_iterator itBgn, st
 	typedef lac::GraphSimplification<graph_type>   graph_simplification_type;
 	this->construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor, vdd_set, false);
 	uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
-#if LIWEI_BEFORE
-	simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
-#else
 	//simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
-#endif
-	
-
 	graph_simplification_type gs(dg, m_db->color_num());
 	
 	gs.set_isVDDGND(vdd_set);
@@ -622,11 +589,8 @@ void SimpleMPL::lgSimplification(std::vector<uint32_t>::const_iterator itBgn, st
 	std::vector<bool> projLocal(mGlobal2Local.size(), false);
 
 	std::vector<vertex_descriptor> all_articulations;
-
 	gs.get_articulations(all_articulations);
-#ifdef DEBUG_LIWEI_DONE
-	std::cout<<"LIWEI: articulations size is "<<all_articulations.size()<<", component number is "<<gs.num_component()<<std::endl;
-#endif
+
 	std::set<vertex_descriptor> temp_set(all_articulations.begin(), all_articulations.end());
 
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
@@ -647,7 +611,7 @@ void SimpleMPL::lgSimplification(std::vector<uint32_t>::const_iterator itBgn, st
 	}
 }
 
-void SimpleMPL::dgSimplColoring()
+void SimpleMPL::dg_simplification()
 {
 	std::vector<std::vector<uint32_t> > comp2subcomp(m_comp_cnt);
 	std::vector<std::map<vertex_descriptor, std::set<uint32_t> > > m_mArtiPoints(m_comp_cnt);
@@ -665,7 +629,7 @@ void SimpleMPL::dgSimplColoring()
 		std::map<vertex_descriptor, std::set<uint32_t> >& arti_point = m_mArtiPoints[comp_id];
 		// Simplification on each component
 
-		this->liweidgSimplColoring(itBgn, itEnd, comp_id, arti_point, comp_vertex);
+		this->dg_simplification(itBgn, itEnd, comp_id, arti_point, comp_vertex);
 	}
 #ifdef _DGOUT
 	return;
@@ -673,156 +637,8 @@ void SimpleMPL::dgSimplColoring()
 }
 
 
-/*
-for (std::vector<vertex_descriptor>::iterator it = sub_vSimpl2Orig.begin(); it != sub_vSimpl2Orig.end(); it++)
-{
-	// std::cout << "*it : " << *it << std::endl;
-	// std::cout << "vSimpl2Orig.at(*it) : " << vSimpl2Orig.at(*it) << std::endl;
-	vertex_descriptor curpid = mLocal2Global.at(vSimpl2Orig.at(*it));
-	// std::cout << curpid << std::endl;
-				
-	dgCompId[curpid] = globalCompId;
-	if (isVDDGND[curpid])
-	{
-		vdd_multi_comp[curpid].push_back(globalCompId);
-	}
-}
-globalCompId++;
-*/
 
-void SimpleMPL::dgSimplColoring(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::map<vertex_descriptor, std::set<uint32_t> >& m_ArtiPoint, std::vector<std::vector<vertex_descriptor> >& m_CompVertex)
-{
-	(void)m_ArtiPoint;
-	(void)m_CompVertex;
-	std::cout << "\n\n\n**************************************************************\n";
-	std::cout << "Debug| dgSimplification comp " << comp_id << std::endl;
-	uint32_t pattern_cnt = itEnd - itBgn;
-	graph_type dg(pattern_cnt);
-	std::vector<int8_t> vColor(pattern_cnt, -1);
-	std::map<uint32_t, uint32_t> mGlobal2Local;
-	std::set<vertex_descriptor> vdd_set;
-
-	typedef lac::GraphSimplification<graph_type>   graph_simplification_type;
-	this->construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor, vdd_set, false);
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"LIWEI: DG construct complete"<<std::endl;
-	#endif
-	uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
-	simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
-
-	graph_simplification_type gs(dg, m_db->color_num());
-	gs.precolor(vColor.begin(), vColor.end());
-
-	std::vector<uint32_t> mLocal2Global(mGlobal2Local.size());
-	for (std::map<uint32_t, uint32_t>::iterator it = mGlobal2Local.begin(); it != mGlobal2Local.end(); it++)
-		mLocal2Global[it->second] = it->first;
-
-	gs.set_isVDDGND(vdd_set);
-	gs.simplify(simplify_strategy);
-
-	///< big component : input big component (the only several big components in original input gds file).
-	///< small component : small component divided from big component after conducting IVR and biconnected decomposition, may contains one or two VDDGNDs, is corresponding one row in big component
-	///< sub small component : sub small component divided from small component after only conducting biconnected decomposition, divide one row into sevel small sub components
-	
-	std::vector<std::vector<int8_t> > big_comp_color(gs.num_component());
-	std::vector<std::vector<vertex_descriptor> > mSmall2Big (gs.num_component());
-	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
-
-	for (uint32_t small_comp_id = 0; small_comp_id < gs.num_component(); ++small_comp_id)
-	{
-#ifdef DEBUG_LIWEI_DONE
-		std::cout << "\n==================================================\n";
-		std::cout << "Debug| dgSimplification sub_comp " << small_comp_id << std::endl;
-#endif
-		graph_type small_g;
-		
-		std::vector<int8_t>& small_comp_color = big_comp_color[small_comp_id];	///< used to store coloring results of current small component
-		(void) small_comp_color;
-		std::vector<vertex_descriptor>& vSimplSmall2OriBig = mSmall2Big[small_comp_id];		///< used to store the simplificaiton mapping information from current small component to original big component
-
-		gs.simplified_graph_component(small_comp_id, small_g, vSimplSmall2OriBig);
-
-		uint32_t temp = 0;
-		std::set<vertex_descriptor> small_vdd_set;
-		std::vector<int8_t> small_vColor(num_vertices(small_g), -1);
-		///< construct small vColor
-		///< also get vdd_set for current sub component
-		for (std::vector<vertex_descriptor>::iterator it = vSimplSmall2OriBig.begin(); it != vSimplSmall2OriBig.end(); it++, temp++)
-		{
-			if (gs.whether_VDDGND(*it))
-				small_vdd_set.insert(temp);
-			small_vColor[temp] = vColor[*it];
-		}
-
-		///< ***************************************************///
-		///< Now simplify current small component
-		///< **************************************************///
-
-		graph_simplification_type simplified_small_g(small_g, m_db->color_num());	///< construct small graph simplification object
-		///< merge VDD nodes in sg, and conduct biconnected devision
-		simplified_small_g.precolor(small_vColor.begin(), small_vColor.end());
-		simplified_small_g.mergeVDD(small_vdd_set);
-		simplified_small_g.simplify(graph_simplification_type::BICONNECTED_COMPONENT);
-		std::vector<std::vector<int8_t> > small_comp_color_2 (simplified_small_g.num_component());	///< used to store the coloring results of sub small components, and recover small_comp_color;
-		std::vector<std::vector<vertex_descriptor> > sub_small2small(simplified_small_g.num_component());	///< store the mapping information from sub small components to current small component
-		
-		double acc_obj_value = 0;
-
-		for (uint32_t ss_comp_id = 0; ss_comp_id < simplified_small_g.num_component(); ++ss_comp_id)
-		{
-#ifdef DEBUG_LIWEI_DONE
-			std::cout << "\n===============================\n";
-			std::cout << "Debug| dgSimplification ss_comp " << ss_comp_id << std::endl;
-			std::cout << "Debug| dgSimplification with nodes : ";
-#endif
-			graph_type sub_small_simpl_sg;
-			
-			std::vector<vertex_descriptor>& sub_vSimpl2OrigSmall = sub_small2small[ss_comp_id];
-			simplified_small_g.simplified_graph_component(ss_comp_id, sub_small_simpl_sg, sub_vSimpl2OrigSmall);
-			
-			std::vector<int8_t>& sub_small_comp_color = small_comp_color_2[ss_comp_id];	///< used to store 
-			sub_small_comp_color.assign(num_vertices(sub_small_simpl_sg), -1);
-
-			typedef lac::Coloring<graph_type> coloring_solver_type;
-			coloring_solver_type* pcs = create_coloring_solver(sub_small_simpl_sg);
-
-			boost::graph_traits<graph_type>::vertex_iterator vi, vie;
-			for (boost::tie(vi, vie) = vertices(sub_small_simpl_sg); vi != vie; vi++)
-			{
-				vertex_descriptor v = *vi;
-				int8_t color = small_vColor[sub_vSimpl2OrigSmall[v]];
-				if (color >= 0 && color < m_db->color_num())
-				{
-					pcs->precolor(v, color);
-					sub_small_comp_color[v] = color; ///< necessary for merge_K4 coloring
-				}
-			}
-			double obj_value1 = (*pcs)();
-			double obj_value2 = std::numeric_limits<double>::max();
-#ifdef DEBUG_NONINTEGERS
-			if (obj_value1 >= 1 && boost::num_vertices(sub_small_simpl_sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::SDP_CSDP) && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // merge K4 is not performed
-				obj_value2 = merge_K4_coloring(sub_small_simpl_sg, sub_small_comp_color);
-#endif
-			if (obj_value1 < obj_value2)
-			{
-				acc_obj_value += obj_value1;
-				///< collect  coloring results from simplified graph
-				for (boost::tie(vi, vie) = vertices(sub_small_simpl_sg); vi != vie; vi++)
-				{
-					vertex_descriptor v = *vi;
-					int8_t color = pcs->color(v);
-					mplAssert(color >= 0 && color < m_db->color_num());
-					sub_small_comp_color[v] = color;
-				}
-			}
-			else // no need to update sub_small_comp_color, since it has already been updated by merge_K4_coloring
-				acc_obj_value += obj_value2;
-		}
-	}
-}
-
-
-void SimpleMPL::liweidgSimplColoring(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::map<vertex_descriptor, std::set<uint32_t> >& m_ArtiPoint, std::vector<std::vector<vertex_descriptor> >& m_CompVertex)
+void SimpleMPL::dg_simplification(std::vector<uint32_t>::const_iterator itBgn, std::vector<uint32_t>::const_iterator itEnd, uint32_t comp_id, std::map<vertex_descriptor, std::set<uint32_t> >& m_ArtiPoint, std::vector<std::vector<vertex_descriptor> >& m_CompVertex)
 {
 	(void)m_ArtiPoint;
 	(void)m_CompVertex;
@@ -836,9 +652,6 @@ void SimpleMPL::liweidgSimplColoring(std::vector<uint32_t>::const_iterator itBgn
 
 	typedef lac::GraphSimplification<graph_type>   graph_simplification_type;
 	this->construct_component_graph(itBgn, pattern_cnt, dg, mGlobal2Local, vColor, vdd_set, false);
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"LIWEI: DG construct complete"<<std::endl;
-	#endif
 	uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
 	simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 
@@ -859,10 +672,6 @@ void SimpleMPL::liweidgSimplColoring(std::vector<uint32_t>::const_iterator itBgn
 	std::vector<std::vector<int8_t> > big_comp_color(gs.num_component());
 	std::vector<std::vector<vertex_descriptor> > mSmall2Big (gs.num_component());
 	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
-	#ifdef DEBUG_LIWEI_DONE
-		if(pattern_cnt > vHiddenVertices.size())
-			std::cout << "Debug| dgSimplification comp " << comp_id << ", with left vertex number "<< pattern_cnt-vHiddenVertices.size()<<", subcomponent number "<<gs.num_component()<<std::endl;
-	#endif
 	for (uint32_t small_comp_id = 0; small_comp_id < gs.num_component(); ++small_comp_id)
 	{
 
@@ -876,9 +685,6 @@ void SimpleMPL::liweidgSimplColoring(std::vector<uint32_t>::const_iterator itBgn
 
 		std::set<vertex_descriptor> small_vdd_set;
 		std::vector<int8_t> small_vColor(num_vertices(small_g), -1);
-#ifdef DEBUG_LIWEI_DONE
-		std::cout << "Debug| dgSimplification sub_comp " << small_comp_id << " with vertices "<<num_vertices(small_g)<< std::endl;
-#endif
 	}
 
 }
@@ -948,14 +754,7 @@ void SimpleMPL::setVddGnd()
 	isVDDGND.assign(vertex_num, false);
 	for (uint32_t i = 0; i < vertex_num; i++)
 	{
-#if LIWEI_BEFORE
-		if (boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) >= threshold)
-		{
-			isVDDGND[i] = true;
-			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
-		}
-#else
-		if (isLongEnough(m_db->vPatternBbox[i]))
+		if (is_long_enough(m_db->vPatternBbox[i]))
 		{
 			isVDDGND[i] = true;
 			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
@@ -964,19 +763,11 @@ void SimpleMPL::setVddGnd()
 			isVDDGND[i] = false;
 			std::cout<<"dirty coding for oracle cases"<<std::endl;
 		}
-#endif
-#if 0
-		else
-		{
-			coordinate_difference width = boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL);
-			coordinate_difference height = boost::polygon::delta(*m_db->vPatternBbox[i], gtl::VERTICAL);
-		}
-#endif
 	}
 	return;
 }
 
-void SimpleMPL::calBoundaries(){
+void SimpleMPL::cal_boundaries(){
 	std::vector<coordinate_type>().swap(boundaries);
 	mplAssert(boundaries.empty());
 	uint32_t vertex_num = m_db->vPatternBbox.size();
@@ -995,13 +786,6 @@ void SimpleMPL::calBoundaries(){
 	boundaries.push_back(tmp_bound[1]);
 	boundaries.push_back(tmp_bound[2]);
 	boundaries.push_back(tmp_bound[3]);
-#if LIWEI_DEBUG
-	std::cout<<"boundries of layout is calculated and the value is "<<boundaries[0]<<','\
-																	<<boundaries[1]<<','\
-																	<<boundaries[2]<<','\
-																	<<boundaries[3]<<','\
-	<<std::endl;
-#endif
 	return;
 }
 
@@ -1012,14 +796,12 @@ void SimpleMPL::projection()
 	std::vector<uint32_t> Poly_Rect_begin;
     if(is_Rec)
         {
-			std::cout<<"LIWEI: RECTANGLE INPUT"<<std::endl;
 			for (uint32_t i = 0; i < vertex_num; i++)
 				Poly_Rect_begin.push_back(i);
 		}
     else
 	{
 		Poly_Rect_begin = m_db->PolyRectBgnLoc();				///< original polygons mapping to rectangles
-		std::cout<<"LIWEI: POLYGON INPUT"<<std::endl;
 	}
     
 
@@ -1040,7 +822,6 @@ void SimpleMPL::projection()
 	uint32_t new_polygon_id = -1;						///< new polygon id
 	uint32_t new_rectangle_id = -1;						///< new rectangle id
 	uint32_t stitch_edge_number = 0;    
-	//LIWEI: projection data preparetion finished"<<std::endl;
 #ifdef _OPENMP
 #pragma omp parallel num_threads(m_db->thread_num()) 
 #endif
@@ -1077,28 +858,15 @@ void SimpleMPL::projection()
 			{
 				rectangle_type rect(*rect_vec[j]);
 				std::vector<rectangle_pointer_type> split;
-				splitRectangle(rect, split, poss_nei_vec);
+				split_rectangle(rect, split, poss_nei_vec);
 				for (uint32_t i = 0; i < split.size(); i++)
 					rect_split.push_back(std::make_pair(split[i], rect.pattern_id()));
 				stitch_edge_number += split.size() - 1;
-#if DEBUG_LIWEI_DONE
-				if(split.size()>1){
-					std::cout<<"rect "<<rect.pattern_id()<<" add stitch :";
-					for (uint32_t i = 0; i < split.size(); i++)
-					{	
-						rectangle_pointer_type pRect = split[i];
-						std::cout<<gtl::xl(*pRect)<<" ";
-					}
-						
-					std::cout<<std::endl;
-				}
-				
-#endif
-			} ///< for
+			} 
 
 				std::vector<uint32_t> new_polygon_id_list;
 				// reconstruct polygons, also generate stitch relationships
-				liweireconstruct_polygon(new_polygon_id, new_polygon_id_list, rect_split,pid);
+				reconstruct_polygon(new_polygon_id, new_polygon_id_list, rect_split,pid);
 				mplAssert(new_polygon_id_list.size() == rect_split.size());
 #ifdef _OPENMP
 #pragma omp ordered
@@ -1133,7 +901,6 @@ void SimpleMPL::projection()
 		} ///< if, stitch generation core
 		else
 		{
-			//LIWEI: NON-AVALIBLE vertex are being handled "<<v<<std::endl;
 #ifdef _OPENMP
 #pragma omp ordered
 #endif
@@ -1163,11 +930,7 @@ void SimpleMPL::projection()
 	} ///< for all vertices
 
 	m_db->refresh(new_rect_vec, new_Rect2ParentPoly);
-
-#ifdef DEBUG_LIWEI_DONE
-	std::cout<<"LIWEI: refresh done"<<std::endl;
-#endif
-	updateConflictRelation(); 
+	update_conflict_relation(); 
 
 
 	std::vector<uint32_t>().swap(m_vCompId);
@@ -1187,12 +950,7 @@ void SimpleMPL::projection()
 	return;
 }
 
-void SimpleMPL::printVector(std::vector<uint32_t>& vector){
-	for(uint32_t i = 0; i<vector.size();i++){
-		std::cout<<vector[i]<<" ";
-	}
-}
-void SimpleMPL::updateConflictRelation()
+void SimpleMPL::update_conflict_relation()
 {
 	// now update adjacency list, we still need original adjacency list.
 	// here we use set to remove duplicated neighboring polygons
@@ -1202,18 +960,6 @@ void SimpleMPL::updateConflictRelation()
 	uint32_t edge_num = 0;
 	uint32_t dg_conflict = 0;
 	uint32_t dg_illegal_conflict = 0;
-	/*
-	// generate new index information
-	std::vector<uint32_t> new_poly_rect_begin = m_db->PolyRectBgnLoc();
-	std::vector<uint32_t> new_poly_rect_end;
-	
-	mplAssert(vertex_num == m_db->vPatternBbox.size());
-
-	new_poly_rect_end.resize(vertex_num);
-	for (uint32_t i = 0; i < vertex_num - 1; i++)
-		new_poly_rect_end[i] = new_poly_rect_begin[i + 1] - 1;
-	new_poly_rect_end[vertex_num - 1] = new_rect_vec.size() - 1;
-	*/
 
 	//update in_DG
 	std::vector<bool> tmp_in_DG;
@@ -1270,62 +1016,16 @@ void SimpleMPL::updateConflictRelation()
 		vAdjVertex.swap(vAdjVertex); // shrink to fit, save memory 
 		edge_num += vAdjVertex.size();
 	}
-	std::cout << "After stitch insertion, it has " << dg_conflict << " dg_conflict. and dg_illegal_conflict\n"<<dg_illegal_conflict;
 
 	///< update m_mAdjVertex
 	std::vector<std::vector<uint32_t> >().swap(m_mAdjVertex);
 	m_mAdjVertex.resize(new_mAdjVertex.size());
 	for (uint32_t i = 0; i < new_mAdjVertex.size(); i++)
 		m_mAdjVertex[i].insert(m_mAdjVertex[i].end(), new_mAdjVertex[i].begin(), new_mAdjVertex[i].end());
-
-	/*
-	// traverse all the original polygons to get the original neighbor list
-	for (uint32_t i = 0, ie = m_mAdjVertex.size(); i < ie; i++)
-	{
-		// list all the possible polygon neighbors
-		std::vector<uint32_t> poss_nei;
-		bool split_flag = false;
-		for (uint32_t j = 0, je = m_mAdjVertex[i].size(); j < je; j++)
-		{
-			uint32_t nei_id = m_mAdjVertex[i][j];
-			for (uint32_t it = 0; it < ori2new_polygon[nei_id].size(); it++)
-				poss_nei.push_back(ori2new_polygon[nei_id][it]);
-		}
-		// traverse all the newly-generated nodes in polygon i
-		for (std::vector<uint32_t>::iterator it = ori2new_polygon[i].begin(); it != ori2new_polygon[i].end(); it++)
-		{
-			uint32_t start_idx = new_poly_rect_begin[*it];
-			uint32_t end_idx = new_poly_rect_end[*it];
-			for (std::vector<uint32_t>::iterator nei_poly = poss_nei.begin(); nei_poly != poss_nei.end(); nei_poly++)
-			{
-				if (*nei_poly > *it)
-					continue;
-				for (uint32_t now_rect = start_idx; now_rect <= end_idx; now_rect++)
-				{
-					uint32_t nei_start_idx = new_poly_rect_begin[*nei_poly];
-					uint32_t nei_end_idx = new_poly_rect_end[*nei_poly];
-					// traverse all rectangles in current newly-generated neighbor polygon
-					for (uint32_t nei_rect = nei_start_idx; nei_rect <= nei_end_idx; nei_rect++)
-					{
-						uint32_t nei_rect_pid = new_rect_vec[nei_rect]->pattern_id();
-						coordinate_difference distance = boost::geometry::distance(*new_rect_vec[now_rect], *new_rect_vec[nei_rect_pid]);
-						if (distance < m_db->coloring_distance)
-						{
-							new_mAdjVertex[*it].insert(*nei_poly);
-							new_mAdjVertex[*nei_poly].insert(*it);
-							break;
-						}// if
-					} // for
-				} // for
-			} // for
-		} // for
-		
-	} // for
-*/
 }
 
 
-void SimpleMPL::findConflictRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& conflict_rects,uint32_t current_poly_id){
+void SimpleMPL::find_conflict_rects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& conflict_rects,uint32_t current_poly_id){
 	const std::vector<rectangle_pointer_type>& vPolyRectPattern = m_db->polyrect_patterns();
 	const std::vector<uint32_t>& vPolyRectBeginId = m_db->PolyRectBgnLoc();
 	uint32_t num_polyrects = vPolyRectPattern.size();
@@ -1347,7 +1047,7 @@ void SimpleMPL::findConflictRects(rectangle_pointer_type& prec, std::vector<rect
 	}
 }
 
-void SimpleMPL::findTouchRects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& touch_rects,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list){
+void SimpleMPL::find_touch_rects(rectangle_pointer_type& prec, std::vector<rectangle_pointer_type>& touch_rects,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list){
 	for (uint32_t index = 0 ; index < rect_list.size(); index++)
 	{
 		if(rect_list[index].first == prec) continue;
@@ -1355,7 +1055,7 @@ void SimpleMPL::findTouchRects(rectangle_pointer_type& prec, std::vector<rectang
 	}	
 }
 
-bool SimpleMPL::isLongEnough(rectangle_pointer_type& rec){
+bool SimpleMPL::is_long_enough(rectangle_pointer_type& rec){
 		if (boost::polygon::delta(*rec, gtl::HORIZONTAL) >= 0.64*(boundaries[1]-boundaries[0])||\
 		boost::polygon::delta(*rec, gtl::VERTICAL) >= 0.64*(boundaries[3]-boundaries[2]))
 			return true;
@@ -1368,7 +1068,7 @@ bool SimpleMPL::isLongEnough(rectangle_pointer_type& rec){
 // 1 | 8 | 2
 // __|___|__
 // 4 | 0 | 5
-uint32_t SimpleMPL::box2BoxDirection(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2){
+uint32_t SimpleMPL::box2box_direction(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2){
 	coordinate_difference xl1 = gtl::xl(*(prec1));
 	coordinate_difference xl2 = gtl::xl(*(prec2));
 	coordinate_difference xh1 = gtl::xh(*(prec1));
@@ -1393,8 +1093,8 @@ uint32_t SimpleMPL::box2BoxDirection(rectangle_pointer_type& prec1,rectangle_poi
 }
 
 //TODO: FINISH this function
-bool SimpleMPL::bIsBoundSlice(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2,std::vector<rectangle_pointer_type>& touch_set1){
-	uint32_t direction = box2BoxDirection(prec1,prec2);
+bool SimpleMPL::is_boundslice(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2,std::vector<rectangle_pointer_type>& touch_set1){
+	uint32_t direction = box2box_direction(prec1,prec2);
 	if(direction > 3)	return false;
 	bool isHor = (1==direction || 2==direction);
 	// Step 1: determine boundary of prec1 & prec2
@@ -1413,7 +1113,7 @@ bool SimpleMPL::bIsBoundSlice(rectangle_pointer_type& prec1,rectangle_pointer_ty
 	return true;
 }
 
-bool SimpleMPL::canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t current_poly_id){
+bool SimpleMPL::can_intro_stitches(rectangle_pointer_type& prec1,rectangle_pointer_type& prec2,std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t current_poly_id){
 	if(m_db->color_num() <= 1) return false;
 	if(m_db->color_num() == 2)
 	{
@@ -1425,28 +1125,25 @@ bool SimpleMPL::canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_t
 	std::vector<rectangle_pointer_type> vID2;
 	std::vector<rectangle_pointer_type> vTouch1;
 	std::vector<rectangle_pointer_type> vTouch2;
-	findConflictRects(prec1,vID1,current_poly_id);
-	findConflictRects(prec2,vID2,current_poly_id);
-	findTouchRects(prec1,vTouch1,rect_list);
-	findTouchRects(prec2,vTouch2,rect_list);
-
-	//std::cout<<"LIWEI : find conflicts size "<<vID1.size()<<" "<<vID2.size()<<std::endl;
-
+	find_conflict_rects(prec1,vID1,current_poly_id);
+	find_conflict_rects(prec2,vID2,current_poly_id);
+	find_touch_rects(prec1,vTouch1,rect_list);
+	find_touch_rects(prec2,vTouch2,rect_list);
 
 	//remove the stitches on vdd
-  	if (isLongEnough(prec1) || isLongEnough(prec2)) {
-		uint32_t direction = box2BoxDirection(prec1,prec2);
+  	if (is_long_enough(prec1) || is_long_enough(prec2)) {
+		uint32_t direction = box2box_direction(prec1,prec2);
 		if(1==direction || 2== direction) return false;
 	  }
 	//remove boundslice
 	coordinate_difference threshold = m_db->coloring_distance / (m_db->color_num() + 2 );
 	if((gtl::xh(*prec1) - gtl::xl(*prec1)) < threshold || (gtl::yh(*prec1) - gtl::yl(*prec1))< threshold)
 	{
-		if (true == bIsBoundSlice(prec1, prec2,vTouch1)) return false;
+		if (true == is_boundslice(prec1, prec2,vTouch1)) return false;
 	}
 	if(gtl::xh(*prec2) - gtl::xl(*prec2) < threshold || gtl::yh(*prec2) - gtl::yl(*prec2) < threshold)
 	{
-		if (true == bIsBoundSlice(prec2, prec1,vTouch2)) return false;
+		if (true == is_boundslice(prec2, prec1,vTouch2)) return false;
 	}
 
 
@@ -1459,8 +1156,8 @@ bool SimpleMPL::canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_t
 		for(auto touch_of_rec2 = vTouch2.begin(); touch_of_rec2 != vTouch2.end(); touch_of_rec2 ++ ){
 			if(*touch_of_rec2 == prec1)	continue;
 			if(*touch_of_rec1 != *touch_of_rec2)	continue;
-			uint32_t direction1 = box2BoxDirection(prec1,*touch_of_rec1);
-			uint32_t direction2 = box2BoxDirection(prec1,prec2);
+			uint32_t direction1 = box2box_direction(prec1,*touch_of_rec1);
+			uint32_t direction2 = box2box_direction(prec1,prec2);
 			if (direction1 != direction2) return false;
 		}		
 	}
@@ -1482,13 +1179,11 @@ bool SimpleMPL::canIntroStitch(rectangle_pointer_type& prec1,rectangle_pointer_t
 		if (vitr == vID1.end()) bFind2 = true;
 	}
 	if (bFind1 || bFind2) return true;
-	//LIWEI: bFind1 || bFind2 changes to bFind1 && bFind2, since I think each box should have their own special adj boxes
-	//results show that this change is too strict that conflict number increases while 
 	return false;	
 
 }
 
-void SimpleMPL::liweireconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, 
+void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, 
 std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t current_poly_id)
 {
 	Graph G(rect_list.size());
@@ -1506,16 +1201,9 @@ std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t c
 		for(uint32_t j=i+1;j<rect_list.size();j++){
 			rectangle_pointer_type prec2 = rect_list[j].first;
 			coordinate_difference distance = boost::geometry::distance(*prec1, *prec2);
-			#ifdef DEBUG_LIWEI_DONE
-				std::cout<<"LIWEI: distance between "<<i<<" and "<<j<<" is "<<distance<<std::endl;
-			#endif
-			
 			if(distance > 0) continue;
-			bool canStitch = canIntroStitch(prec1,prec2,rect_list, current_poly_id);
+			bool canStitch = can_intro_stitches(prec1,prec2,rect_list, current_poly_id);
 			if(canStitch){
-				#ifdef DEBUG_LIWEI_DONE
-					std::cout<<"One stitsh found successfully"<<std::endl;
-				#endif
 				stitchCount ++;
 				rec_stitch_list[i].push_back(j);
 				rec_stitch_list[j].push_back(i);//if two recs with stitch relations locate in same poly, and warning should be arised
@@ -1524,9 +1212,6 @@ std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t c
 			add_edge(i, j, G);
 		}
 	}
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<new_polygon_id_list.size()<<" "<<num_vertices(G)<<", Graph build done"<<std::endl;
-	#endif
 
 	mplAssert(new_polygon_id_list.size() == num_vertices(G));
   	int component_num = connected_components(G, &new_polygon_id_list[0]);
@@ -1588,93 +1273,9 @@ std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list, uint32_t c
 
 	
 }	
-void SimpleMPL::reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list)
-{
-	std::vector<std::vector<uint32_t> > stitch_list;
-	uint32_t start = polygon_id + 1;
-	std::vector<std::pair<rectangle_pointer_type, uint32_t> > rect_temp;
-	std::vector<uint32_t> new_polygon_id_temp;
 
-	uint32_t rect_list_size = rect_list.size();
-	std::vector<bool> visited(rect_list_size, false);
 
-	std::vector<uint32_t>().swap(new_polygon_id_list);
-	new_polygon_id_list.assign(rect_list_size, std::numeric_limits<uint32_t>::max());
-
-	// traverse all the rectangles to generate new IDs
-	for (uint32_t i = 0; i< rect_list_size; i++)
-	{
-		if (new_polygon_id_list[i] == std::numeric_limits<uint32_t>::max())
-		{
-			if(visited[i])
-				std::cout<<"VISITED POLYGON BUT ID IS MAX"<<i<<std::endl;
-			polygon_id += 1; //TODO: here maybe a bug, += 1 should be behind
-			new_polygon_id_list[i] = polygon_id;
-		}
-		visited[i] = true;
-		for (uint32_t j = i + 1; j < rect_list_size; j++)
-		{
-			if (visited[j] == false && rect_list[i].second != rect_list[j].second && boost::geometry::distance(*(rect_list[i].first), *(rect_list[j].first)) == 0)
-			{
-				visited[j] = true;
-				new_polygon_id_list[j] = new_polygon_id_list[i];
-			}
-		}
-	}
-
-#ifdef DEBUG_LIWEI_DONE
-	for (uint32_t i = 0; i< rect_list_size; i++){
-		for (uint32_t j = i + 1; j < rect_list_size; j++)
-		{
-			if (rect_list[i].second != rect_list[j].second && boost::geometry::distance(*(rect_list[i].first), *(rect_list[j].first)) == 0)
-			{
-				if(new_polygon_id_list[j] != new_polygon_id_list[i]){
-					std::cout<<"ERROR: they should belong to same polygon: "<<rect_list[i].second<<" "<<rect_list[j].second<<std::endl;
-					rectangle_pointer_type const & pPattern1 = m_db->polyrect_patterns()[rect_list[i].second];
-					rectangle_pointer_type const & pPattern2 = m_db->polyrect_patterns()[rect_list[j].second];
-					coordinate_type xl1 = gtl::xl(*pPattern1);
-					coordinate_type yl1 = gtl::yl(*pPattern1);
-					coordinate_type xl2 = gtl::xl(*pPattern2);
-					coordinate_type yl2 = gtl::yl(*pPattern2);
-					std::cout<<"ERROR: the x,y value are "<<xl1<<" "<<yl1<<" "<<xl2<<" "<<yl2<<std::endl;
-			
-				}
-			}
-		}
-	}
-#endif
-
-	// for rectangles in the same original rectangle, we need to introduce a stitch between them, and record the stitch relationships.
-	stitch_list.resize(polygon_id - start + 1);
-	for (uint32_t i = 0; i < rect_list.size(); i++)
-	{
-		for (uint32_t j = i + 1; j < rect_list.size(); j++)
-		{
-			if (rect_list[i].second == rect_list[j].second && boost::geometry::distance(*(rect_list[i].first), *(rect_list[j].first)) == 0)
-			{
-				stitch_list[new_polygon_id_list[i] - start].push_back(new_polygon_id_list[j]);
-				stitch_list[new_polygon_id_list[j] - start].push_back(new_polygon_id_list[i]);
-			}
-		}
-	}
-	// rectangles in the same polygon should be abutting
-	for (uint32_t i = start, ie = polygon_id; i <= ie; ++i)
-	{
-		for (uint32_t j = 0; j < new_polygon_id_list.size(); ++j)
-		{
-			if (new_polygon_id_list[j] == i)
-			{
-				new_polygon_id_temp.push_back(i);
-				rect_temp.push_back(rect_list[j]);
-			}
-		}
-	}
-	rect_list.swap(rect_temp);
-	new_polygon_id_list.swap(new_polygon_id_temp);
-	StitchRelation.insert(StitchRelation.end(), stitch_list.begin(), stitch_list.end());
-}
-
-void SimpleMPL::splitRectangle(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec)
+void SimpleMPL::split_rectangle(rectangle_type & pRect, std::vector<rectangle_pointer_type>& split, std::vector<rectangle_pointer_type> nei_Vec)
 {
 	bool hor = gtl::delta(pRect, gtl::HORIZONTAL) >= gtl::delta(pRect, gtl::VERTICAL);
 	std::vector<coordinate_type> vstitches;
@@ -1705,16 +1306,9 @@ void SimpleMPL::splitRectangle(rectangle_type & pRect, std::vector<rectangle_poi
 		if (distance >= m_db->coloring_distance) continue;
 		rectangle_type temp(*(*it));
 		gtl::bloat(temp, gtl::HORIZONTAL, m_db->coloring_distance);
-		gtl::bloat(temp, gtl::VERTICAL, m_db->coloring_distance);
-		
+		gtl::bloat(temp, gtl::VERTICAL, m_db->coloring_distance);		
 		boost::polygon::intersect(temp, pRect, true);
-		
-#ifdef DEBUG_LIWEI_DONE
 		vInterSect.push_back(temp);
-#else
-		vInterSect.push_back(temp);
-#endif 
-
 		if (hor)
 		{
 			vset.insert(gtl::xl(temp));
@@ -1731,7 +1325,7 @@ void SimpleMPL::splitRectangle(rectangle_type & pRect, std::vector<rectangle_poi
 		vPossibleStitches.push_back(*it);
 	std::sort(vPossibleStitches.begin(), vPossibleStitches.end());
 
-	GenerateStitchPosition(pRect, vInterSect, vPossibleStitches, vstitches);
+	generate_stitch_position(pRect, vInterSect, vPossibleStitches, vstitches);
 
 #ifdef STITCH_FILTER
 	// check the stitch positions' legalities
@@ -1794,7 +1388,7 @@ void SimpleMPL::splitRectangle(rectangle_type & pRect, std::vector<rectangle_poi
 	return;
 }
 
-void SimpleMPL::GenerateStitchPosition(const rectangle_type pRect, std::vector<rectangle_type> vInterSect,
+void SimpleMPL::generate_stitch_position(const rectangle_type pRect, std::vector<rectangle_type> vInterSect,
 	std::vector<coordinate_type>& vPossibleStitches, std::vector<coordinate_type>& vstitches)
 {
 	bool ishor = gtl::delta(pRect, gtl::HORIZONTAL) >= gtl::delta(pRect, gtl::VERTICAL);
@@ -1868,9 +1462,6 @@ void SimpleMPL::GenerateStitchPosition(const rectangle_type pRect, std::vector<r
 		}
 		else if (pos1 == vStages.size() - 3)
 		{
-			#ifdef DEBUG_LIWEI_DONE
-				//std::cout<<"i is"<<i<<",vzeroids are "<< vzeroids << ", vStage is"<< vStages<<std::endl;
-			#endif
 			mplAssert(i == vzeroids.size() - 2);
 			bool bFind = true;
 			uint32_t zsize = vzeroids.size();
@@ -2048,11 +1639,6 @@ uint32_t SimpleMPL::construct_graph_from_distance(uint32_t vertex_num)
         // parallel with omp reduction here 
         edge_num += vAdjVertex.size();
     }
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"number pf Edges with length zero are "<<zero_len_edge_num/2<<", m_db->coloring_distance is"<<m_db->coloring_distance<<", distance_value_count is "<< std::endl;
-		for (std::vector<uint32_t>::iterator i = distance_value_count.begin(); i != distance_value_count.end(); ++i)
-        	std::cout << *i << ' ';
-	#endif
     return edge_num;
 }
 
@@ -2196,9 +1782,6 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 			}
 		}
 	}
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"For component "<<comp_id<<", there are "<<component_count<<" vertices in total."<<std::endl;
-	#endif
 }
 
 ///// helper functions for SimpleMPL::solve_component
@@ -2252,12 +1835,6 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 	in_graph.assign(num_vertices(tmp_graph),true);
 	std::stack<vertex_descriptor> S;
 	bool debug = false;
-	#ifdef DEBUG_LIWEI_DONE
-		if(num_vertices(tmp_graph) == 5){
-			debug = true;
-			std::cout<<"LIWEI: fast color the 2 component!"<<std::endl;
-		}
-	#endif
 	//std::cout<<"FST: graph enter done."<<std::endl;
 	while(in_loop){
 		in_loop = false; 
@@ -2273,8 +1850,6 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 			int32_t conflictPreVDD_degree = 0;
 			int32_t stitchPreVDD_degree = 0;
 			//TODO: waiting for the response of LImbo
-			if(debug)
-				std::cout<<"LIWEI: now processing "<<v<<std::endl;
 			boost::graph_traits<graph_type>::adjacency_iterator vi2, vie2,next2;
 			boost::tie(vi2, vie2) = boost::adjacent_vertices(v, tmp_graph);
 			for (next2 = vi2; vi2 != vie2; vi2 = next2)
@@ -2285,7 +1860,7 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 				if(in_graph[int(v2)] == false)
 					continue;
 				if(debug)
-					std::cout<<"liwei: PROCESS ADJ VERTEX "<<v2<<std::endl;
+					std::cout<<"debug: PROCESS ADJ VERTEX "<<v2<<std::endl;
 				// skip stitch edges 
 
 				std::pair<edge_descriptor, bool> e12 = boost::edge(v, v2, tmp_graph);
@@ -2295,7 +1870,7 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 						continue;}
 				conflictPreVDD_degree += 1;
 				if(debug)
-					std::cout<<"liwei: PROCESS ADJ VERTEX DONE"<<v2<<std::endl;
+					std::cout<<"debug: PROCESS ADJ VERTEX DONE"<<v2<<std::endl;
 			}
 			if(conflictPreVDD_degree < m_db->color_num() && stitchPreVDD_degree < 2)
 			{
@@ -2304,7 +1879,7 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 				//boost::remove_vertex(v,tmp_graph);
 				in_loop = true;
 			if(debug)
-				std::cout<<"LIWEI: now processing DONE, push "<<v<<std::endl;
+				std::cout<<"debug: now processing DONE, push "<<v<<std::endl;
 
 			}	
 	}}
@@ -2313,7 +1888,7 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 		while(S.empty() == false){
 			vertex_descriptor v = S.top();
 			S.pop();
-			if(debug)	std::cout<<"LIWEI: now calculate color of vertex "<<v<< ", this is "<<std::count(in_graph.begin(),in_graph.end(),true)<<std::endl;
+			if(debug)	std::cout<<"debug: now calculate color of vertex "<<v<< ", this is "<<std::count(in_graph.begin(),in_graph.end(),true)<<std::endl;
 			if(std::count(in_graph.begin(),in_graph.end(),true) == 0){
 				in_graph[int(v)] = true;
 				vSubColor[v] = 0;
@@ -2330,7 +1905,7 @@ bool SimpleMPL::fast_color_trial(std::vector<int8_t>& vSubColor,SimpleMPL::graph
 				mplAssert(vSubColor[*vi2]>-1);
 				std::pair<boost::graph_traits<SimpleMPL::graph_type>::edge_descriptor, bool> e12 = boost::edge(v, *vi2, tmp_graph);
 				mplAssert(e12.second);
-				if(debug)	std::cout<<"LIWEI: now calculate adj of vertex "<<v<<", adj is"<<*vi2<< ", the edge is "<<\
+				if(debug)	std::cout<<"debug: now calculate adj of vertex "<<v<<", adj is"<<*vi2<< ", the edge is "<<\
 				(int)boost::get(boost::edge_weight, tmp_graph, e12.first)<<", adj color is"<<vSubColor[*vi2]<<std::endl;
 				//For stitch edge, we assign the node color as same 
 				if (boost::get(boost::edge_weight, tmp_graph, e12.first) < 0) 
@@ -2369,22 +1944,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 	gs.set_isVDDGND(vdd_set);
 	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices 
 	std::set<vertex_descriptor> not_in_DG;
-	//bool find_debug = false;
-	// coordinate_difference hard_code = -3850;
-	// coordinate_difference hard_code_y = -1730;
-
-	// uint32_t hard_code_vertex = -1;
-	// coordinate_difference hard_code2 = -3890;
-	// coordinate_difference hard_code_y2 = -2230;
-	 
-	// uint32_t hard_code_vertex2 = -1;
 	
-
-
-
-	#ifdef DEBUG_LIWEI_DONE
-		std::cout<<"LIWEI: for component "<<comp_id<<", size is"<<pattern_cnt<<", hiden size is"<<not_in_DG.size()<<std::endl;
-	#endif
     // set max merge level, actually it only works when MERGE_SUBK4 is on 
     if (m_db->color_num() == 3)
         gs.max_merge_level(3);
@@ -2394,24 +1954,8 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 	
 	// collect simplified information 
 	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
-#ifdef DEBUG_LIWEI_DONE
-    std::stack<vertex_descriptor> vHiddenVertices_debug = gs.hidden_vertices();
-	while(!vHiddenVertices_debug.empty()){
-		if(vHiddenVertices_debug.top() == hard_code_vertex){
-			std::cout<<"LIWEI: is hiden!"<<std::endl;
-			break;
-		}
-		if(vHiddenVertices_debug.top() == hard_code_vertex2){
-			std::cout<<"LIWEI:2 is hiden!"<<std::endl;
-			break;
-		}
-		vHiddenVertices_debug.pop();
-	}
-#endif
 
     // for debug, it does not affect normal run 
-	// if (comp_id == m_db->dbg_comp_id() && simplify_strategy != graph_simplification_type::MERGE_SUBK4)
-	// 	gs.write_simplified_graph_dot("graph_simpl");
 
 	// in order to recover color from articulation points 
 	// we have to record all components and mappings 
@@ -2424,10 +1968,6 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 	std::vector<vertex_descriptor> all_articulations;
 
 	gs.get_articulations(all_articulations);
-#ifdef DEBUG_LIWEI_DONE
-	if(all_articulations.size() > 0)
-		std::cout<<"LIWEI: articulations size is "<<all_articulations.size()<<", component number is "<<gs.num_component()<<std::endl;
-#endif
 	
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
 	{
@@ -2456,23 +1996,6 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		/***
 		if(fast_color_trial(vSubColor,sg))
 		{
-			#ifdef DEBUG_LIWEI_DONE
-
-				for(int i = 0; i< vSimpl2Orig.size();i++){
-					if(vSimpl2Orig[i] == hard_code_vertex)
-						std::cout<<"LIWEI: vertex 1: color by fast color trial "<<vSubColor[i]<<std::endl;
-					if(vSimpl2Orig[i] == hard_code_vertex2)
-					{
-						for(int j = 0; j<vSimpl2Orig.size();j++){
-							std::cout<<vSimpl2Orig[j]<<" ";
-						}
-						std::cout<<"LIWEI: vertex 2: color by fast color trial "<<vSubCol+or[i]<<std::endl;
-					}
-				}
-				if(find_debug){
-					std::cout<<"LIWEI: solved by fast color trial "<<sub_comp_id<<std::endl;
-				}
-			#endif
 			continue;
 		}
 		***/
@@ -2538,7 +2061,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		double obj_value1 = (*pcs)(); // solve coloring 
 		
 		// if(obj_value1 != 0){
-		// 	this->writeGraph(sg,std::to_string(comp_id),obj_value1);
+		// 	this->write_txt(sg,std::to_string(comp_id),obj_value1);
 		// 	std::cout<<"Write Component "<<comp_id<<", Sub component "<<sub_comp_id<<std::endl;
 		// }
 
@@ -2614,7 +2137,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		std::string name = std::to_string(comp_id);
 		name.append("_");
 		name.append(std::to_string(sub_comp_id));
-		this->writeJson(sg,(char*)name.c_str(),vSubColor);
+		this->write_json(sg,(char*)name.c_str(),vSubColor);
 	}
 #endif
 
@@ -2624,19 +2147,11 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 #ifdef _DGOUT
 	return 1;
 #endif
-	// #ifdef DEBUG_LIWEI_DONE
-	// if(find_debug)
-	// 	std::cout<<"Color before recover is "<<(int)vColor[hard_code_vertex]<<" "<<(int)vColor[hard_code_vertex2]<<std::endl;
-	// #endif
 	// recover color assignment according to the simplification level set previously 
 	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
 
 	gs.recover(vColor, mSubColor, mSimpl2Orig); 
 
-	// #ifdef DEBUG_LIWEI_DONE
-	// if(find_debug)
-	// 	std::cout<<"Color is "<<(int)vColor[hard_code_vertex]<<" "<<(int)vColor[hard_code_vertex2]<<std::endl;
-	// #endif
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
     RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
@@ -2645,7 +2160,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 	// mplAssert(total_obj == acc_obj_value);
 	//mplPrint(kINFO, "Component %u solved", comp_id);
 	// std::string name = std::to_string(comp_id);
-	// this->writeJson(dg,(char*)name.c_str(),vColor);
+	// this->write_json(dg,(char*)name.c_str(),vColor);
 
     return acc_obj_value;
 }
