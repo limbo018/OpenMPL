@@ -724,7 +724,9 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);
 	std::vector<int> MPLD_search_vector;
 	//MPLD_search_vector = BFS_Order(edge_list);
-	MPLD_search_vector = BFS_Order_no_stitch_first(edge_list,dl);
+	MPLD_search_vector = Simple_Order(edge_list.size());
+	//MPLD_search_vector = BFS_Order_no_stitch_first(edge_list,dl);
+	//MPLD_search_vector = BFS_Order_max_first(edge_list);
 	for(auto i = 0; i<MPLD_search_vector.size(); i++){
 		std::cout<<MPLD_search_vector[i]<<" ";
 	}

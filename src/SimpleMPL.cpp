@@ -2003,8 +2003,8 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK){
 			double cost = 0;
 			if(m_db->use_stitch()){
-				//cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);
-				cost = solve_by_dancing_link_GPU(sg,vSubColor);
+				cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);
+				//cost = solve_by_dancing_link_GPU(sg,vSubColor);
 				}
 			else{ cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);}
 #if RECORD > 1
@@ -2734,7 +2734,16 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 	//dancing_link_timer.start();
 	//Step 1.1 BUILD DL MATRIX WITH STITCH
 	//Node structure done,  then build DL system
-	DancingLink dl2; 
+
+	std::vector<int> MPLD_search_vector;
+	MPLD_search_vector = BFS_Order(edge_list);
+	//MPLD_search_vector stores the node index in i_th selection while MPLD_search_vector_indexes stores the selection oder(starting from 1) of i_th node
+	std::vector<int> MPLD_search_vector_indexes;
+	MPLD_search_vector_indexes.assign(MPLD_search_vector.size(),0);
+	mplAssert(MPLD_search_vector_indexes.size() == edge_list.size());
+	for (uint32_t i=1;i<MPLD_search_vector.size();i++){
+		MPLD_search_vector_indexes[MPLD_search_vector[i]] = i;
+	}
 	int row_numbers = vertex_numbers * m_db->color_num() + stitch_count * pow(m_db->color_num(),2);
 	int col_numbers = edge_numbers * m_db->color_num() + vertex_numbers;
 	// std::cout<<"DL2: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
