@@ -845,6 +845,44 @@ int  mask_number, std::vector<std::vector<std::pair<uint32_t,uint32_t>>>& decode
 	}
 	return;
 }
+
+void decode_row_results_wo_skeleton(std::vector<int> & final_result, std::vector<int8_t>& color_vector, int vertex_number,
+int  mask_number, std::vector<std::vector<std::pair<uint32_t,uint32_t>>>& decode_mat, std::vector<Vertex*> & node_list ){
+	std::vector<int8_t> color_results_wo_stitch (vertex_number);
+	for (auto i = final_result.begin(); i != final_result.end(); i++)
+	{
+		// if the selected row is in the range of parent node (no stitch)
+		// std::cout << *i << std::endl;
+		if((*i) < vertex_number * mask_number + 1){
+		int No = ((*i) - 1) / mask_number + 1;
+		int mask = (*i + 2) % mask_number;
+		color_results_wo_stitch[No-1] = mask; }
+
+		//if the selected_rows represent some stitches rows 
+		if((*i) > (vertex_number * (uint32_t)(mask_number))){
+			std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[(*i)- vertex_number * mask_number -1];
+			for(std::vector<std::pair<uint32_t,uint32_t>>::iterator it = row_decoder.begin(); it != row_decoder.end(); ++it) {
+				color_vector[(*it).first] = (*it).second;
+			}
+		}
+	}
+
+
+	for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) {
+		if(color_vector[(*it)->Stitch_No]!= -1){continue;}
+		if((*it)->No == 0){
+			mplAssert((*it)->Is_Parent == false);
+			mplAssert((*it)->parent->Stitch_No == -1);
+			mplAssert(color_results_wo_stitch[(*it)->parent->No -1]!= -1);
+			color_vector[(*it)->Stitch_No] = color_results_wo_stitch[(*it)->parent->No -1];
+		}
+		else{
+			mplAssert(color_results_wo_stitch[(*it)->No -1]!=-1);
+			color_vector[(*it)->Stitch_No] = color_results_wo_stitch[(*it)->No -1];
+		}
+	}
+	return;
+}
 void Decode(int vertex_numbers, int mask_numbers, std::vector<int> result_vec, std::pair<int, int> conflict_pair, std::string filename)
 {
 	(void)conflict_pair;

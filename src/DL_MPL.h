@@ -200,6 +200,9 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 void decode_row_results(std::vector<int> & final_result, std::vector<int8_t> & color_vector, int  vertex_number,
 int  mask_number, std::vector<std::vector<std::pair<uint32_t,uint32_t>>>& decode_mat, std::vector<Vertex*> & node_list );
 
+void decode_row_results_wo_skeleton(std::vector<int> & final_result, std::vector<int8_t> & color_vector, int  vertex_number,
+int  mask_number, std::vector<std::vector<std::pair<uint32_t,uint32_t>>>& decode_mat, std::vector<Vertex*> & node_list );
+
 /*
  * @brief:	This function decode the result and convert the exact cover problem to origin coloring problem.
  * @param	vertex_numbers:		the number of vertices in the graph

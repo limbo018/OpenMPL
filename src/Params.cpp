@@ -59,6 +59,14 @@ bool CmdParser::operator()(int argc, char** argv)
             mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default algorithm\n");
 #endif
         }
+        if (limbo::iequals(algo_str, "ILP_UPDATED")) 
+        {
+#if GUROBI == 1
+            parms.algo = AlgorithmTypeEnum::ILP_UPDATED_GURBOI;
+#else 
+            mplPrint(kWARN, "ILP updated is not available without GUROBI, set to default algorithm\n");
+#endif
+        }
         else if (limbo::iequals(algo_str, "LP"))
         {
 #if GUROBI == 1

@@ -26,6 +26,7 @@ in conflict_num() : uncomment color mplAssertmessage
 // only valid when gurobi is available 
 #if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
+#include <limbo/algorithms/coloring/ILPColoringUpdated.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
 #include <limbo/algorithms/coloring/MISColoring.h>
 #endif
@@ -39,7 +40,7 @@ in conflict_num() : uncomment color mplAssertmessage
 #include <limbo/algorithms/coloring/BacktrackColoring.h>
 #define CUT_DG
 // RECORD is a value to record some information for debug by Wei
-#define RECORD 1
+#define RECORD 2
 #ifdef DEBUG_NONINTEGERS
 std::vector<unsigned int> vLP1NonInteger; 
 std::vector<unsigned int> vLP1HalfInteger; 
@@ -172,9 +173,13 @@ void SimpleMPL::write_gds()
 
 void SimpleMPL::write_json(){
 	std::ofstream jsonFile;
-	char* tmp = const_cast<char *>(m_db->input_gds().c_str());
-	char* output_json =(char*)strcat(tmp,".json");
-	jsonFile.open(output_json);
+	char filename[80];
+	strcpy(filename,"../json/");
+	strcat(filename,const_cast<char *>(m_db->input_gds().c_str()));
+	strcat(filename,".json");
+	// char* tmp = const_cast<char *>(m_db->input_gds().c_str());
+	// char* output_json =(char*)strcat(tmp,".json");
+	jsonFile.open(filename);
 	jsonFile<<"[";
 	for(uint32_t i = 0; i != m_mAdjVertex.size(); i++){
 		if(in_DG[i] == false) 
@@ -232,7 +237,7 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
 	std::ofstream jsonFile;
 	// char* tmp = const_cast<char *>(m_db->input_gds().c_str());
 	// char* tmp2 = (char*)strcat(tmp,graph_count);
-	 std::cout<<"json file name is"<<graph_count<<std::endl;
+	std::cout<<"json file name is"<<graph_count<<std::endl;
 	// char* output_json =(char*)strcat(tmp2,".json");
 	
 	jsonFile.open(m_db->input_gds() + graph_count + ".json");
@@ -1798,6 +1803,8 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 #if GUROBI == 1
         case AlgorithmTypeEnum::ILP_GURBOI:
             pcs = new lac::ILPColoring<graph_type> (sg); break;
+        case AlgorithmTypeEnum::ILP_UPDATED_GURBOI:
+            pcs = new lac::ILPColoringUpdated<graph_type> (sg); break;
         case AlgorithmTypeEnum::LP_GUROBI:
             pcs = new lac::LPColoring<graph_type> (sg); break;
         case AlgorithmTypeEnum::MIS_GUROBI:
@@ -2003,8 +2010,8 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK){
 			double cost = 0;
 			if(m_db->use_stitch()){
-				cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);
-				//cost = solve_by_dancing_link_GPU(sg,vSubColor);
+				//cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);
+				cost = solve_by_dancing_link_GPU(sg,vSubColor);
 				}
 			else{ cost = solve_by_dancing_link_with_one_stitch(sg,vSubColor, comp_id);}
 #if RECORD > 1
@@ -2131,7 +2138,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 
 #endif	
 
-#if RECORD > 0
+#if RECORD > 1
 	//we only store json file with graph size larger than 3
 	if(num_vertices(sg) > 3){
 		std::string name = std::to_string(comp_id);
@@ -2271,7 +2278,6 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 		}
 	}
 	mplAssert(node_wo_stitch_list.size() == vertex_numbers);
-
 	std::vector<std::list<Edge_Simple> >   edge_list;
 	edge_list.resize(vertex_numbers + 1);
 	for(std::set<Vertex*>::iterator it = node_wo_stitch_list.begin(); it != node_wo_stitch_list.end(); ++it) {
@@ -2457,7 +2463,6 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 			//Insert singelon row
 				Cell_Insert(dl2,vertex_numbers * m_db->color_num() + 1,vertex_numbers + i * m_db->color_num() + j);
 		}
-
 		// Step 2 Decode matrix generation and Stitch Rows Cell Insertion
 		int count = -1;
 		std::vector<uint32_t> starting_indexes;
@@ -2506,8 +2511,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 						// 			mplAssert(col_edge!=-1);
 						// 			mplAssert(node_list[*first_set_element]->Stitch_No == *first_set_element);
 						// 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
-						// 			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
-						// first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + first_color<<std::endl;
+						//  			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
+						//  first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + first_color<<std::endl;
 									Cell_Insert(dl2,vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
 						first_color *color_num_uint32 + second_color, vertex_numbers + 1+(col_edge -1)*color_num_uint32 + first_color);
 								
@@ -2526,8 +2531,8 @@ double SimpleMPL::solve_by_dancing_link_with_one_stitch(SimpleMPL::graph_type& g
 									}
 									//mplAssert(col_edge!=-1);
 						// 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
-						// 			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
-						// first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + second_color<<std::endl;
+						//  			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
+						//  first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + second_color<<std::endl;
 									Cell_Insert(dl2,vertex_numbers * color_num_uint32 +2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
 						first_color *color_num_uint32 + second_color, vertex_numbers + 1+(col_edge -1)*color_num_uint32 + second_color);
 							
@@ -2609,7 +2614,7 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 			if (v1 >= v2) continue;
 			std::pair<edge_descriptor, bool> e12 = boost::edge(v1, v2, g);
 			mplAssert(e12.second);
-			//std::cout<<v1<<" "<<v2<<" "<<boost::get(boost::edge_weight, g, e12.first)<<std::endl;
+			std::cout<<v1<<" "<<v2<<" "<<boost::get(boost::edge_weight, g, e12.first)<<std::endl;
 
 			//if node source and node target is not created. New one/
 			if(!node_list[v1]){
@@ -2773,8 +2778,7 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 	}
 	std::cout<<"END"<<std::endl;
 	
-	// Insert Non-stitch DL cells
-	//std::cout<< "SECOND dl init" << dancing_link_timer.format(6)<<std::endl;
+	//Insert Non-stitch DL cells
 	//dancing_link_timer.start();
 	for (uint32_t it = 1; it < edge_list.size(); ++it)
 	{
@@ -2789,11 +2793,24 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 			}
 		}
 	}
-
 	// Step 2 Decode matrix generation and Stitch Rows Cell Insertion
 	int count = -1;
 	std::vector<uint32_t> starting_indexes;
 	uint32_t starting_index = 0;
+	for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) {
+		//if the node in parent node, means it has no stitch relations
+		(*it)->updateDuplicateLGConflicts();
+		if(!(*it)->Is_Parent)
+		//else, add its parent node if it has not been added into node_wo_stitch_list
+		{
+			mplAssert((*it)->parent->Is_Parent);
+			if(node_wo_stitch_list.find((*it)->parent) == node_wo_stitch_list.end()){
+				node_wo_stitch_list.insert((*it)->parent);
+				(*it)->parent->updateDuplicateLGConflicts();
+			}
+
+		}
+	}
 	for(auto parent_node = node_wo_stitch_list.begin(); parent_node != node_wo_stitch_list.end(); ++parent_node){
 		uint32_t childs_num = ((*parent_node)->Childs).size();
 		int parent_no = (*parent_node)->No;
@@ -2837,8 +2854,8 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 					// 			mplAssert(col_edge!=-1);
 					// 			mplAssert(node_list[*first_set_element]->Stitch_No == *first_set_element);
 					// 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
-					// 			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
-					// first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + first_color<<std::endl;
+					//  			std::cout<<vertex_numbers * color_num_uint32+ starting_index + (uint32_t)(stitch_no*pow(color_num_uint32,2)) + \
+					//  first_color *color_num_uint32 + second_color<<" "<< vertex_numbers +(col_edge -1)*color_num_uint32 + first_color<<std::endl;
 								dl_matrix[vertex_numbers * color_num_uint32+ starting_index + (uint32_t)(stitch_no*pow(color_num_uint32,2)) + \
 					first_color *color_num_uint32 + second_color][vertex_numbers+(col_edge -1)*color_num_uint32 + first_color] = 1;
 							
@@ -2857,8 +2874,8 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 								}
 								//mplAssert(col_edge!=-1);
 					// 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
-					// 			std::cout<<vertex_numbers * color_num_uint32 + 2+ starting_index + (stitch_no*pow(color_num_uint32,2)) + 
-					// first_color *color_num_uint32 + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*color_num_uint32 + second_color<<std::endl;
+					//  			std::cout<<vertex_numbers * color_num_uint32 + starting_index + (stitch_no*pow(color_num_uint32,2)) + 
+					//  first_color *color_num_uint32 + second_color<<" "<< vertex_numbers +(col_edge -1)*color_num_uint32 + second_color<<std::endl;
 								dl_matrix[vertex_numbers * color_num_uint32+ starting_index + (uint32_t)(stitch_no*pow(color_num_uint32,2)) + \
 					first_color *color_num_uint32 + second_color][ vertex_numbers +(col_edge -1)*color_num_uint32 + second_color] = 1;
 						
@@ -2895,44 +2912,18 @@ double SimpleMPL::solve_by_dancing_link_GPU(SimpleMPL::graph_type& g,std::vector
 	myfile<<"========================================================="<<endl;
 	myfile.close();
 #endif
-
 	mc_solver(dl_matrix, results, deleted_cols, col_group, vertex_numbers, row_numbers, col_numbers);
-	std::vector<int> color_results_wo_stitch;
-	color_results_wo_stitch.assign(vertex_numbers,-1);
 	for (int i = 0; i <row_numbers ; i++)
 	{
 		if(results[i] != 0){
 			// if the selected row indicates stitch row
-			if(i+1 > (int)vertex_numbers * m_db->color_num() ){
-				std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[i+1- vertex_numbers * m_db->color_num() -1];
-				for(std::vector<std::pair<uint32_t,uint32_t>>::iterator it = row_decoder.begin(); it != row_decoder.end(); ++it) {
-					color_vector[(*it).first] = (*it).second;
-				}
-			}
-			else{
-				int No = (i) / m_db->color_num() + 1;
-				int mask = (i) % m_db->color_num();
-				color_results_wo_stitch[No-1] = mask;
-			}
+			selected_rows_by_dl2.push_back(i+1);
 		}
 		// std::cout << *i << std::endl;
 
 	}
+	decode_row_results_wo_skeleton(selected_rows_by_dl2, color_vector,(int)vertex_numbers, (int)m_db->color_num(), decode_mat,node_list);
 
-
-	for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) {
-		if(color_vector[(*it)->Stitch_No]!= -1){continue;}
-		if((*it)->No == 0){
-			mplAssert((*it)->Is_Parent == false);
-			mplAssert((*it)->parent->Stitch_No == -1);
-			mplAssert(color_results_wo_stitch[(*it)->parent->No -1]!= -1);
-			color_vector[(*it)->Stitch_No] = color_results_wo_stitch[(*it)->parent->No -1];
-		}
-		else{
-			mplAssert(color_results_wo_stitch[(*it)->No -1]!=-1);
-			color_vector[(*it)->Stitch_No] = color_results_wo_stitch[(*it)->No -1];
-		}
-	}
 	double cost = calc_cost(g,color_vector);
 	std::cout<<"cost is "<<cost<<std::endl;
 	return cost;

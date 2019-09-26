@@ -75,7 +75,8 @@ struct AlgorithmTypeEnum
         LP_GUROBI = 3,    // only valid when gurobi is available
         SDP_CSDP = 4,     // only valid when Csdp is available
         MIS_GUROBI = 5,    // only valid when gurobi is available 
-		DANCING_LINK = 6
+		DANCING_LINK = 6,
+		ILP_UPDATED_GURBOI = 7
     };
 };
 class AlgorithmType : public EnumExt<AlgorithmTypeEnum::EnumType>
