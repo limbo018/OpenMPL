@@ -24,10 +24,10 @@ $ make install
  * Multi-threading
  * Small memory usage
  * Multiple algorithms: 
-     ILP (Gurobi or Lemon CBC), 
-     SDP (Csdp API), 
-     LP  (Gurobi API)
- * Dancing Links
+    * ILP (Gurobi or Lemon CBC)
+    * SDP (Csdp API)
+    * LP  (Gurobi API)
+    * Dancing Links
 
 The Csdp API used in OpenMPL has been modified and built for threading safety at high level. 
 
