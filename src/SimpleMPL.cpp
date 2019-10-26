@@ -26,7 +26,6 @@ in conflict_num() : uncomment color mplAssertmessage
 // only valid when gurobi is available 
 #if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
-#include <limbo/algorithms/coloring/ILPColoringUpdated.h>
 #include <limbo/algorithms/coloring/LPColoring.h>
 #include <limbo/algorithms/coloring/MISColoring.h>
 #endif
@@ -1803,8 +1802,6 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 #if GUROBI == 1
         case AlgorithmTypeEnum::ILP_GURBOI:
             pcs = new lac::ILPColoring<graph_type> (sg); break;
-        case AlgorithmTypeEnum::ILP_UPDATED_GURBOI:
-            pcs = new lac::ILPColoringUpdated<graph_type> (sg); break;
         case AlgorithmTypeEnum::LP_GUROBI:
             pcs = new lac::LPColoring<graph_type> (sg); break;
         case AlgorithmTypeEnum::MIS_GUROBI:

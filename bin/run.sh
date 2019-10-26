@@ -1,7 +1,7 @@
 #!
 
 # ========================================================================
-#                         SimpleMPL 1.X Usage                         
+#                         SimpleMPL Usage                         
 #  -help (false)                toggle printing help message
 #  -in                          input gds file name
 #  -out ()                      output gds file name

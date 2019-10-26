@@ -1,7 +1,7 @@
 #!
 
 # ========================================================================
-#                         SimpleMPL 1.X Usage                         
+#                         SimpleMPL Usage                         
 #  -help (false)                toggle printing help message
 #  -in                          input gds file name
 #  -out ()                      output gds file name
@@ -27,6 +27,7 @@
 #-uncolor_layer 203 \
 # if the benchmark contains polygon shapes, -shape must be set to POLYGON;
 # otherwise, set -shape to RECTANGLE is more memory efficient
+mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
     -in bench/sim_s1.gds \
@@ -35,7 +36,7 @@
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo DL\
+    -algo BACKTRACK\
     -thread_num 8\
      -use_stitch gen_stitch\
   #   -dbg_comp_id 10096

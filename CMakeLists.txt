@@ -23,12 +23,10 @@ endif(NOT CMAKE_CXX_ABI)
 message("-- CMAKE_CXX_ABI: _GLIBCXX_USE_CXX11_ABI=${CMAKE_CXX_ABI}")
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${CMAKE_CXX_ABI})
 
-#option(ENABLE_GUROBI "whether enable Gurobi" OFF)
-#message("-- GUROBI: ${ENABLE_GUROBI}")
-#option(ENABLE_LEMONCBC "whether enable Lemon-CBC" OFF)
-#message("-- LEMONCBC: ${ENABLE_LEMONCBC}")
-#option(ENABLE_CSDP "whether enable CSDP" OFF)
-#message("-- CSDP: ${ENABLE_CSDP}")
+option(ENABLE_GUROBI "whether enable Gurobi" OFF)
+message("-- GUROBI: ${ENABLE_GUROBI}")
+option(ENABLE_LEMONCBC "whether enable Lemon-CBC" OFF)
+message("-- LEMONCBC: ${ENABLE_LEMONCBC}")
 
 set(CMAKE_CXX_STANDARD 11)
 
