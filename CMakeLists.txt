@@ -35,7 +35,7 @@ set(LIMBO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/Limbo)
 message("-- LIMBO_BINARY_DIR ${LIMBO_BINARY_DIR}")
 
 find_package(ZLIB REQUIRED)
-find_package(Boost 1.55.0 REQUIRED COMPONENTS iostreams chrono timer unit_test_framework graph regex)
+find_package(Boost 1.55.0 REQUIRED COMPONENTS chrono timer graph regex)
 find_package(Gurobi)
 
 add_subdirectory(thirdparty)

@@ -6,7 +6,7 @@ else()
     set(COMPILE_DEFINITIONS "")
 endif()
 
-set(LIBS programoptions gdsdb gdsparser ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+set(LIBS programoptions gdsdb gdsparser gzstream ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 if(UNIX AND NOT APPLE)
     set(LIBS ${LIBS} rt)
 endif(UNIX AND NOT APPLE)
@@ -36,6 +36,7 @@ file(GLOB SOURCES
     LayoutDB.cpp
     LayoutDBPolygon.cpp 
     LayoutDBRect.cpp
+    MatrixCover.cpp
     Msg.cpp 
     Params.cpp
     RecoverHiddenVertex.cpp 
