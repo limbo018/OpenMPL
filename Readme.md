@@ -1,9 +1,17 @@
 # OpenMPL
 
 > **OpenMPL** stands for open multiple patterning lithography framework.
+
 ### Pre-requisite
 
-- [Limbo](https://github.com/limbo018/Limbo): require LIMBO_DIR environment variable to the path where Limbo is installed. OpenMPL is based on Limbo library.
+- [Limbo](https://github.com/limbo018/Limbo): Integrated as a git submodule.
+
+### Publications
+
+* [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
+    "**OpenMPL: An Open Source Layout Decomposer**", 
+    IEEE International Conference on ASIC (ASICON), Chongqing, China, Oct. 29–Nov. 1, 2019.
+([preprint](https://arxiv.org/pdf/1809.07554v3.pdf))
 
 ### How To Compile
 
@@ -11,10 +19,11 @@
 $ git clone https://github.com/limbo018/OpenMPL.git --recursive
 $ mkdir build
 $ cd build
-$ cmake ..
+$ cmake .. 
 $ make
 $ make install
 ```
+The default installation path is the repo directory. It can bee changed via ```cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path```. 
 
 ### Features
  * Contact or metal layer decomposition 
@@ -81,8 +90,9 @@ One exmaple : /bin/run.sh.
 
 | Name         | Affiliation         | email                                                     |
 | ------------ | ------------------- | --------------------------------------------------------- |
-| Yibo Lin     | School of EECS, PKU | [yibolin@pku.edu.cn](mailto:yibolin@pku.edu.cn) |
+| Yibo Lin     | School of EECS, PKU | [yibolin@pku.edu.cn](mailto:yibolin@pku.edu.cn)           |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
+| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:werry715@gmail.com)           |
 | Qi Sun       | CSE Dept, CUHK      | [qsun@cse.cuhk.edu.hk](mailto:qsun@cse.cuhk.edu.hk)       |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |
 

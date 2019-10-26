@@ -3380,9 +3380,9 @@ void SimpleMPL::print_welcome() const
 {
   mplPrint(kNONE, "\n\n");
   mplPrint(kNONE, "=======================================================================\n");
-  mplPrint(kNONE, "                      OpenMPL - Version 1.1                          \n");
+  mplPrint(kNONE, "                      OpenMPL - Version 2.0                          \n");
   mplPrint(kNONE, "                                by                                   \n");  
-  mplPrint(kNONE, "                Yibo Lin, Bei Yu, Qi Sun and  David Z. Pan           \n");
+  mplPrint(kNONE, "       Yibo Lin, Bei Yu, Wei Li, Qi Sun, and  David Z. Pan           \n");
   mplPrint(kNONE, "               ECE Department, University of Texas at Austin         \n");
   mplPrint(kNONE, "               CSE Department, Chinese University of Hong Kong       \n");
   mplPrint(kNONE, "                         Copyright (c) 2018                          \n");
