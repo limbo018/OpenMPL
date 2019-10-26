@@ -1,1 +1,1 @@
-zip -q -r jsonfile.zip *.json
+zip -q -FSr jsonfile.zip *.json

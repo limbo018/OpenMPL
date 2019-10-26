@@ -103,6 +103,7 @@ struct LayoutDB : public rectangle_data<int32_t>
     /// \return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const = 0;
 	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const = 0;
+    virtual std::vector<uint32_t> const& ParentPolygonId() const = 0;
     /// \return patterns 
     virtual std::vector<rectangle_pointer_type> const& pattern_bboxes() const {return vPatternBbox;}
     /// set color for patterns 

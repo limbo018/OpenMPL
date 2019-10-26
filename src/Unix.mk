@@ -16,8 +16,8 @@ else
 endif
 endif
 
-CXXFLAGS_BASIC = -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -fmax-errors=1 -W -Wall -Wextra -Wreturn-type -ansi -m64 -Wno-deprecated -Wno-unused-local-typedefs
-CXXFLAGS_DEBUG = -g -DDEBUG $(CXXFLAGS_BASIC) 
+CXXFLAGS_BASIC = -g -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -fmax-errors=1 -W -Wall -Wextra -Wreturn-type -ansi -m64 -Wno-deprecated -Wno-unused-local-typedefs
+CXXFLAGS_DEBUG =  -DDEBUG $(CXXFLAGS_BASIC) 
 CXXFLAGS_RELEASE = -O3 -fopenmp $(CXXFLAGS_BASIC) 
 
 ARFLAGS = rvs

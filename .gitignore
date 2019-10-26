@@ -31,6 +31,7 @@ bin/Regr
 test/regr
 test/models
 decomp_*
+bin/.*
 bin/*.zip
 bin/bench/*.gds
 bin/benchout/*
