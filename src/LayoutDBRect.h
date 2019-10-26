@@ -38,7 +38,7 @@ struct LayoutDBRect : public LayoutDB
 	virtual void initialize_data();
     /// \return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPatternBbox;}
-
+	virtual std::vector<uint32_t> const& ParentPolygonId() const {return vRectBeginId; }
 	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const 
 	{
 		return vRectBeginId; 

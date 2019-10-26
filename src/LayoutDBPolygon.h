@@ -57,7 +57,8 @@ struct LayoutDBPolygon : public LayoutDB
 	virtual void initialize_data();
     /// return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPolyRectPattern;}
-
+    ///\return a vector indicating the parent poly id of each rect 
+    virtual std::vector<uint32_t> const& ParentPolygonId() const {return vParentPolygonId; }
 	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const { return vPolyRectBeginId; }
     /// set color for patterns 
     /// \param pattern_id is the index of vPatternBbox

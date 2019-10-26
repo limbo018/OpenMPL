@@ -8,23 +8,12 @@
 ### How To Compile
 
 ```bash
-$ git clone https://github.com/limbo018/OpenMPL.git
-$ cd OpenMPL/src/mpl/
+$ git clone https://github.com/limbo018/OpenMPL.git --recursive
+$ mkdir build
+$ cd build
+$ cmake ..
 $ make
-```
-Here are some optional parameters when make :
-
-```bash
-# default DBG (debug) is off
-DBG = 0
-# default GPROF is off, used to enable runtime profiling
-GPROF = 0
-# default GUROBI is off 
-GUROBI = 0
-# default LEMONCBC is off 
-LEMONCBC = 0
-# default CSDP is off 
-CSDP = 0
+$ make install
 ```
 
 ### Features
@@ -92,7 +81,7 @@ One exmaple : /bin/run.sh.
 
 | Name         | Affiliation         | email                                                     |
 | ------------ | ------------------- | --------------------------------------------------------- |
-| Yibo Lin     | ECE Dept, UT Austin | [yibolin@utexas.edu](mailto:yibolin@utexas.edu) |
+| Yibo Lin     | School of EECS, PKU | [yibolin@pku.edu.cn](mailto:yibolin@pku.edu.cn) |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
 | Qi Sun       | CSE Dept, CUHK      | [qsun@cse.cuhk.edu.hk](mailto:qsun@cse.cuhk.edu.hk)       |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |

@@ -95,7 +95,6 @@ void LayoutDBPolygon::initialize_data()
     tPatternBbox.swap(tTmp1);
     // compute parent polygons for each rectangle by connected component algorithm 
     compute_parent_polygons();
-
     tPatternBbox.clear(); // I want to reduce peak memory, but not sure if it works or not
     // after initialization, tPatternBbox is used to store vPatternBbox
     // construction with packing algorithm 

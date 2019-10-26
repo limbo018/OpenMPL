@@ -82,3 +82,6 @@ int get_conflict_col(int **dl_matrix, int *deleted_rows, int *deleted_cols, int 
 
 //
 void mc_solver(int **dl_matrix, int *results, int *deleted_cols, int *col_group, int vertex_num, int total_dl_matrix_row_num, int total_dl_matrix_col_num);
+
+
+void print_vec(int *vec, int vec_length);
