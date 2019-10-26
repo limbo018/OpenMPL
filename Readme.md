@@ -17,6 +17,7 @@
 
 ```bash
 $ git clone https://github.com/limbo018/OpenMPL.git --recursive
+$ cd OpenMPL
 $ mkdir build
 $ cd build
 $ cmake .. 
