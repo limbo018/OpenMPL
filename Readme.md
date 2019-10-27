@@ -4,7 +4,20 @@
 
 ### Pre-requisite
 
-- [Limbo](https://github.com/limbo018/Limbo): Integrated as a git submodule.
+- [GCC](https://gcc.gnu.org/)
+    - Recommend GCC 4.8 or later. 
+    - Other compilers may also work, but not tested. 
+
+- [CMake](https://cmake.org/)
+    - Require 3.8.2 or later. 
+
+- [Boost](https://www.boost.org)
+    - Require 1.55 or later. 
+    - Need to install and visible for linking. 
+    - Custom installation path may require to export ```BOOST_ROOT``` for CMake. 
+
+- [Limbo](https://github.com/limbo018/Limbo)
+    - Integrated as a git submodule.
 
 ### Publications
 
