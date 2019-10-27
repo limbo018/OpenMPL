@@ -36,7 +36,14 @@ set(LIMBO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/Limbo)
 message("-- LIMBO_BINARY_DIR ${LIMBO_BINARY_DIR}")
 
 find_package(ZLIB REQUIRED)
-find_package(Boost 1.55.0 REQUIRED COMPONENTS chrono timer graph regex)
+# first try to find static libraries, then try to find dynamic ones
+set(Boost_USE_STATIC_LIBS ON) 
+find_package(Boost 1.55.0 COMPONENTS chrono timer graph)
+if (NOT Boost_FOUND)
+    set(Boost_USE_STATIC_LIBS OFF)  
+    find_package(Boost 1.55.0 REQUIRED COMPONENTS chrono timer graph)
+endif (NOT Boost_FOUND)
+message("-- Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
 find_package(Gurobi)
 
 add_subdirectory(thirdparty)
