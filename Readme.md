@@ -4,11 +4,11 @@
 
 ### Pre-requisite
 
-- [GCC](https://gcc.gnu.org/)
+- [GCC](https://gcc.gnu.org)
     - Recommend GCC 4.8 or later. 
     - Other compilers may also work, but not tested. 
 
-- [CMake](https://cmake.org/)
+- [CMake](https://cmake.org)
     - Require 3.8.2 or later. 
 
 - [Boost](https://www.boost.org)
@@ -18,6 +18,9 @@
 
 - [Limbo](https://github.com/limbo018/Limbo)
     - Integrated as a git submodule.
+
+- [Gurobi](https://www.gurobi.com) (Optional)
+    - ILP solver. 
 
 ### Publications
 
@@ -50,7 +53,7 @@ cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path
  * Multi-threading
  * Small memory usage
  * Multiple algorithms: 
-    * ILP (Gurobi or Lemon CBC)
+    * ILP (Gurobi API)
     * SDP (Csdp API)
     * LP  (Gurobi API)
     * Dancing Links
