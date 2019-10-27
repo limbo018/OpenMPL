@@ -2,6 +2,10 @@
 
 > **OpenMPL** stands for open multiple patterning lithography framework.
 
+| Stitch Insertion | Graph Simplification | Decomposition |
+| ---------------- | -------------------- | ------------- | 
+| <img src=/images/biconnected.png width=127> | <img src=/images/stitch-2.png width=150> | <img src=/images/total_c2.gif width=300> |
+
 ### Pre-requisite
 
 - [GCC](https://gcc.gnu.org)
