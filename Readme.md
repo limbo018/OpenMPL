@@ -4,7 +4,7 @@
 
 | Stitch Insertion | Graph Simplification | Decomposition |
 | ---------------- | -------------------- | ------------- | 
-| <img src=/images/biconnected.png width=127> | <img src=/images/stitch-2.png width=150> | <img src=/images/total_c2.gif width=300> |
+| <img src=/images/stitch-2.png width=150> | <img src=/images/biconnected.png width=150> | <img src=/images/total_c2.gif width=200> |
 
 ### Pre-requisite
 
