@@ -18,7 +18,7 @@
 - [Boost](https://www.boost.org)
     - Require 1.55 or later. 
     - Need to install and visible for linking. 
-    - Custom installation path may require to export ```BOOST_ROOT``` for CMake. 
+    - Custom installation path may require to export ```BOOST_ROOT``` for [CMake](https://cmake.org/cmake/help/v3.8/module/FindBoost.html). 
 
 - [Limbo](https://github.com/limbo018/Limbo)
     - Integrated as a git submodule.
