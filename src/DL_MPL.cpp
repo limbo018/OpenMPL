@@ -515,9 +515,9 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	//TODO: this depth should be a bug cause sometimes it is not by order (need a bool vector to record the col cover information)
 	int this_col = Next_Column_stitch(dl,MPLD_search_vector);
 	
-	if(need_debug){
-		std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
-	}
+	// if(need_debug){
+	// 	std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
+	// }
 	col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
 	col_cover_vector[this_col] = true;
@@ -556,9 +556,9 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	}
 	LR_recover(*col);
 	col_cover_vector[this_col] = false;
-	if(need_debug){
-		std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
-	}
+	// if(need_debug){
+	// 	std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
+	// }
 	
 	return false;
 }
@@ -631,9 +631,9 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 
 	Cell *col;
 	int this_col = Next_Column_stitch(dl,MPLD_search_vector);
-	if(need_debug){
-		std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
-	}
+	// if(need_debug){
+	// 	std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
+	// }
 
 	col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
@@ -686,9 +686,9 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 		Recover_Rows_Cols(dl, row_set, col_set);
 	}
 	LR_recover(*col);
-	if(need_debug){
-		std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
-	}
+	// if(need_debug){
+	// 	std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
+	// }
 	col_results.pop_back();
 	return false;
 }
@@ -724,13 +724,13 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 	Delete_the_Row_in_which_Col.resize(row_numbers + 1);
 	std::vector<int> MPLD_search_vector;
 	//MPLD_search_vector = BFS_Order(edge_list);
-	MPLD_search_vector = Simple_Order(edge_list.size());
-	//MPLD_search_vector = BFS_Order_no_stitch_first(edge_list,dl);
+	//MPLD_search_vector = Simple_Order(edge_list.size());
+	MPLD_search_vector = BFS_Order_no_stitch_first(edge_list,dl);
 	//MPLD_search_vector = BFS_Order_max_first(edge_list);
-	for(auto i = 0; i<MPLD_search_vector.size(); i++){
-		std::cout<<MPLD_search_vector[i]<<" ";
-	}
-	std::cout<<std::endl;
+	// for(auto i = 0; i<MPLD_search_vector.size(); i++){
+	// 	std::cout<<MPLD_search_vector[i]<<" ";
+	// }
+	// std::cout<<std::endl;
 	int depth = 1;
 	std::vector<std::vector<int>> early_quit_count;
 	for(auto i = 0; i <= vertex_numbers; i++){
