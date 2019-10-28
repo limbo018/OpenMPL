@@ -36,8 +36,9 @@
 ### How To Compile
 
 ```bash
-$ git clone https://github.com/limbo018/OpenMPL.git --recursive
+$ git clone https://github.com/limbo018/OpenMPL.git 
 $ cd OpenMPL
+$ git submodule update --init --recursive
 $ mkdir build
 $ cd build
 $ cmake .. 
