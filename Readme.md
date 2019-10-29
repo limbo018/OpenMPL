@@ -18,7 +18,7 @@
 - [Boost](https://www.boost.org)
     - Require 1.55 or later. 
     - Need to install and visible for linking. 
-    - Custom installation path may require to export ```BOOST_ROOT``` for CMake. 
+    - Custom installation path may require to export ```BOOST_ROOT``` for [CMake](https://cmake.org/cmake/help/v3.8/module/FindBoost.html). 
 
 - [Limbo](https://github.com/limbo018/Limbo)
     - Integrated as a git submodule.
@@ -36,8 +36,9 @@
 ### How To Compile
 
 ```bash
-$ git clone https://github.com/limbo018/OpenMPL.git --recursive
+$ git clone https://github.com/limbo018/OpenMPL.git 
 $ cd OpenMPL
+$ git submodule update --init --recursive
 $ mkdir build
 $ cd build
 $ cmake .. 
@@ -89,8 +90,8 @@ A table of options :
 -verbose (false)             toggle controlling screen messages
 -stitch (false)              toggle controlling stitch insertion, default is false
 -dbg_comp_id (4294967295)    debug component id
--use_stitch 				 use stitch to avoid conflict
-gen_stitch					 generate stitch candidate
+-use_stitch                  use stitch to avoid conflict
+-gen_stitch                  generate stitch candidate
 ```
 
 One exmaple : /bin/run.sh.
@@ -116,7 +117,7 @@ One exmaple : /bin/run.sh.
 | ------------ | ------------------- | --------------------------------------------------------- |
 | Yibo Lin     | School of EECS, PKU | [yibolin@pku.edu.cn](mailto:yibolin@pku.edu.cn)           |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
-| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:werry715@gmail.com)           |
+| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:wli@cse.cuhk.edu.hk)           |
 | Qi Sun       | CSE Dept, CUHK      | [qsun@cse.cuhk.edu.hk](mailto:qsun@cse.cuhk.edu.hk)       |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |
 

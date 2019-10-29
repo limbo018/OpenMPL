@@ -29,6 +29,7 @@ struct ControlParameter
 	int32_t color_num;                         ///< number of colors available, only support 3 or 4
 	int32_t simplify_level;                    ///< simplification level 0|1|2|3, default is 3
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
+    int32_t record;                        ///< record level, which controls the degree of recording information
 	bool verbose;                              ///< control screen message 
 	bool use_stitch;						   ///< control whether use stitches
 	bool gen_stitch;						   ///< control whether only generate and output stitches
@@ -55,6 +56,7 @@ inline ControlParameter::ControlParameter()
     color_num                = 3;
     simplify_level           = 3;
     thread_num               = 1;
+    record                   = 0;
     weight_stitch            = 0.1;
     verbose                  = false;
 	use_stitch				 = false;
@@ -75,6 +77,7 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(color_num, rhs.color_num);
     std::swap(simplify_level, rhs.simplify_level);
     std::swap(thread_num, rhs.thread_num);
+    std::swap(record, rhs.record);
     std::swap(verbose, rhs.verbose);
 	std::swap(use_stitch, rhs.use_stitch);
 	std::swap(gen_stitch, rhs.gen_stitch);
