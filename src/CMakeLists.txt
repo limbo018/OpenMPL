@@ -6,6 +6,8 @@ else()
     set(COMPILE_DEFINITIONS "")
 endif()
 
+#set(COMPILE_DEFINITIONS -DDEBUG_LIWEI ${COMPILE_DEFINITIONS})
+
 set(LIBS programoptions gdsdb gdsparser gzstream ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 if(UNIX AND NOT APPLE)
     set(LIBS ${LIBS} rt)

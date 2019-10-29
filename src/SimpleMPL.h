@@ -157,8 +157,6 @@ class SimpleMPL
 		/// After we insert stitches (generate dg from lg), we should update conflict relations which are stored in \m_mAdjVertex(since vertex number is even changed) 
 		void update_conflict_relation();
 		
-		/// merge vdd, and conduct biconnected component devision once more, and simplify the graph further.
-		void vdd_biconnected_component();
 		/// initialize graph from layoutdb_type
 		void construct_graph();
         /// construct graph from coloring distance, set adjacency list m_mAdjVertex 
