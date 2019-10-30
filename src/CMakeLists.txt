@@ -38,7 +38,6 @@ file(GLOB SOURCES
     LayoutDB.cpp
     LayoutDBPolygon.cpp 
     LayoutDBRect.cpp
-    MatrixCover.cpp
     Msg.cpp 
     Params.cpp
     RecoverHiddenVertex.cpp 
