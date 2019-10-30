@@ -47,7 +47,6 @@ $ make install
 The default installation path is the repo directory. It can bee changed via 
 ```
 cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path
->>>>>>> develop
 ```
 
 ### Features
