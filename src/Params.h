@@ -25,11 +25,14 @@ struct ControlParameter
 	std::set<int32_t> sPrecolorLayer;          ///< layers that represent precolored features, they should have the same number of colors 
 	std::set<int32_t> sPathLayer;              ///< path layers that represent conflict edges 
 	double coloring_distance_nm;               ///< minimum coloring distance in nanometer, set from command line 
+    double weight_stitch;                      ///< a floating point number indicating the weight of stitch
 	int32_t color_num;                         ///< number of colors available, only support 3 or 4
 	int32_t simplify_level;                    ///< simplification level 0|1|2|3, default is 3
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
 	bool verbose;                              ///< control screen message 
-    uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
+	bool use_stitch;						   ///< control whether use stitches
+	bool gen_stitch;						   ///< control whether only generate and output stitches
+	uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
 
 	std::string   input_gds;                   ///< input gdsii filename 
 	std::string   output_gds;                  ///< output gdsii filename 
@@ -52,7 +55,10 @@ inline ControlParameter::ControlParameter()
     color_num                = 3;
     simplify_level           = 3;
     thread_num               = 1;
+    weight_stitch            = 0.1;
     verbose                  = false;
+	use_stitch				 = false;
+	gen_stitch				 = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";
     output_gds               = "";
@@ -70,6 +76,8 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(simplify_level, rhs.simplify_level);
     std::swap(thread_num, rhs.thread_num);
     std::swap(verbose, rhs.verbose);
+	std::swap(use_stitch, rhs.use_stitch);
+	std::swap(gen_stitch, rhs.gen_stitch);
     std::swap(dbg_comp_id, rhs.dbg_comp_id);
     std::swap(input_gds, rhs.input_gds);
     std::swap(output_gds, rhs.output_gds);

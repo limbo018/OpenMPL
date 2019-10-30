@@ -20,6 +20,7 @@ RecoverHiddenVertex::RecoverHiddenVertex(RecoverHiddenVertex::graph_type const& 
     , m_vColorDensity (vColorDensity)
     , m_db (db)
     , m_vUnusedColor(db.color_num())
+	, m_vStitchColor(db.color_num())
 {
 }
 
@@ -44,7 +45,7 @@ void RecoverHiddenVertex::recover_vertex(RecoverHiddenVertex::vertex_descriptor 
     // find best color 
     int8_t best_color = find_best_color(v);
     // assign color 
-    mplAssert(best_color >= 0 && best_color < m_db.color_num());
+    // mplAssert(best_color >= 0 && best_color < m_db.color_num());
     m_vColor[v] = best_color;
 }
 
@@ -59,7 +60,17 @@ void RecoverHiddenVertex::find_unused_colors(RecoverHiddenVertex::vertex_descrip
         if (m_vColor[u] >= 0)
         {
             mplAssert(m_vColor[u] < m_db.color_num());
-            m_vUnusedColor[m_vColor[u]] = false;
+			if (m_db.use_stitch())
+			{
+				std::pair<graph_edge_descriptor, bool> e12 = boost::edge(v, u, m_dg);
+				assert(e12.second);
+				if (boost::get(boost::edge_weight, m_dg, e12.first) <= 0)
+					m_vUnusedColor[m_vColor[u]] = true;
+				else
+					m_vUnusedColor[m_vColor[u]] = false;
+			}
+			else
+	            m_vUnusedColor[m_vColor[u]] = false;
         }
     }
 }
@@ -104,6 +115,12 @@ int8_t RecoverHiddenVertexDistance::find_best_color(RecoverHiddenVertexDistance:
 #ifdef DEBUG
         mplAssert(m_vColor[u] < m_db.color_num() && distance >= 0);
 #endif
+		if (m_db.use_stitch())
+		{
+			std::pair<graph_edge_descriptor, bool> e12 = boost::edge(v, u, m_dg);
+			if (e12.second && (boost::get(boost::edge_weight, m_dg, e12.first) <= 0) )
+				continue;
+		}
         m_vDist[ m_vColor[u] ] = std::min(m_vDist[ m_vColor[u] ], distance);
     }
 

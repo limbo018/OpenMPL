@@ -33,6 +33,7 @@ class RecoverHiddenVertex
         typedef layoutdb_type::graph_type              graph_type;
         typedef layoutdb_type::vertex_descriptor       vertex_descriptor;
         typedef layoutdb_type::edge_descriptor         edge_descriptor;
+		typedef layoutdb_type::graph_edge_descriptor   graph_edge_descriptor;
 
         /// constructor 
         RecoverHiddenVertex(graph_type const& dg, std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt, 
@@ -61,6 +62,7 @@ class RecoverHiddenVertex
         std::vector<uint32_t> const& m_vColorDensity;
         layoutdb_type const& m_db;
         std::vector<char> m_vUnusedColor; ///< local variable to avoid frequent construction
+		std::vector<char> m_vStitchColor; ///< local variable to avoid frequent construction
 };
 
 /// recover with distance heuristic 

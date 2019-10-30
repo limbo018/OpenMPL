@@ -34,6 +34,7 @@ struct LayoutDB : public rectangle_data<int32_t>
 	//typedef bgi::rtree<rectangle_pointer_type, bgi::linear<16, 4> > rtree_type;
 	typedef bgi::rtree<rectangle_pointer_type, bgi::rstar<16> > rtree_type;
 	typedef polygon_90_set_data<coordinate_type> polygon_set_type;
+    
     /// necessary for gtl::rectangle_traits
     using base_type::interval_type; 
 
@@ -44,8 +45,9 @@ struct LayoutDB : public rectangle_data<int32_t>
             boost::property<boost::vertex_index_t, uint32_t>, 
             boost::property<boost::edge_index_t, uint32_t, boost::property<boost::edge_weight_t, float> > 
                 > graph_type;
-    typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor; 
-    typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;
+	typedef boost::graph_traits<graph_type>::edge_descriptor	graph_edge_descriptor;
+    typedef boost::graph_traits<graph_type>::vertex_descriptor	vertex_descriptor; 
+    typedef boost::graph_traits<graph_type>::edge_descriptor	edge_descriptor;
 
 	std::map<int32_t, std::vector<path_type> > hPath;    ///< path that indicates conflict edges from input
 	std::string strname;                            ///< TOPCELL name, useful for dump out gds files 
@@ -59,7 +61,10 @@ struct LayoutDB : public rectangle_data<int32_t>
     /// for rectangle-only layout, they denote patterns; otherwise, they denote decomposed rectangles from polygon patterns 
 	rtree_type tPatternBbox;                       ///< rtree for components that intersects the LayoutDB
 	std::vector<rectangle_pointer_type> vPatternBbox;   ///< uncolored and precolored patterns 
-
+	std::vector<std::pair<uint32_t, std::vector<rectangle_pointer_type> > > additional_split;	///< additional splited rectangles, used in color recovery and rectangle resplit 
+    std::vector<uint32_t> vParentPolygonId;
+    std::vector<rectangle_pointer_type> vPolyRectPattern;
+    std::vector<uint32_t> vPolyRectBeginId;
 	struct compare_rectangle_type 
 	{
 		// by x and then by y
@@ -97,6 +102,8 @@ struct LayoutDB : public rectangle_data<int32_t>
 	virtual void initialize_data();
     /// \return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const = 0;
+	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const = 0;
+    virtual std::vector<uint32_t> const& ParentPolygonId() const = 0;
     /// \return patterns 
     virtual std::vector<rectangle_pointer_type> const& pattern_bboxes() const {return vPatternBbox;}
     /// set color for patterns 
@@ -112,7 +119,9 @@ struct LayoutDB : public rectangle_data<int32_t>
     /// \return the euclidean distance of two patterns 
     virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const = 0;
 
-    /// helper functions 
+	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent) = 0;
+    
+	/// helper functions 
     /// update bounding box of layout 
     void update_bbox(base_type const& bbox);
     void check_layer_and_color(int32_t layer, bool& pattern_layer_flag, int8_t& color) const;
@@ -127,6 +136,8 @@ struct LayoutDB : public rectangle_data<int32_t>
     inline int32_t simplify_level() const {return parms.simplify_level;}
     inline int32_t thread_num() const {return parms.thread_num;}
     inline bool verbose() const {return parms.verbose;}
+	inline bool use_stitch() const { return parms.use_stitch; }
+	inline bool gen_stitch() const { return parms.gen_stitch; }
     inline uint32_t dbg_comp_id() const {return parms.dbg_comp_id;}
     inline AlgorithmType algo() const {return parms.algo;}
     inline ShapeMode shape_mode() const {return parms.shape_mode;}

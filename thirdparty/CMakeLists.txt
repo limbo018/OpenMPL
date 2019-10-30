@@ -1,0 +1,5 @@
+set(OPENBLAS ON CACHE BOOL "Turn on OPENBLAS for Limbo")
+set(INSTALL_LIMBO OFF CACHE BOOL "Turn off installation for Limbo")
+set(GENERATE_DOCS OFF CACHE BOOL "Turn off documentation for Limbo")
+set(ENABLE_TEST OFF CACHE BOOL "Turn off test for Limbo")
+add_subdirectory(Limbo)

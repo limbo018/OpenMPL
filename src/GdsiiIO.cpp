@@ -161,6 +161,31 @@ void GdsWriter::operator() (std::string const& filename, GdsWriter::layoutdb_typ
     gw.gds_write_endstr();
     gw.gds_write_endlib(); 
 }
+
+void GdsWriter::operator() (std::string const& filename, layoutdb_type const& db,
+	std::vector<std::pair<uint32_t, uint32_t> > const& vConflict,
+	std::vector<std::vector<uint32_t> > const& vStitches,
+	std::vector<std::vector<uint32_t> > const& mAdjVertex) const
+{
+	GdsParser::GdsWriter gw(filename.c_str());
+	gw.gds_create_lib("POLYGONS", db.unit*1e+9 /* um per bit */);
+	gw.gds_write_bgnstr();
+	gw.gds_write_strname(db.strname.c_str());
+
+	// if there are precolored patterns, keep the same layer convention 
+	int32_t layer_offset = (db.parms.sPrecolorLayer.empty()) ? 100 : *db.parms.sPrecolorLayer.begin();
+	// basic operation
+	// will add more 
+	write_rectangles(gw, db.polyrect_patterns(), layer_offset);
+
+	write_conflicts(gw, db, vConflict, layer_offset + db.color_num());   // conflict layer 
+	write_edges(gw, db, vStitches, layer_offset + db.color_num() + 1);  // draw stitches
+	write_edges(gw, db, mAdjVertex, layer_offset + db.color_num() + 2); // draw edges 
+
+	gw.gds_write_endstr();
+	gw.gds_write_endlib();
+}
+
 void GdsWriter::write_rectangles(GdsParser::GdsWriter& gw, std::vector<GdsWriter::rectangle_pointer_type> const& vRect, const int32_t layer_offset) const 
 {
     for (std::vector<rectangle_pointer_type>::const_iterator it = vRect.begin(); it != vRect.end(); ++it)
@@ -249,4 +274,83 @@ void GdsWriter::write_edges(GdsParser::GdsWriter& gw, GdsWriter::layoutdb_type c
     }
 }
 
+void GdsWriter::write_edges(GdsParser::GdsWriter& gw, GdsWriter::layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, std::vector<bool> isVDDGND, const int32_t layer) const
+{
+	for (uint32_t i = 0; i != mAdjVertex.size(); ++i)
+	{
+		for (uint32_t j = 0; j != mAdjVertex[i].size(); ++j)
+		{
+			uint32_t v = i;
+			uint32_t u = mAdjVertex[i][j];
+			// create a path from v to u 
+			if (v < u) // avoid duplicate 
+			{
+				// create a path
+				gw.gds_write_path();
+				if (isVDDGND[v] || isVDDGND[u])
+					gw.gds_write_layer(layer + 1);
+				else
+					gw.gds_write_layer(layer);
+				gw.gds_write_datatype(0);
+				gw.gds_write_pathtype(2); // extended square ends
+				gw.gds_write_width(5); // 5 nm wide
+
+				point_type vc = db.get_point_closest_to_center(v);
+				point_type uc = db.get_point_closest_to_center(u);
+				int32_t x[2] = { gtl::x(vc), gtl::x(uc) };
+				int32_t y[2] = { gtl::y(vc), gtl::y(uc) };
+
+				gw.gds_write_xy(x, y, 2);
+				gw.gds_write_endel();
+			}
+		}
+	}
+}
+
+
+void GdsWriter::write_Simplification(std::string const filename, GdsWriter::layoutdb_type const& db, std::vector<uint32_t> m_vCompId, std::vector<std::vector<uint32_t> > m_mAdjVertex, std::vector<bool> in_DG, std::vector<bool> isVDDGND, bool lg) const
+{
+	GdsParser::GdsWriter gw(filename.c_str());
+	gw.gds_create_lib("POLYGON", db.unit*1e+6);
+	gw.gds_write_bgnstr();
+	gw.gds_write_strname(db.strname.c_str());
+
+	std::vector<rectangle_pointer_type> rect_vec = db.polyrect_patterns();
+	std::vector<uint32_t> Poly_Rect_begin = db.PolyRectBgnLoc();				///< original polygons mapping to rectangles
+	std::vector<uint32_t> Poly_Rect_end;
+	uint32_t vertex_num = db.vPatternBbox.size();
+	Poly_Rect_end.resize(vertex_num);
+
+	for (uint32_t i = 0; i < vertex_num - 1; i++)
+		Poly_Rect_end[i] = Poly_Rect_begin[i + 1] - 1;
+	Poly_Rect_end[vertex_num - 1] = rect_vec.size() - 1;
+
+	for (uint32_t i = 0; i < vertex_num; i++)
+	{
+		uint32_t start_idx = Poly_Rect_begin[i];
+		uint32_t end_idx = Poly_Rect_end[i];
+		uint32_t color;
+		if (lg)
+		{
+			if (in_DG[i])
+				color = m_vCompId[i] + 1;
+			else
+				color = 0;
+		}
+		else {
+			color = m_vCompId[i] + 1;
+		}
+		for (uint32_t j = start_idx; j <= end_idx; j++)
+		{
+			rectangle_type const& rect = *rect_vec[j];
+			gw.write_box(99 + color, 0,
+				gtl::xl(rect), gtl::yl(rect),
+				gtl::xh(rect), gtl::yh(rect));
+		}
+	}
+	uint32_t edge_color = *std::max_element(m_vCompId.begin(), m_vCompId.end());
+	this->write_edges(gw, db, m_mAdjVertex, isVDDGND, 99 + edge_color + 3);
+	gw.gds_write_endstr();
+	gw.gds_write_endlib();
+}
 SIMPLEMPL_END_NAMESPACE
