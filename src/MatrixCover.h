@@ -85,3 +85,4 @@ void mc_solver(int **dl_matrix, int *results, int *deleted_cols, int *col_group,
 
 
 void print_vec(int *vec, int vec_length);
+

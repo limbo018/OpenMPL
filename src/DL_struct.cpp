@@ -1,4 +1,11 @@
-#include"DL_struct.h"
+/**
+ * @file   DL_struct.cpp
+ * @author Wei Li 
+ * @date   Oct 2019
+ */
+#include "DL_struct.h"
+
+SIMPLEMPL_BEGIN_NAMESPACE
 
 void UD_self(Cell &c) {
 	c.Up = &c;
@@ -315,3 +322,5 @@ int main()
 	return 0;
 }
 */
+
+SIMPLEMPL_END_NAMESPACE
