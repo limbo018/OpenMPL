@@ -53,7 +53,7 @@ bool CmdParser::operator()(int argc, char** argv)
         if (limbo::iequals(algo_str, "ILP")) 
         {
 #if GUROBI == 1
-            parms.algo = AlgorithmTypeEnum::ILP_GURBOI;
+            parms.algo = AlgorithmTypeEnum::ILP_GUROBI;
 #elif LEMONCBC == 1
             parms.algo = AlgorithmTypeEnum::ILP_CBC;
 #else 
@@ -63,7 +63,7 @@ bool CmdParser::operator()(int argc, char** argv)
         if (limbo::iequals(algo_str, "ILP_UPDATED")) 
         {
 #if GUROBI == 1
-            parms.algo = AlgorithmTypeEnum::ILP_UPDATED_GURBOI;
+            parms.algo = AlgorithmTypeEnum::ILP_UPDATED_GUROBI;
 #else 
             mplPrint(kWARN, "ILP updated is not available without GUROBI, set to default algorithm\n");
 #endif
