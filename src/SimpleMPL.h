@@ -7,7 +7,7 @@
 
 #ifndef SIMPLEMPL_SIMPLEMPL_H
 #define SIMPLEMPL_SIMPLEMPL_H
-//#define DEBUG_LIWEI
+
 #include <iostream>
 #include <fstream>
 #include <stack>
@@ -148,12 +148,6 @@ class SimpleMPL
 		/// \param	rect_list list of rects in previous polygon. first_element: rect pointer second: revious polygon_id
 		void reconstruct_polygon(uint32_t& polygon_id, std::vector<uint32_t>& new_polygon_id_list, std::vector<std::pair<rectangle_pointer_type, uint32_t> >& rect_list,uint32_t current_poly_id);
 		
-		/// Falst color trail for speed-up the coloring, as deciribed in TCAD15, Yu: Layout decomposition for triple patterning lithography,
-		/// \param vSubColor is the coloring result if it can be colored by fast_color_trial
-		/// \param sg is the target graph
-		/// \return whether it can be colored by fast_color_trial or not. 
-		bool fast_color_trial(std::vector<int8_t>& vSubColor,graph_type const& sg);
-
 		/// After we insert stitches (generate dg from lg), we should update conflict relations which are stored in \m_mAdjVertex(since vertex number is even changed) 
 		void update_conflict_relation();
 		
@@ -194,7 +188,7 @@ class SimpleMPL
 
 
 
-		//find all of the vertexes which are in the same polygon with selected vertex before stitch insertion
+		/// find all of the vertexes which are in the same polygon with selected vertex before stitch insertion
 		void find_all_stitches(uint32_t vertex, std::vector<uint32_t>& stitch_vec);
 		/// report conflict number for the whole layout 
 		/// collect conflict patterns to m_vConflict
@@ -212,29 +206,7 @@ class SimpleMPL
         void write_graph(graph_type& g, std::string const& filename) const;
 		//print graph information for debug
 		void printGraph(graph_type& g);
-		// for dancing link solver
-		// \param g is the input graph for colorings
-		// \param color_vector is the vector which stores the coloring results of each node. sizeof(color_vector) == num_vertices(g)
-		void solve_by_dancing_link(graph_type& g,std::vector<int8_t>& color_vector);
 		
-		//for dancing link solver of stitch graph
-		double solve_by_dancing_link_with_stitch(graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id);
-
-		double solve_by_dancing_link_with_one_stitch(graph_type& g,std::vector<int8_t>& color_vector, uint32_t comp_id );
-
-		//push stitch adjacents nodes into same des_set used in solve_by_dancing_link_with_one_stitch.
-		void push_adj_into_set(vertex_descriptor & v1, SimpleMPL::graph_type & g, std::set<uint32_t> & des_set, std::set<uint32_t> & oppo_set);
-		//for dancing link solver of GPU version
-		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector,uint32_t comp_id);
-		
-		//find the node with maximal degree,
-		//return: the node id with maximal degree
-		//iteratively mark the nodes which locate in some polygon (for new_calc_cost function)
-		void iterative_mark(graph_type& g,std::vector<uint32_t>& parent_node_ids, vertex_descriptor& v1);
-		//calculate cost, used in dancing link
-		double new_calc_cost(graph_type& g,std::vector<int8_t>& color_vector);
-		//calculate cost, used in dancing link
-		double calc_cost(graph_type& g,std::vector<int8_t> const& vColor);
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
 		std::vector<uint32_t>					m_vVertexOrder;		///< vertex id, vertices in the same component are abutting,
@@ -242,33 +214,31 @@ class SimpleMPL
 		std::vector<std::vector<uint32_t> >		m_mAdjVertex;		///< adjcency list
 		std::vector<uint32_t>					m_vCompId;			///< independent component id
 		uint32_t								m_comp_cnt;			///< max# of connected components
-		uint32_t 								DG_num = 0;             ///< DG component number
-		std::vector<uint32_t>					vBookmark;			///< a bookmark marking the start and end locations of different components
+		uint32_t 								m_DG_num = 0;             ///< DG component number
+		std::vector<uint32_t>					m_vBookmark;			///< a bookmark marking the start and end locations of different components
 		/// density balancing 
 		std::vector<uint32_t>					m_vColorDensity;	///< number of colors used so far 
-		// std::vector<uint32_t>					IsVDDGND;
-
 
 		/// conflict report 
 		mutable std::vector<std::pair<uint32_t, uint32_t> > m_vConflict; ///< conflict patterns  
 
-		///< in_DG : controls whether that node has been removed in lg_simplification, in other words, that's stitch candidate.
-		///< also, only when a node is in DG, it will generate projections on other nodes.
-		std::vector<bool>						in_DG;		///< store the nodes left after lg_simplification, which means these nodes should be in DGs.
+		/// in_DG : controls whether that node has been removed in lg_simplification, in other words, that's stitch candidate.
+		/// also, only when a node is in DG, it will generate projections on other nodes.
+		std::vector<bool>						m_in_DG;		///< store the nodes left after lg_simplification, which means these nodes should be in DGs.
 		///< articulation_set : if it's articulation point, we won't split it.
-		std::vector<bool>						articulation_vec; ///< store the global articulation polygons
-		bool 									is_Rec;
+		std::vector<bool>						m_articulation_vec; ///< store the global articulation polygons
+		bool 									m_is_Rec;
 		///< if it's VGGGND, we won't split it.
-		std::vector<bool>						isVDDGND;			  ///< whether this node is VDDGND
-		std::vector<uint32_t>					new2ori_polygon;
-		std::vector<std::vector<uint32_t> >		ori2new_polygon;
-		std::vector<std::vector<uint32_t> >		StitchRelation;
+		std::vector<bool>						m_isVDDGND;			  ///< whether this node is VDDGND
+		std::vector<uint32_t>					m_new2ori_polygon;
+		std::vector<std::vector<uint32_t> >		m_ori2new_polygon;
+		std::vector<std::vector<uint32_t> >		m_StitchRelation;
 
-		std::vector<uint32_t>					dgCompId;
-		std::map<uint32_t, uint32_t>			dgGlobal2Local;
-		uint32_t								globalCompId;
-		std::vector<std::vector<uint32_t> >		vdd_multi_comp;
-		std::vector<coordinate_type>			boundaries; // boundaries of the whole layout
+		std::vector<uint32_t>					m_dgCompId;
+		std::map<uint32_t, uint32_t>			m_dgGlobal2Local;
+		uint32_t								m_globalCompId;
+		std::vector<std::vector<uint32_t> >		m_vdd_multi_comp;
+		std::vector<coordinate_type>			m_boundaries; // boundaries of the whole layout
 };
 
 SIMPLEMPL_END_NAMESPACE

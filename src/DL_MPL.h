@@ -1,7 +1,16 @@
+/**
+ * @file   DL_MPL.h
+ * @author Wei Li 
+ * @date   Oct 2019
+ */
+#ifndef SIMPLEMPL_DL_MPL_H
+#define SIMPLEMPL_DL_MPL_H
+
 #include"DL_struct.h"
-#include "Msg.h"
 #include<vector>
 #include<queue>
+
+SIMPLEMPL_BEGIN_NAMESPACE
 
 /*
  * @brief: This function read the graph file and return the relevant information to help solving the MPLD problem.
@@ -175,7 +184,7 @@ bool MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vect
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
 	int depth, std::vector<int> & MPLD_search_vector,  const char*  result_file,std::vector<bool>& col_cover_vector,std::vector<int>& row_select_vector,
 				std::vector<int> & partial_conflict_col_table,
-			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows, bool & need_debug);
+			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows);
 
 bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector, std::vector<int> & result_vec, std::pair<int, int> & conflict_pair,
 	int  vertex_numbers, int  mask_numbers,
@@ -183,18 +192,18 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 	std::vector<std::list<int> > & Order_of_Row_Deleted_in_Col, 
 	int depth, std::vector<int> & MPLD_search_vector,  const char*  result_file,std::vector<int>& row_select_vector,
 				std::vector<int> & partial_conflict_col_table,
-			std::vector<int>  &  conflict_col_table,bool & need_debug);
+			std::vector<int>  &  conflict_col_table);
 
 
 bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec, std::pair<int, int>  & conflict_pair, 
 			int vertex_numbers, std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector,
 			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results,
-			std::vector<std::vector<int>> &early_quit_count,bool & early_quit, bool & need_debug);
+			std::vector<std::vector<int>> &early_quit_count,bool & early_quit);
 
 //The core function to solve one dl.
 std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simple> > & edge_list,  int  row_numbers,  int  col_numbers,
- int  vertex_numbers, int mask_number,  bool & need_debug);
+ int  vertex_numbers, int mask_number);
 
 //The function to decode and calculate the cost of the results of DL.
 void decode_row_results(std::vector<int> & final_result, std::vector<int8_t> & color_vector, int  vertex_number,
@@ -235,3 +244,7 @@ void Decode_OpenMPL(int vertex_numbers, int mask_numbers, std::vector<int8_t>& c
  * @param	result_file:			the file storing the result
  */
 void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, bool whether_BFS, int mask_numbers, std::string result_file);
+
+SIMPLEMPL_END_NAMESPACE
+
+#endif

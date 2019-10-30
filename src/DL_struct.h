@@ -1,4 +1,11 @@
-#pragma once
+/**
+ * @file   DL_struct.h
+ * @author Wei Li 
+ * @date   Oct 2019
+ */
+#ifndef SIMPLEMPL_DL_STRUCT_H
+#define SIMPLEMPL_DL_STRUCT_H
+
 #include<iostream>
 #include<fstream>
 #include<string>
@@ -9,8 +16,10 @@
 #include<list>
 #include<map>
 #include<limits.h>
-#include "Msg.h"
 #include <assert.h>
+#include "Msg.h"
+
+SIMPLEMPL_BEGIN_NAMESPACE
 
 struct Cell {
 	Cell *Left, *Right, *Up, *Down;
@@ -256,3 +265,7 @@ void Recover_Rows_Cols(DancingLink & dl, std::set<int>  & row_set, std::set<int>
  *			bool	whether the dlx instance has valid solution in present step.
  */
 bool DancingLinksSolver(DancingLink & dl, std::vector<int> & result_vec, int(*Select_Next_Column_Method)(DancingLink&));
+
+SIMPLEMPL_END_NAMESPACE
+
+#endif

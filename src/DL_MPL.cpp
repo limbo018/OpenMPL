@@ -1,7 +1,15 @@
-#include"DL_MPL.h"
+/**
+ * @file   DL_MPL.cpp
+ * @author Wei Li 
+ * @date   Oct 2019
+ */
 #include <algorithm>
-#include<vector>
+#include <vector>
 #include <boost/timer/timer.hpp>
+#include"DL_MPL.h"
+
+SIMPLEMPL_BEGIN_NAMESPACE
+
 std::vector<std::list<Edge_Simple> >  Read_Graph_File(std::string filename, int & vertex_numbers, int & edge_numbers)
 {
 	std::ifstream filein(filename.c_str());
@@ -495,7 +503,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, const char* result_file,
 			std::vector<bool>& col_cover_vector,std::vector<int>& row_select_vector,
 			std::vector<int> & partial_conflict_col_table,
-			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows, bool & need_debug)
+			std::vector<int>  &  conflict_col_table,std::vector<int>  &partial_last_rows,std::vector<int>  &last_rows)
 {
 	// If there is no columns left or all the verteices are covered, then the algorithm terminates.
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
@@ -515,9 +523,6 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	//TODO: this depth should be a bug cause sometimes it is not by order (need a bool vector to record the col cover information)
 	int this_col = Next_Column_stitch(dl,MPLD_search_vector);
 	
-	// if(need_debug){
-	// 	std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
-	// }
 	col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
 	col_cover_vector[this_col] = true;
@@ -547,7 +552,7 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 
 		Remove_Rows_Cols(dl, row_set, col_set);
 		if (MPLD_X_Solver(dl, color_vector,result_vec, conflict_pair, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, 
-		MPLD_search_vector, result_file,col_cover_vector,row_select_vector,partial_conflict_col_table,conflict_col_table,partial_last_rows,last_rows,need_debug))
+		MPLD_search_vector, result_file,col_cover_vector,row_select_vector,partial_conflict_col_table,conflict_col_table,partial_last_rows,last_rows))
 			return true;
 
 		result_vec.pop_back();
@@ -556,9 +561,6 @@ bool MPLD_X_Solver(DancingLink & dl, std::vector<int8_t>& color_vector,std::vect
 	}
 	LR_recover(*col);
 	col_cover_vector[this_col] = false;
-	// if(need_debug){
-	// 	std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
-	// }
 	
 	return false;
 }
@@ -567,7 +569,7 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 			int vertex_numbers, int mask_numbers,
 			std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector, const char* result_file,
-			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results, bool & need_debug)
+			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results)
 {
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
@@ -577,9 +579,9 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 
 	Cell *col;
 	int this_col = Next_Column_stitch(dl,MPLD_search_vector);
-	if(need_debug){
-		std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
-	}
+#ifdef DEBUG_DANCINGLINKCOLORING
+    mplPrint(kDEBUG, "BEGIN: this_col : %d depth : %d\n", this_col, depth);
+#endif
 
 	col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
@@ -603,7 +605,7 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 		efficient_store_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 		Remove_Rows_Cols(dl, row_set, col_set);
 		if (Efficient_MPLD_X_Solver(dl,color_vector, result_vec, conflict_pair, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, 
-		MPLD_search_vector, result_file,partial_row_results,partial_col_results,col_results,need_debug))
+		MPLD_search_vector, result_file,partial_row_results,partial_col_results,col_results))
 			return true;
 
 		result_vec.pop_back();
@@ -611,9 +613,9 @@ bool Efficient_MPLD_X_Solver(DancingLink & dl,std::vector<int8_t>& color_vector,
 		Recover_Rows_Cols(dl, row_set, col_set);
 	}
 	LR_recover(*col);
-	if(need_debug){
-		std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
-	}
+#ifdef DEBUG_DANCINGLINKCOLORING
+    mplPrint(kDEBUG, "END: this_col : %d depth : %d\n", this_col, depth);
+#endif
 	col_results.pop_back();
 	return false;
 }
@@ -622,7 +624,7 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 			int vertex_numbers, std::vector<int> & Delete_the_Row_in_which_Col,
 			std::vector<std::list<int> >  & Order_of_Row_Deleted_in_Col, int depth, std::vector<int> & MPLD_search_vector,
 			std::vector<int> & partial_row_results, std::vector<int> & partial_col_results,std::vector<int> & col_results,
-			std::vector<std::vector<int>> &early_quit_count,bool & early_quit,bool & need_debug)
+			std::vector<std::vector<int>> &early_quit_count,bool & early_quit)
 {
 	if (dl.DL_Header.Right == &dl.DL_Header || Vertices_All_Covered(dl, vertex_numbers))
 	{
@@ -631,9 +633,6 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 
 	Cell *col;
 	int this_col = Next_Column_stitch(dl,MPLD_search_vector);
-	// if(need_debug){
-	// 	std::cout << "BEGIN: this_col : " << this_col << "depth : " << depth<<std::endl;
-	// }
 
 	col = &dl.Col_Header_Table[this_col];
 	LR_remove(*col);
@@ -665,7 +664,7 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 		efficient_store_intermediate_process(dl, this_col, row_set, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col);
 		Remove_Rows_Cols(dl, row_set, col_set);
 		if (Efficient_MPLD_X_Solver_v2(dl, result_vec, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth + 1, 
-		MPLD_search_vector,partial_row_results,partial_col_results,col_results,early_quit_count,early_quit,need_debug))
+		MPLD_search_vector,partial_row_results,partial_col_results,col_results,early_quit_count,early_quit))
 			return true;
 		else{
 			if(early_quit){
@@ -674,9 +673,9 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 				Recover_Rows_Cols(dl, row_set, col_set);
 				LR_recover(*col);
 				col_results.pop_back();
-				if(need_debug){
-					std::cout << "END by early stop: this_col : " << this_col << "depth : " << depth<<std::endl;
-				}
+#ifdef DEBUG_DANCINGLINKCOLORING
+                mplPrint(kDEBUG, "END by early stop: this_col : %d depth : %d\n", this_col, depth);
+#endif
 				return false;
 			}	
 		}
@@ -686,9 +685,6 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
 		Recover_Rows_Cols(dl, row_set, col_set);
 	}
 	LR_recover(*col);
-	// if(need_debug){
-	// 	std::cout << "END: this_col : " << this_col << "depth : " << depth<<std::endl;
-	// }
 	col_results.pop_back();
 	return false;
 }
@@ -700,7 +696,7 @@ bool Efficient_MPLD_X_Solver_v2(DancingLink & dl, std::vector<int> & result_vec,
  * Return : selected row 
  * **/
 std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simple> > & edge_list,  int  row_numbers,  int  col_numbers,
- int  vertex_numbers, int mask_number, bool & need_debug){
+ int  vertex_numbers, int mask_number){
 	//the total conflict pairs 
 	// boost::timer::cpu_timer dancing_link_timer;
 	// //dancing_link_timer.start();
@@ -740,16 +736,16 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 	}
 	bool early_quit = false;
 	bool result = Efficient_MPLD_X_Solver_v2(dl, selected_rows, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, 
-		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,early_quit_count, early_quit,need_debug);
+		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,early_quit_count, early_quit);
 	int iteration = 1;
 	//std::cout<< "IN MPL:::::::::::::::::::::first try solve " << dancing_link_timer.format(6)<<std::endl;
 	//dancing_link_timer.start();
 	while(result==false && partial_selected_rows.size()< vertex_numbers){
 		mplAssert(partial_selected_rows.size() == partial_selected_cols.size());
 		iteration++;
-		if(need_debug){
-			std::cout<<"itration "<<iteration<<std::endl;
-		}
+#ifdef DEBUG_DANCINGLINKCOLORING
+        mplPrint(kDEBUG, "iteration %d\n", iteration);
+#endif
 		final_conflict.insert(conflict_pair);
 		int col_edge = -1;
 		for(std::list<Edge_Simple>::iterator conflict_edge = edge_list[conflict_pair.first].begin();conflict_edge != edge_list[conflict_pair.first].end();++conflict_edge){
@@ -791,7 +787,7 @@ std::vector<int> core_solve_dl(DancingLink & dl, std::vector<std::list<Edge_Simp
 		}
 		early_quit = false;
 		result = Efficient_MPLD_X_Solver_v2(dl, selected_rows, conflict_pair, vertex_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, 
-		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,early_quit_count, early_quit,need_debug);
+		MPLD_search_vector,partial_selected_rows,partial_selected_cols,selected_cols,early_quit_count, early_quit);
 		//std::cout<< "IN MPL:::::::::::::::::::::second try solve " << dancing_link_timer.format(6)<<std::endl;
 		//dancing_link_timer.start();
 	}
@@ -963,3 +959,4 @@ void MPLD_Solver(std::string Graph_Filename, std::string Exact_Cover_Filename, b
 	//MPLD_X_Solver(dl, color_vec,result_vec, conflict_pair, vertex_numbers, mask_numbers, Delete_the_Row_in_which_Col, Order_of_Row_Deleted_in_Col, depth, MPLD_search_vector, result_file,col_cover_vector);
 }
 
+SIMPLEMPL_END_NAMESPACE
