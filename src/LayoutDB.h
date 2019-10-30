@@ -65,6 +65,8 @@ struct LayoutDB : public rectangle_data<int32_t>
     std::vector<uint32_t> vParentPolygonId;
     std::vector<rectangle_pointer_type> vPolyRectPattern;
     std::vector<uint32_t> vPolyRectBeginId;
+    //polygon set by Boost, easier to extract non-overlap rects
+    polygon_set_type PolygonSet; 
 	struct compare_rectangle_type 
 	{
 		// by x and then by y

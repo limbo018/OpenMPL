@@ -157,8 +157,6 @@ class SimpleMPL
 		/// After we insert stitches (generate dg from lg), we should update conflict relations which are stored in \m_mAdjVertex(since vertex number is even changed) 
 		void update_conflict_relation();
 		
-		/// merge vdd, and conduct biconnected component devision once more, and simplify the graph further.
-		void vdd_biconnected_component();
 		/// initialize graph from layoutdb_type
 		void construct_graph();
         /// construct graph from coloring distance, set adjacency list m_mAdjVertex 
@@ -227,7 +225,7 @@ class SimpleMPL
 		//push stitch adjacents nodes into same des_set used in solve_by_dancing_link_with_one_stitch.
 		void push_adj_into_set(vertex_descriptor & v1, SimpleMPL::graph_type & g, std::set<uint32_t> & des_set, std::set<uint32_t> & oppo_set);
 		//for dancing link solver of GPU version
-		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector);
+		double solve_by_dancing_link_GPU(graph_type& g,std::vector<int8_t>& color_vector,uint32_t comp_id);
 		
 		//find the node with maximal degree,
 		//return: the node id with maximal degree

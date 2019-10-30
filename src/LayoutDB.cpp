@@ -178,6 +178,13 @@ void LayoutDB::remove_overlap(std::vector<LayoutDB::rectangle_pointer_type>& vTa
 {
     // do nothing if empty
     if (vTargetPattern.empty()) return;
+
+    // gtl::polygon_90_set_data<LayoutDB::coordinate_type> polygon_set = gtl::polygon_90_set_data<LayoutDB::coordinate_type>();
+    // for (std::vector<rectangle_pointer_type>::iterator it1 = vTargetPattern.begin();it1!=vTargetPattern.end(); it1++){
+    //     rectangle_pointer_type& pPattern1 = *it1;
+    //     polygon_set.insert(pPattern1);
+    // }
+    // polygon_set.get_polygons(vTargetPattern);
     std::sort(vTargetPattern.begin(), vTargetPattern.end(), compare_rectangle_type());
     // only duplicate is removed so far
     // TO DO: remove overlapping patterns 
