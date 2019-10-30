@@ -52,7 +52,7 @@ cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path
 
 ### Features
  * Contact or metal layer decomposition 
- * No stitching
+ * Stitching
  * Support 3 or 4 coloring 
  * Density control
  * Multi-threading

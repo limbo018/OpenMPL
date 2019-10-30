@@ -44,7 +44,7 @@ if [[ $benchmark == output_* ]]; then
 # this parameter works for output_1x1.gds 
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
-	--args ./bin/SimpleMPL \
+	--args ./bin/OpenMPL \
     -shape "RECTANGLE" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
@@ -64,7 +64,7 @@ elif [[ $benchmark == "via2.gds" ]]; then
 
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
-	--args ./bin/SimpleMPL \
+	--args ./bin/OpenMPL \
     -shape "RECTANGLE" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
@@ -85,7 +85,7 @@ elif [[ $benchmark == Via2_local_precolor* ]]; then
 # this parameter works for Via2_local_precolor.gds
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
-	--args ./bin/SimpleMPL \
+	--args ./bin/OpenMPL \
     -shape "RECTANGLE" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
@@ -105,7 +105,7 @@ elif [[ $benchmark == via2_local_precolor* ]]; then
 # this parameter works for via2_local_precolor.gds
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
-	--args ./bin/SimpleMPL \
+	--args ./bin/OpenMPL \
     -shape "RECTANGLE" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
@@ -131,7 +131,7 @@ elif [[ $benchmark == sim_* ]]; then
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
 	--args \
-    ./bin/SimpleMPL \
+    ./bin/OpenMPL \
     -shape "POLYGON" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
@@ -157,7 +157,7 @@ fi
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
 	--args \
-    ./bin/SimpleMPL \
+    ./bin/OpenMPL \
     -shape "POLYGON" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
@@ -185,7 +185,7 @@ fi
 
 gdb \
 	-ex "source ${LIBRARIES_DIR}/gdb_container.sh" \
-	--args ./bin/SimpleMPL \
+	--args ./bin/OpenMPL \
     -shape "RECTANGLE" \
 	-in "${benchmark_dir}/${benchmark}" \
 	-out "${output}" \
