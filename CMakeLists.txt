@@ -45,6 +45,7 @@ if (NOT Boost_FOUND)
 endif (NOT Boost_FOUND)
 message("-- Boost_INCLUDE_DIRS = ${Boost_INCLUDE_DIRS}")
 find_package(Gurobi)
+find_package(OpenMP)
 
 add_subdirectory(thirdparty)
 add_subdirectory(src)
