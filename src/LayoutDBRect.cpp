@@ -80,6 +80,9 @@ void LayoutDBRect::initialize_data()
     remove_overlap(vPatternBbox);
     // construction with packing algorithm 
     rtree_type tTmp (vPatternBbox.begin(), vPatternBbox.end());
+    uint32_t vertex_num = vPatternBbox.size();
+    for (uint32_t i = 0; i < vertex_num; i++)
+        vRectBeginId.push_back(i);
     tPatternBbox.swap(tTmp);
 }
 void LayoutDBRect::set_color(uint32_t pattern_id, int8_t color)

@@ -95,7 +95,6 @@ void LayoutDBPolygon::initialize_data()
     tPatternBbox.swap(tTmp1);
     // compute parent polygons for each rectangle by connected component algorithm 
     compute_parent_polygons();
-
     tPatternBbox.clear(); // I want to reduce peak memory, but not sure if it works or not
     // after initialization, tPatternBbox is used to store vPatternBbox
     // construction with packing algorithm 
@@ -258,6 +257,67 @@ void LayoutDBPolygon::report_data_kernel() const
 {
     mplPrint(kINFO, "# polygon rectangles = %lu\n", vPolyRectPattern.size());
 }
+
+void LayoutDBPolygon::refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent)
+{
+	vParentPolygonId.clear();
+	vParentPolygonId.assign(rect_to_parent.begin(), rect_to_parent.end());
+
+	vPolyRectPattern.clear();
+	vPolyRectPattern.assign(new_rect_vec.begin(), new_rect_vec.end());
+
+	// update vPolyRectBeginId
+	std::vector<uint32_t>().swap(vPolyRectBeginId);
+	uint32_t base = vParentPolygonId[0];
+	vPolyRectBeginId.push_back(0);
+	for (uint32_t i = 1, ie = vParentPolygonId.size(); i < ie; i++)
+	{
+        if(vParentPolygonId[i] - vParentPolygonId[i-1]>1){
+            std::cout<<"i, vParentPolygonId[i] ,vParentPolygonId[i-1] "<<i<<" "<<vParentPolygonId[i] <<" "<<vParentPolygonId[i-1]<<std::endl;
+        }
+        //mplAssert(vParentPolygonId[i] - vParentPolygonId[i-1]<=1);
+		if (vParentPolygonId[i] != base)
+		{
+			base = vParentPolygonId[i];
+			vPolyRectBeginId.push_back(i);
+		}
+	}
+
+	uint32_t num_polygons = vPolyRectBeginId.size();
+	std::vector<rectangle_pointer_type>().swap(vPatternBbox);
+
+	// vPatternBbox is the bounding box of a polygon 
+	vPatternBbox.assign(num_polygons, NULL);
+
+	for (uint32_t i = 0, ie = vPolyRectPattern.size(); i != ie; ++i)
+	{
+		const rectangle_pointer_type &pPolyRectPattern = vPolyRectPattern[i];
+		uint32_t parentPolygonId = vParentPolygonId[i];
+		rectangle_pointer_type& pPattern = vPatternBbox[parentPolygonId];
+		if (!pPattern)
+		{
+			pPattern = new rectangle_type(*pPolyRectPattern);
+			pPattern->pattern_id(parentPolygonId); // vPatternBbox.pattern_id() is different from vPolyRectPattern.pattern_id()
+		}
+		else
+		{
+			//		mplAssert(pPattern->color() == pPolyRectPattern->color());
+			gtl::encompass(*pPattern, *pPolyRectPattern);
+		}
+        #ifdef DEBUG_LIWEI
+            std::cout<<"parentPolygonId, i, vPolyRectBeginId[parentPolygonId] is "<<parentPolygonId<<" "<<i<<" "<<vPolyRectBeginId[parentPolygonId]<<std::endl;
+        #endif
+		mplAssert(vPolyRectBeginId[parentPolygonId] <= i);
+	}
+
+	// no need to store tPatternBbox again, since we don't need to compute the distance between two Polyons again,
+	// Also, due to the stitch insertion, the distanaces in rtree are invalid. I'm not sure whether to delete this.
+	tPatternBbox.clear(); // tPatternBbox is used to store vPatternBbox construction with packing algorithm 
+	rtree_type tTmp(vPatternBbox.begin(), vPatternBbox.end());
+	tPatternBbox.swap(tTmp);
+	return;
+}
+
 
 SIMPLEMPL_END_NAMESPACE
 

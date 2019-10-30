@@ -32,7 +32,10 @@ bool CmdParser::operator()(int argc, char** argv)
         .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK|LP|SDP >").default_value(std::string(defaultParms.algo)))
         .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
         .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
-        .add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
+        .add_option(Value<bool>("-use_stitch", &parms.use_stitch, "whether use stitch projection").toggle(true).default_value(defaultParms.use_stitch).toggle_value(true))
+		.add_option(Value<bool>("gen_stitch", &parms.gen_stitch, "control whether only generate and output stitches").toggle(true).default_value(defaultParms.gen_stitch).toggle(true))
+		.add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
+        .add_option(Value<double>("-weighted_stitch", &parms.weight_stitch, "a floating point number indicating the weight of stitch").default_value(defaultParms.weight_stitch))
         ;
     try
     {
@@ -54,6 +57,14 @@ bool CmdParser::operator()(int argc, char** argv)
             parms.algo = AlgorithmTypeEnum::ILP_CBC;
 #else 
             mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default algorithm\n");
+#endif
+        }
+        if (limbo::iequals(algo_str, "ILP_UPDATED")) 
+        {
+#if GUROBI == 1
+            parms.algo = AlgorithmTypeEnum::ILP_UPDATED_GURBOI;
+#else 
+            mplPrint(kWARN, "ILP updated is not available without GUROBI, set to default algorithm\n");
 #endif
         }
         else if (limbo::iequals(algo_str, "LP"))
@@ -82,6 +93,8 @@ bool CmdParser::operator()(int argc, char** argv)
         }
         else if (limbo::iequals(algo_str, "BACKTRACK"))
             parms.algo = AlgorithmTypeEnum::BACKTRACK;
+        else if (limbo::iequals(algo_str, "DL"))
+            parms.algo = AlgorithmTypeEnum::DANCING_LINK;
         else mplPrint(kWARN, "Unknown algorithm type %s, set to default algorithm\n", algo_str.c_str());
 
         // post processing shape_str

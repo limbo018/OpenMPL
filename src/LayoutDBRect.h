@@ -24,7 +24,7 @@ struct LayoutDBRect : public LayoutDB
 {
     typedef LayoutDB base_type;
 	typedef base_type::coordinate_type coordinate_type;
-
+	std::vector<uint32_t> vRectBeginId; 
 	LayoutDBRect();
 	LayoutDBRect(coordinate_type xl, coordinate_type yl, coordinate_type xh, coordinate_type yh);
 	LayoutDBRect(LayoutDBRect const& rhs);
@@ -38,6 +38,11 @@ struct LayoutDBRect : public LayoutDB
 	virtual void initialize_data();
     /// \return poly rect patterns 
     virtual std::vector<rectangle_pointer_type> const& polyrect_patterns() const {return vPatternBbox;}
+	virtual std::vector<uint32_t> const& ParentPolygonId() const {return vRectBeginId; }
+	virtual std::vector<uint32_t> const& PolyRectBgnLoc() const 
+	{
+		return vRectBeginId; 
+	}
     /// set color for patterns 
     /// \param pattern_id is the index of vPatternBbox
     virtual void set_color(uint32_t pattern_id, int8_t color);
@@ -50,6 +55,16 @@ struct LayoutDBRect : public LayoutDB
     /// \return the euclidean distance of two patterns 
     virtual coordinate_difference euclidean_distance(rectangle_type const& r1, rectangle_type const& r2) const {return gtl::euclidean_distance(r1, r2);}
 
+	virtual void refresh(std::vector<rectangle_pointer_type>& new_rect_vec, std::vector<uint32_t>& rect_to_parent) 
+	{ 
+		(void) rect_to_parent;
+		std::vector<rectangle_pointer_type>().swap(vPatternBbox);
+		vPatternBbox.assign(new_rect_vec.size(), NULL);
+		for(unsigned int i = 0; i<new_rect_vec.size();i++ )
+        {
+			vPatternBbox[i] = new_rect_vec[i];
+		}
+    }
     /// always return false as each rectangle is its own parent 
     //virtual bool same_parent(uint32_t, uint32_t) const {return false;}
 };

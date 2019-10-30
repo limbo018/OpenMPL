@@ -88,7 +88,13 @@ struct GdsWriter
 			std::vector<std::pair<uint32_t, uint32_t> > const& vConflict, 
 			std::vector<std::vector<uint32_t> > const& mAdjVertex, 
 			std::string const& strname = "TOPCELL", double unit = 0.001) const;
-    /// write rectangles 
+    
+	void operator() (std::string const& filename, layoutdb_type const& db,
+		std::vector<std::pair<uint32_t, uint32_t> > const& vConflict,
+		std::vector<std::vector<uint32_t> > const& vStitches,
+		std::vector<std::vector<uint32_t> > const& mAdjVertex) const;
+
+	/// write rectangles 
 	void write_rectangles(GdsParser::GdsWriter& gw, std::vector<rectangle_pointer_type> const& vRect, const int32_t layer_offset) const;
     /// write conflicts 
 	void write_conflicts(GdsParser::GdsWriter& gw, layoutdb_type const& db, 
@@ -98,6 +104,9 @@ struct GdsWriter
     /// write conflict edges 
 	void write_edges(GdsParser::GdsWriter& gw, layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, const int32_t layer) const; 
 
+	void write_edges(GdsParser::GdsWriter& gw, layoutdb_type const& db, std::vector<std::vector<uint32_t> > const& mAdjVertex, std::vector<bool> isVDDGND, const int32_t layer) const;
+
+	void write_Simplification(std::string const filename, layoutdb_type const& db, std::vector<uint32_t> m_vCompId, std::vector<std::vector<uint32_t> > m_mAdjVertex, std::vector<bool> in_DG, std::vector<bool> isVDDGND, bool lg) const;
 };
 
 SIMPLEMPL_END_NAMESPACE
