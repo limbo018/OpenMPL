@@ -88,10 +88,10 @@ A table of options :
 -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP >
 -shape (RECTANGLE)           shape mode < RECTANGLE|POLYGON >
 -verbose (false)             toggle controlling screen messages
--stitch (false)              toggle controlling stitch insertion, default is false
 -dbg_comp_id (4294967295)    debug component id
 -use_stitch                  use stitch to avoid conflict
 -gen_stitch                  generate stitch candidate
+-weight_stitch               a floating point number indicating the weight of stitch
 ```
 
 One exmaple : /bin/run.sh.
