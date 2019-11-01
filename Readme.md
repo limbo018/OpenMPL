@@ -31,7 +31,7 @@
 * [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
     "**OpenMPL: An Open Source Layout Decomposer**", 
     IEEE International Conference on ASIC (ASICON), Chongqing, China, Oct. 29–Nov. 1, 2019.
-([preprint](https://arxiv.org/pdf/1809.07554v3.pdf)) ([limbo018.github.io/papers/DFM_ASICON2019_Li.slides.pdf slides])
+([preprint](https://arxiv.org/pdf/1809.07554v3.pdf)) ([slides](https://limbo018.github.io/papers/DFM_ASICON2019_Li.slides.pdf))
 
 ### How To Compile
 
