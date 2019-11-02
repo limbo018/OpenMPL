@@ -3,7 +3,7 @@
 > **OpenMPL** stands for open multiple patterning lithography framework.
 
 | Stitch Insertion | Graph Simplification | Decomposition |
-| ---------------- | -------------------- | ------------- | 
+| ---------------- | -------------------- | ------------- |
 | <img src=/images/stitch-2.png width=150> | <img src=/images/biconnected.png width=250> | <img src=/images/total_c2.gif width=200> |
 
 ### Pre-requisite
@@ -31,7 +31,7 @@
 * [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
     "**OpenMPL: An Open Source Layout Decomposer**", 
     IEEE International Conference on ASIC (ASICON), Chongqing, China, Oct. 29–Nov. 1, 2019.
-([preprint](https://arxiv.org/pdf/1809.07554v3.pdf))
+([preprint](https://arxiv.org/pdf/1809.07554v3.pdf)) ([slides](http://yibolin.com/publications/papers/DFM_ASICON2019_Li.slides.pdf))
 
 ### How To Compile
 
@@ -65,6 +65,10 @@ cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path
 
 The Csdp API used in OpenMPL has been modified and built for threading safety at high level. 
 
+### How to Get Benchmarks
+
+[Download](http://www.cse.cuhk.edu.hk/~wli/ISCAS_benchmark.zip)
+
 ### How To Execute
 
 ```bash
@@ -88,10 +92,10 @@ A table of options :
 -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP >
 -shape (RECTANGLE)           shape mode < RECTANGLE|POLYGON >
 -verbose (false)             toggle controlling screen messages
--stitch (false)              toggle controlling stitch insertion, default is false
 -dbg_comp_id (4294967295)    debug component id
 -use_stitch                  use stitch to avoid conflict
 -gen_stitch                  generate stitch candidate
+-weight_stitch               a floating point number indicating the weight of stitch
 ```
 
 One exmaple : /bin/run.sh.
@@ -99,8 +103,9 @@ One exmaple : /bin/run.sh.
 ### Possible Compiler Problems
 
 + default CFLAGS of boost and gurobi are different in newest version
-  + downgrade the boost version
-
+  
++ downgrade the boost version
+  
 + ```
   SimpleMPL.cpp:461:5: error: ‘graph_simplification_type’ has no member named ‘set_isVDDGND’
   ```
@@ -117,8 +122,8 @@ One exmaple : /bin/run.sh.
 | ------------ | ------------------- | --------------------------------------------------------- |
 | Yibo Lin     | School of EECS, PKU | [yibolin@pku.edu.cn](mailto:yibolin@pku.edu.cn)           |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
-| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:wli@cse.cuhk.edu.hk)           |
-| Qi Sun       | CSE Dept, CUHK      | [qsun@cse.cuhk.edu.hk](mailto:qsun@cse.cuhk.edu.hk)       |
+| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:wli@cse.cuhk.edu.hk)          |
+| Yuzhe Ma     | CSE Dept, CUHK      | [yzma@cse.cuhk.edu.hk](mailto:yzma@cse.cuhk.edu.hk)       |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |
 
 

@@ -239,7 +239,7 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
 	std::ofstream jsonFile;
 	// char* tmp = const_cast<char *>(m_db->input_gds().c_str());
 	// char* tmp2 = (char*)strcat(tmp,graph_count);
-    mplPrint(kDEBUG, "json file name is %s\n", graph_count);
+    //mplPrint(kDEBUG, "json file name is %s\n", graph_count);
 	// char* output_json =(char*)strcat(tmp2,".json");
 	
 	jsonFile.open("./json/" + m_db->input_gds() + graph_count + ".json");

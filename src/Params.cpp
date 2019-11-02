@@ -36,7 +36,7 @@ bool CmdParser::operator()(int argc, char** argv)
 		.add_option(Value<bool>("-gen_stitch", &parms.gen_stitch, "control whether only generate and output stitches").toggle(true).default_value(defaultParms.gen_stitch).toggle(true))
 		.add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
         .add_option(Value<int32_t>("-record", &parms.record, "record level, which controls the degree of recording information").default_value(defaultParms.record))
-        .add_option(Value<double>("-weighted_stitch", &parms.weight_stitch, "a floating point number indicating the weight of stitch").default_value(defaultParms.weight_stitch))
+        .add_option(Value<double>("-weight_stitch", &parms.weight_stitch, "a floating point number indicating the weight of stitch").default_value(defaultParms.weight_stitch))
         ;
     try
     {
