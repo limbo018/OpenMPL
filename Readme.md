@@ -3,7 +3,7 @@
 > **OpenMPL** stands for open multiple patterning lithography framework.
 
 | Stitch Insertion | Graph Simplification | Decomposition |
-| ---------------- | -------------------- | ------------- | 
+| ---------------- | -------------------- | ------------- |
 | <img src=/images/stitch-2.png width=150> | <img src=/images/biconnected.png width=250> | <img src=/images/total_c2.gif width=200> |
 
 ### Pre-requisite
@@ -65,6 +65,10 @@ cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path
 
 The Csdp API used in OpenMPL has been modified and built for threading safety at high level. 
 
+### How to Get Benchmarks
+
+<a href=" http://www.cse.cuhk.edu.hk/~wli/ISCAS_benchmark.zip " download="benchmark.zip">Download </a>
+
 ### How To Execute
 
 ```bash
@@ -99,8 +103,9 @@ One exmaple : /bin/run.sh.
 ### Possible Compiler Problems
 
 + default CFLAGS of boost and gurobi are different in newest version
-  + downgrade the boost version
-
+  
++ downgrade the boost version
+  
 + ```
   SimpleMPL.cpp:461:5: error: ‘graph_simplification_type’ has no member named ‘set_isVDDGND’
   ```
