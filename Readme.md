@@ -117,8 +117,8 @@ One exmaple : /bin/run.sh.
 | ------------ | ------------------- | --------------------------------------------------------- |
 | Yibo Lin     | School of EECS, PKU | [yibolin@pku.edu.cn](mailto:yibolin@pku.edu.cn)           |
 | Bei Yu       | CSE Dept, CUHK      | [byu@cse.cuhk.edu.hk](mailto:byu@cse.cuhk.edu.hk)         |
-| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:wli@cse.cuhk.edu.hk)           |
-| Qi Sun       | CSE Dept, CUHK      | [qsun@cse.cuhk.edu.hk](mailto:qsun@cse.cuhk.edu.hk)       |
+| Wei Li       | CSE Dept, CUHK      | [werry715@gmail.com](mailto:wli@cse.cuhk.edu.hk)          |
+| Yuzhe Ma     | CSE Dept, CUHK      | [yzma@cse.cuhk.edu.hk](mailto:yzma@cse.cuhk.edu.hk)       |
 | David Z. Pan | ECE Dept, UT Austin | [dpan@ece.utexas.edu](mailto:dpan@ece.utexas.edu)         |
 
 
