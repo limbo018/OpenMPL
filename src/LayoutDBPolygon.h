@@ -67,6 +67,7 @@ struct LayoutDBPolygon : public LayoutDB
     /// \return a point that is on the pattern and close to its center with given pattern id (polygon id for LayoutDBPolygon)
     /// default is to return the center of rectangle in vPatternBbox
     virtual point_type get_point_closest_to_center(uint32_t pattern_id) const; 
+    virtual void cal_bound();
 	virtual void report_data() const;
     void report_data_kernel() const;
 

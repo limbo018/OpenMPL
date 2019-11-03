@@ -129,7 +129,13 @@ void SimpleMPL::read_gds()
 	mplPrint(kINFO, "Reading input file %s\n", m_db->input_gds().c_str());
 	// read input gds file 
 	GdsReader reader (*m_db);
-    mplAssertMsg(reader(m_db->input_gds()), "failed to read %s", m_db->input_gds().c_str());
+        mplAssertMsg(reader(m_db->input_gds()), "failed to read %s", m_db->input_gds().c_str());
+	m_db->num_of_cells = 1;	
+	m_db->cal_bound();
+	mplAssertMsg(reader(m_db->input2_gds()),"failed to read %s", m_db->input2_gds().c_str());
+	m_db->num_of_cells = 2;
+	m_db->cal_bound();
+	mplAssertMsg(reader(m_db->input3_gds()),"failed to read %s", m_db->input3_gds().c_str());
 	// must call initialize after reading 
 	m_db->initialize_data();
 	
@@ -817,7 +823,7 @@ void SimpleMPL::cal_boundaries()
 		coordinate_type test0 = gtl::xl(*(m_db->vPatternBbox[i]));
 		coordinate_type test1 = gtl::xh(*(m_db->vPatternBbox[i]));
 		coordinate_type test2 = gtl::yl(*(m_db->vPatternBbox[i]));
-		coordinate_type test3 = gtl::yh(*(m_db->vPatternBbox[i]));
+		coordinate_type test3 = gtl::yh(*(m_db->vPatternBbox[i]));(int)
 		tmp_bound[0] = std::min(test0,tmp_bound[0]);
 		tmp_bound[1] = std::max(test1,tmp_bound[1]);
 		tmp_bound[2] = std::min(test2,tmp_bound[2]);

@@ -48,6 +48,11 @@ void LayoutDB::initialize()
 {
     strname                  = "TOPCELL";
     unit                     = 0.001;
+    num_of_cells	     = 0;
+    boundaries.push_back(coordinate_type(0));
+    boundaries.push_back(coordinate_type(0));
+    boundaries.push_back(coordinate_type(0));
+    boundaries.push_back(coordinate_type(0));
     coloring_distance        = 0;
 }
 void LayoutDB::copy(LayoutDB const& rhs)

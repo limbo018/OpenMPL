@@ -52,6 +52,8 @@ struct LayoutDB : public rectangle_data<int32_t>
 	std::map<int32_t, std::vector<path_type> > hPath;    ///< path that indicates conflict edges from input
 	std::string strname;                            ///< TOPCELL name, useful for dump out gds files 
 	double unit;                               ///< keep output gdsii file has the same unit as input gdsii file 
+	int num_of_cells;			   ///< count num of input gdsii cell files
+    std::vector<coordinate_type>  boundaries; // boundaries of the whole layout
 	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_nm and unit
 
 	/// options 
@@ -115,6 +117,8 @@ struct LayoutDB : public rectangle_data<int32_t>
     /// \return a point that is on the pattern and close to its center with given pattern id (polygon id for LayoutDBPolygon)
     /// default is to return the center of rectangle in vPatternBbox
     virtual point_type get_point_closest_to_center(uint32_t pattern_id) const = 0; 
+
+    virtual void cal_bound() = 0;
     virtual void report_data() const = 0;
 	void report_data_kernel() const;
 
@@ -144,6 +148,8 @@ struct LayoutDB : public rectangle_data<int32_t>
     inline AlgorithmType algo() const {return parms.algo;}
     inline ShapeMode shape_mode() const {return parms.shape_mode;}
     inline std::string const& input_gds() const {return parms.input_gds;}
+    inline std::string const& input2_gds() const {return parms.input2_gds;}
+    inline std::string const& input3_gds() const {return parms.input3_gds;}
     inline std::string const& output_gds() const {return parms.output_gds;}
 };
 
