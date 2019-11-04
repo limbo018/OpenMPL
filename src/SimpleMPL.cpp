@@ -132,10 +132,17 @@ void SimpleMPL::read_gds()
         mplAssertMsg(reader(m_db->input_gds()), "failed to read %s", m_db->input_gds().c_str());
 	m_db->num_of_cells = 1;	
 	m_db->cal_bound();
-	mplAssertMsg(reader(m_db->input2_gds()),"failed to read %s", m_db->input2_gds().c_str());
-	m_db->num_of_cells = 2;
-	m_db->cal_bound();
-	mplAssertMsg(reader(m_db->input3_gds()),"failed to read %s", m_db->input3_gds().c_str());
+	if(m_db->input2_gds() != std::string("")){
+		mplAssertMsg(reader(m_db->input2_gds()),"failed to read %s", m_db->input2_gds().c_str());
+		m_db->num_of_cells += 1;
+		m_db->cal_bound();
+	}
+	if(m_db->input3_gds() != std::string("")){
+		mplAssertMsg(reader(m_db->input3_gds()),"failed to read %s", m_db->input3_gds().c_str());
+		m_db->num_of_cells += 1;
+		m_db->cal_bound();
+	}
+	
 	// must call initialize after reading 
 	m_db->initialize_data();
 	
@@ -451,7 +458,8 @@ void SimpleMPL::solve()
             m_vBookmark[m_vCompId[m_vVertexOrder[i]]] = i;
         }
 	}
-	this->cal_boundaries();
+	//We implememt another cal_bound func in layout class for cell sequence generation, therefore we comment this line to slightly reduce the runtime 04/11/19 Wei
+	//this->cal_boundaries();
 	this->setVddGnd(); //perhapes we should also consider pshape->getPointNum()==4
 	mplPrint(kINFO,"VDD nodes set done\n");
 	clock_t begin = clock();
@@ -1137,8 +1145,8 @@ void SimpleMPL::find_touch_rects(rectangle_pointer_type& prec, std::vector<recta
 
 bool SimpleMPL::is_long_enough(rectangle_pointer_type& rec)
 {
-    if (boost::polygon::delta(*rec, gtl::HORIZONTAL) >= 0.64*(m_boundaries[1]-m_boundaries[0])||\
-            boost::polygon::delta(*rec, gtl::VERTICAL) >= 0.64*(m_boundaries[3]-m_boundaries[2]))
+    if (boost::polygon::delta(*rec, gtl::HORIZONTAL) >= 0.64*(m_db->boundaries[1]-m_db->boundaries[0])||\
+            boost::polygon::delta(*rec, gtl::VERTICAL) >= 0.64*(m_db->boundaries[3]-m_db->boundaries[2]))
         return true;
     else
         return false;
