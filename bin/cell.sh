@@ -39,6 +39,6 @@ mkdir -p benchout
     -color_num 3 \
     -algo BACKTRACK\
     -thread_num 8\
-     -use_stitch 
+     -use_stitch \
 	-gen_stitch\
   #   -dbg_comp_id 10096
