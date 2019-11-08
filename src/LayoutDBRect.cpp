@@ -71,7 +71,7 @@ void LayoutDBRect::add_pattern(int32_t layer, std::vector<point_type> const& vPo
     vPatternBbox.push_back(pPattern);
 }
 
-void cal_bound(){
+void LayoutDBRect::cal_bound(){
     std::vector<coordinate_type>().swap(boundaries);
 	mplAssert(boundaries.empty());
 	uint32_t vertex_num = vPatternBbox.size();
@@ -94,6 +94,10 @@ void cal_bound(){
 	boundaries.push_back(tmp_bound[2]);
 	boundaries.push_back(tmp_bound[3]);
 	return;
+}
+
+void LayoutDBRect::flip(coordinate_type leftx,coordinate_type rightx){
+    return;
 }
 /// call it to initialize rtree 
 /// it should be faster than gradually insertion 

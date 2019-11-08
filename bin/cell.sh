@@ -30,9 +30,9 @@
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/INV_X1.gds \
-    -in2 bench/INV_X1.gds\
-    -in3 bench/INV_X1.gds\
+    -in cell/AND2_X1.gds \
+    -in2 cell/AND2_X1.gds\
+    -in2_flip\
     -out benchout/sim_c1_sti.gds  \
     -coloring_distance 120 \
 	-uncolor_layer 11 \

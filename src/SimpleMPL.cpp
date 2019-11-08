@@ -9,6 +9,9 @@
 #include "LayoutDBRect.h"
 #include "LayoutDBPolygon.h"
 #include "RecoverHiddenVertex.h"
+#include <errno.h>
+#include <sstream>
+#define SYSERROR()  errno
 #include <stack>
 #ifdef _OPENMP
 #include <omp.h>
@@ -135,12 +138,25 @@ void SimpleMPL::read_gds()
 	if(m_db->input2_gds() != std::string("")){
 		mplAssertMsg(reader(m_db->input2_gds()),"failed to read %s", m_db->input2_gds().c_str());
 		m_db->num_of_cells += 1;
+		coordinate_type left_x = m_db->boundaries[1];
+		std::cout<<left_x<<std::endl;
 		m_db->cal_bound();
+		coordinate_type right_x = m_db->boundaries[1];
+		std::cout<<right_x<<std::endl;
+		if(m_db->parms.flip2){
+			std::cout<<"FLIP SECOND CELL!"<<std::endl;
+			m_db->flip(left_x,right_x);
+		}
 	}
 	if(m_db->input3_gds() != std::string("")){
 		mplAssertMsg(reader(m_db->input3_gds()),"failed to read %s", m_db->input3_gds().c_str());
 		m_db->num_of_cells += 1;
+		coordinate_type left_x = m_db->boundaries[2];
 		m_db->cal_bound();
+		coordinate_type right_x = m_db->boundaries[2];
+		if(m_db->parms.flip3){
+			m_db->flip(left_x,right_x);
+		}
 	}
 	
 	// must call initialize after reading 
@@ -254,11 +270,21 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
 	// char* tmp2 = (char*)strcat(tmp,graph_count);
     //mplPrint(kDEBUG, "json file name is %s\n", graph_count);
 	// char* output_json =(char*)strcat(tmp2,".json");
-	
-	jsonFile.open("./json/" + m_db->input_gds() + graph_count + ".json");
-
+    std::stringstream ss1;
+    ss1 << m_db->parms.flip2;
+    std::stringstream ss2;
+    ss2 << m_db->parms.flip3;
+	jsonFile.open( m_db->input_gds() +"_"+m_db->input2_gds()+"_"+ss1.str()+"_"+m_db->input3_gds()+"_"+ss2.str() +"_"+ graph_count + ".json");
+	//jsonFile.open("/json/"+ m_db->input_gds() + graph_count + ".json");
+	//jsonFile.open("/research/byu2/wli/repository/OpenMPL/bin/json/" + m_db->input_gds() + graph_count + ".json");
+	//std::cout<<jsonFile.is_open()<<std::endl;
+	//std::cerr<<"Failed to open file : "<<SYSERROR()<<std::endl;
 	SimpleMPL::graph_type tmp_graph = sg;
 	jsonFile<<"[";
+	std::cout<<"HELLO!"<<std::endl;
+	jsonFile.flush();
+	jsonFile.close();
+	return;
 	boost::graph_traits<graph_type>::vertex_iterator vi1, vie1;
 	for (boost::tie(vi1, vie1) = boost::vertices(tmp_graph); vi1 != vie1; ++vi1)
     {
@@ -831,7 +857,7 @@ void SimpleMPL::cal_boundaries()
 		coordinate_type test0 = gtl::xl(*(m_db->vPatternBbox[i]));
 		coordinate_type test1 = gtl::xh(*(m_db->vPatternBbox[i]));
 		coordinate_type test2 = gtl::yl(*(m_db->vPatternBbox[i]));
-		coordinate_type test3 = gtl::yh(*(m_db->vPatternBbox[i]));(int)
+		coordinate_type test3 = gtl::yh(*(m_db->vPatternBbox[i]));
 		tmp_bound[0] = std::min(test0,tmp_bound[0]);
 		tmp_bound[1] = std::max(test1,tmp_bound[1]);
 		tmp_bound[2] = std::min(test2,tmp_bound[2]);

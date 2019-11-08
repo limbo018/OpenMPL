@@ -68,6 +68,10 @@ struct LayoutDBPolygon : public LayoutDB
     /// default is to return the center of rectangle in vPatternBbox
     virtual point_type get_point_closest_to_center(uint32_t pattern_id) const; 
     virtual void cal_bound();
+    /// this method is for cell sequence generation, we need to flip cell sometimes. 
+    /// leftx: the most left x axis of the rectangle which is to be fliped
+    /// rightx: the most right x axis of the rectangle which is to be fliped
+    virtual void flip(coordinate_type leftx,coordinate_type rightx);
 	virtual void report_data() const;
     void report_data_kernel() const;
 

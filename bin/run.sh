@@ -36,3 +36,4 @@ mkdir -p benchout
     -thread_num 8 \
     -use_stitch \
     -gen_stitch \
+    -record 2\

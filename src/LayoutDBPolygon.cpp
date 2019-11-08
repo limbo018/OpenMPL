@@ -71,6 +71,7 @@ void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& 
     for (std::vector<rectangle_data<coordinate_type> >::const_iterator it = vTmpRectangle.begin(), ite = vTmpRectangle.end(); it != ite; ++it)
     {
         rectangle_data<coordinate_type> const& rect = *it;
+        if( gtl::yh(rect) -  gtl::yl(rect) == 5600){continue;}
         rectangle_pointer_type pPattern = new rectangle_type(gtl::xl(rect)+boundaries[1], gtl::yl(rect), gtl::xh(rect)+boundaries[1], gtl::yh(rect));
         pPattern->layer(layer);
         pPattern->color(color);
@@ -112,19 +113,19 @@ void LayoutDBPolygon::set_color(uint32_t pattern_id, int8_t color)
         vPolyRectPattern[i]->color(color);
 }
 
-void cal_bound(){
-    std::vector<coordinate_type>().swap(boundaries);
+void LayoutDBPolygon::cal_bound(){
+    std::vector<LayoutDBPolygon::coordinate_type>().swap(boundaries);
 	mplAssert(boundaries.empty());
-	uint32_t vertex_num = vPolyRectPattern.size();
-	coordinate_type tmp_bound[4] = {INT_MAX,0,INT_MAX ,0};
+	uint32_t vertex_num = LayoutDBPolygon::vPolyRectPattern.size();
+	LayoutDBPolygon::coordinate_type tmp_bound[4] = {INT_MAX,0,INT_MAX ,0};
 
 
 	for (uint32_t i = 0; i < vertex_num; i++)
     {
-		coordinate_type test0 = gtl::xl(*(vPolyRectPattern[i]));
-		coordinate_type test1 = gtl::xh(*(vPolyRectPattern[i]));
-		coordinate_type test2 = gtl::yl(*(vPolyRectPattern[i]));
-		coordinate_type test3 = gtl::yh(*(vPolyRectPattern[i]));
+		LayoutDBPolygon::coordinate_type test0 = gtl::xl(*(vPolyRectPattern[i]));
+		LayoutDBPolygon::coordinate_type test1 = gtl::xh(*(vPolyRectPattern[i]));
+		LayoutDBPolygon::coordinate_type test2 = gtl::yl(*(vPolyRectPattern[i]));
+		LayoutDBPolygon::coordinate_type test3 = gtl::yh(*(vPolyRectPattern[i]));
 		tmp_bound[0] = std::min(test0,tmp_bound[0]);
 		tmp_bound[1] = std::max(test1,tmp_bound[1]);
 		tmp_bound[2] = std::min(test2,tmp_bound[2]);
@@ -135,6 +136,23 @@ void cal_bound(){
 	boundaries.push_back(tmp_bound[2]);
 	boundaries.push_back(tmp_bound[3]);
 	return;
+}
+void LayoutDBPolygon::flip(coordinate_type leftx,coordinate_type rightx){
+    for(uint32_t i = 0; i < vPolyRectPattern.size(); i++){
+        LayoutDBPolygon::coordinate_type rect_xl = gtl::xl(*(vPolyRectPattern[i]));
+        LayoutDBPolygon::coordinate_type rect_xh = gtl::xh(*(vPolyRectPattern[i]));
+        if( rect_xl >= leftx && rect_xh <= rightx){
+            //if the rect is in the range, we flip it horizontally
+            //here we new a rectangle and erease original one, there should be another more efficient way
+            rectangle_pointer_type pPattern = new rectangle_type(leftx + rightx - rect_xh, gtl::yl(*(vPolyRectPattern[i])), leftx + rightx - rect_xl, gtl::yh(*(vPolyRectPattern[i])));
+            pPattern->layer(vPolyRectPattern[i]->layer());
+            pPattern->color(vPolyRectPattern[i]->color());
+            pPattern->pattern_id(vPolyRectPattern[i]->pattern_id());
+            vPolyRectPattern.insert(vPolyRectPattern.begin() + i,pPattern);
+            //erase previous one
+            vPolyRectPattern.erase(vPolyRectPattern.begin() + i+1);
+        }
+    }
 }
 LayoutDBPolygon::point_type LayoutDBPolygon::get_point_closest_to_center(uint32_t pattern_id) const
 {

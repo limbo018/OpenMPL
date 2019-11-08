@@ -119,6 +119,7 @@ struct LayoutDB : public rectangle_data<int32_t>
     virtual point_type get_point_closest_to_center(uint32_t pattern_id) const = 0; 
 
     virtual void cal_bound() = 0;
+    virtual void flip(coordinate_type leftx,coordinate_type rightx) = 0;
     virtual void report_data() const = 0;
 	void report_data_kernel() const;
 
