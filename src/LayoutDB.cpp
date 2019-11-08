@@ -53,6 +53,10 @@ void LayoutDB::initialize()
     boundaries.push_back(coordinate_type(0));
     boundaries.push_back(coordinate_type(0));
     boundaries.push_back(coordinate_type(0));
+    curret_bound.push_back(coordinate_type(INT_MAX));
+    curret_bound.push_back(coordinate_type(0));
+    curret_bound.push_back(coordinate_type(INT_MAX));
+    curret_bound.push_back(coordinate_type(0));
     coloring_distance        = 0;
 }
 void LayoutDB::copy(LayoutDB const& rhs)

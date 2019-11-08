@@ -34,8 +34,9 @@ mkdir -p benchout
     -in2 cell/AND2_X1.gds\
     -in2_flip\
     -out benchout/sim_c1_sti.gds  \
-    -coloring_distance 120 \
-	-uncolor_layer 11 \
+    -coloring_distance 100 \
+	-uncolor_layer 15 \
+    -uncolor_layer 16 \
     -color_num 3 \
     -algo BACKTRACK\
     -thread_num 8\

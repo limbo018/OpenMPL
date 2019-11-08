@@ -54,6 +54,7 @@ struct LayoutDB : public rectangle_data<int32_t>
 	double unit;                               ///< keep output gdsii file has the same unit as input gdsii file 
 	int num_of_cells;			   ///< count num of input gdsii cell files
     std::vector<coordinate_type>  boundaries; // boundaries of the whole layout
+    std::vector<coordinate_type>  curret_bound; // boundaries of the whole layout
 	coordinate_difference coloring_distance;   ///< minimum coloring distance, set from coloring_distance_nm and unit
 
 	/// options 
