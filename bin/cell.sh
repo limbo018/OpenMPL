@@ -30,8 +30,8 @@
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in cell/AND2_X1.gds \
-    -in2 cell/AND2_X1.gds\
+    -in cell/SDFFRNQ_X1.gds \
+    -in2 cell/SDFFRNQ_X1.gds\
     -in2_flip\
     -out benchout/sim_c1_sti.gds  \
     -coloring_distance 100 \
@@ -42,4 +42,5 @@ mkdir -p benchout
     -thread_num 8\
      -use_stitch \
 	-gen_stitch\
-  #   -dbg_comp_id 10096
+    -record 2\
+    # -dbg_comp_id 10096

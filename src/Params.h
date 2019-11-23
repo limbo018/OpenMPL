@@ -38,6 +38,7 @@ struct ControlParameter
 	uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
 
 	std::string   input_gds;                   ///< input gdsii filename 
+    std::string   selector;                  ///<filename indicating the selector>
 	std::string   input2_gds;		   ///< second gdsii filename
 	std::string   input3_gds;		   ///< third gdsii filename
 	std::string   output_gds;                  ///< output gdsii filename 
@@ -69,6 +70,7 @@ inline ControlParameter::ControlParameter()
 	gen_stitch				 = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";
+    selector                 = "";
     input2_gds		     = "";
     input3_gds		     = "";
     output_gds               = "";
@@ -94,6 +96,7 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(dbg_comp_id, rhs.dbg_comp_id);
     std::swap(input_gds, rhs.input_gds);
     std::swap(input2_gds,rhs.input2_gds);
+    std::swap(selector, rhs.selector);
     std::swap(input3_gds,rhs.input3_gds);
     std::swap(output_gds, rhs.output_gds);
     std::swap(algo, rhs.algo);

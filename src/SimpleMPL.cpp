@@ -11,6 +11,7 @@
 #include "RecoverHiddenVertex.h"
 #include <errno.h>
 #include <sstream>
+#include <fstream>
 #define SYSERROR()  errno
 #include <stack>
 #ifdef _OPENMP
@@ -69,7 +70,7 @@ void SimpleMPL::run(int argc, char** argv)
 	myfile.close();
 	this->read_cmd(argc, argv);
 	this->read_gds();
-    if (m_db->parms.record > 1)
+    if (m_db->parms.record > 2)
     {
         std::ofstream myfile_small;
         myfile_small.open ("small_results.txt", std::ofstream::app);
@@ -80,6 +81,7 @@ void SimpleMPL::run(int argc, char** argv)
 	this->report();
 	this->write_gds();
 }
+
 void SimpleMPL::reset(bool init)
 {
     // release memory and set to initial value 
@@ -274,17 +276,27 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
     ss1 << m_db->parms.flip2;
     std::stringstream ss2;
     ss2 << m_db->parms.flip3;
-	jsonFile.open( m_db->input_gds() +"_"+m_db->input2_gds()+"_"+ss1.str()+"_"+m_db->input3_gds()+"_"+ss2.str() +"_"+ graph_count + ".json");
+	//for one input gds
+	string filename0 = m_db->input_gds().substr(m_db->input_gds().find("/",2)+1) +"_"+ graph_count + ".json";
+	//for two input gds
+	string filename = m_db->input_gds().substr(m_db->input_gds().find("/",2)+1) +"_"+m_db->input2_gds().substr(m_db->input2_gds().find("/",2)+1)+"_"+ss1.str()+"_"+ graph_count + ".json";
+	//for three input gds
+	string filename1 = m_db->input_gds().substr(m_db->input_gds().find("/",2)+1) +"_"+m_db->input2_gds().substr(m_db->input2_gds().find("/",2)+1)+"_"+ss1.str()+"_"+m_db->input3_gds().substr(m_db->input3_gds().find("/",2)+1)+"_"+ss2.str() +"_"+ graph_count + ".json";
+	if(!m_db->input3_gds().empty())
+		jsonFile.open(".//json//"+filename1);
+	else{
+		if(!m_db->input2_gds().empty())
+			jsonFile.open(".//json//"+filename);
+		else
+			jsonFile.open(".//json//"+filename0);
+	}
+		
 	//jsonFile.open("/json/"+ m_db->input_gds() + graph_count + ".json");
 	//jsonFile.open("/research/byu2/wli/repository/OpenMPL/bin/json/" + m_db->input_gds() + graph_count + ".json");
 	//std::cout<<jsonFile.is_open()<<std::endl;
 	//std::cerr<<"Failed to open file : "<<SYSERROR()<<std::endl;
 	SimpleMPL::graph_type tmp_graph = sg;
 	jsonFile<<"[";
-	std::cout<<"HELLO!"<<std::endl;
-	jsonFile.flush();
-	jsonFile.close();
-	return;
 	boost::graph_traits<graph_type>::vertex_iterator vi1, vie1;
 	for (boost::tie(vi1, vie1) = boost::vertices(tmp_graph); vi1 != vie1; ++vi1)
     {
@@ -392,7 +404,22 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
 	jsonFile<<"\n]";
 	jsonFile.close();
 } 
-
+void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filename ) const
+{
+    // in order to make the .gv file readable by boost graphviz reader 
+    // I dump it with boost graphviz writer 
+    boost::dynamic_properties dp;
+    dp.property("id", boost::get(boost::vertex_index, g));
+    dp.property("node_id", boost::get(boost::vertex_index, g));
+    dp.property("label", boost::get(boost::vertex_index, g));
+    // somehow edge properties need mutable graph_type& 
+    dp.property("color", boost::get(boost::edge_weight, g));
+    dp.property("label", boost::get(boost::edge_weight, g));
+    std::ofstream out ((filename+".gv").c_str());
+    boost::write_graphviz_dp(out, g, dp, string("id"));
+    out.close();
+    la::graphviz2pdf(filename);
+}
 void SimpleMPL::write_txt(graph_type const& sg,std::string const filename, double& cost)
 {
 	std::ofstream out(("./graph/"+filename+"_"+std::to_string(cost)+".txt").c_str());
@@ -447,9 +474,15 @@ void SimpleMPL::out_stat()
 
 void SimpleMPL::solve()
 {
+	int numProcs = omp_get_num_procs();
+    std::cout << "omp_get_num_procs() = " << numProcs << std::endl;
     // skip if no uncolored layer 
     if (m_db->parms.sUncolorLayer.empty())
         return;
+	if(m_db->parms.selector!= ""){
+		this->update_algorithm_selector(m_db->parms.selector);
+	}
+	
 	boost::timer::cpu_timer total_timer;
 	total_timer.start();
 	if (m_db->vPatternBbox.empty())
@@ -488,7 +521,8 @@ void SimpleMPL::solve()
 	//this->cal_boundaries();
 	this->setVddGnd(); //perhapes we should also consider pshape->getPointNum()==4
 	mplPrint(kINFO,"VDD nodes set done\n");
-	clock_t begin = clock();
+	boost::timer::cpu_timer stitch_timer;
+	stitch_timer.start();
 	this->lg_simplification();
 
 	if (m_db->use_stitch()) //if we use stitches, we need insert stitches through projection()
@@ -497,9 +531,7 @@ void SimpleMPL::solve()
 		//GdsWriter writer;
 		//writer.write_Simplification(m_db->output_gds() + "_lg_simplification.gds", *m_db, m_vCompId, m_mAdjVertex, m_in_DG, m_isVDDGND, true);
 		this->projection();		///< m_vBookmark has already been updated in projection()
-		
-		clock_t end = clock();
-		mplPrint(kINFO, "Projection takes  %g seconds\n", (double)(end - begin) / CLOCKS_PER_SEC);
+		std::cout<<total_timer.format(2, "stitch time %ts(%p%), %ws real")<<std::endl;
 	}
     std::vector<uint32_t>().swap(m_dgCompId);
     m_dgCompId.assign(m_db->vPatternBbox.size(), 0);
@@ -537,12 +569,10 @@ void SimpleMPL::solve()
 	boost::timer::cpu_timer t;
 	t.start();
 	// thread number controled by user option 
-// #ifdef _OPENMP
-// #pragma omp parallel for schedule(dynamic)
-// #endif 
-// #ifdef _OPENMP
-// #pragma omp parallel 
-// #endif 
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(m_db->thread_num())
+#endif 
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
         // construct a component 
@@ -783,7 +813,8 @@ uint32_t SimpleMPL::merge_K4_coloring(SimpleMPL::graph_type const& dg, std::vect
 		vSubColor.assign(num_vertices(sg), -1);
 
 		typedef lac::Coloring<graph_type> coloring_solver_type;
-		coloring_solver_type* pcs = create_coloring_solver(sg);
+		//TODO: merge k4 is not used currently so that we use sub_comp_id here instead of comp_id
+		coloring_solver_type* pcs = create_coloring_solver(sg,sub_comp_id,sub_comp_id);
 
 		boost::graph_traits<graph_type>::vertex_iterator vi, vie;
 		for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
@@ -872,6 +903,9 @@ void SimpleMPL::cal_boundaries()
 
 void SimpleMPL::projection()
 {
+#ifdef _OPENMP
+	std::cout<<"OPENMP enabled with thread num "<<m_db->thread_num()<<std::endl;
+#endif
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();	///< original rectangle list
 	std::vector<uint32_t> Poly_Rect_begin;
@@ -911,7 +945,6 @@ void SimpleMPL::projection()
 #ifdef _OPENMP
 	#pragma omp for ordered schedule(dynamic, 1)
 #endif
-
 	for (uint32_t i = 0; i < vertex_num; i++)
 	{
 		uint32_t v = m_vVertexOrder[i];
@@ -1919,44 +1952,55 @@ void SimpleMPL::depth_first_search(uint32_t source, uint32_t comp_id, uint32_t& 
 ///// it is better to wrap it as an independent function 
 
 /// create coloring solver pointer according to algorithm type
-lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMPL::graph_type const& sg) const
+lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMPL::graph_type const& sg, uint32_t comp_id, uint32_t sub_comp_id) const
 {
     typedef lac::Coloring<graph_type> coloring_solver_type;
     coloring_solver_type* pcs = NULL;
+	if(m_db->parms.selector != ""){
+		if(m_algorithm_selector[comp_id][sub_comp_id] == 0){
+			pcs = new lac::ILPColoring<graph_type> (sg); 
+		}
+		else{
+			pcs = new DancingLinkColoring<graph_type> (sg); 
+		}
+	}
+	else{
     switch (m_db->algo().get())
-    {
-#if GUROBI == 1
-        case AlgorithmTypeEnum::ILP_GUROBI:
-            pcs = new lac::ILPColoring<graph_type> (sg); 
-            break;
-        case AlgorithmTypeEnum::ILP_UPDATED_GUROBI:
-            pcs = new lac::ILPColoringUpdated<graph_type> (sg);
-            break; 
-        case AlgorithmTypeEnum::LP_GUROBI:
-            pcs = new lac::LPColoring<graph_type> (sg); 
-            break;
-        case AlgorithmTypeEnum::MIS_GUROBI:
-            pcs = new lac::MISColoring<graph_type> (sg); 
-            break;
-#endif
-#if LEMONCBC == 1
-        case AlgorithmTypeEnum::ILP_CBC:
-            pcs = new lac::ILPColoringLemonCbc<graph_type> (sg); 
-            break;
-#endif
-#if CSDP == 1
-        case AlgorithmTypeEnum::SDP_CSDP:
-            pcs = new lac::SDPColoringCsdp<graph_type> (sg); 
-            break;
-#endif
-        case AlgorithmTypeEnum::BACKTRACK:
-            pcs = new lac::BacktrackColoring<graph_type> (sg);
-            break;
-        case AlgorithmTypeEnum::DANCING_LINK:
-            pcs = new DancingLinkColoring<graph_type> (sg);
-            break; 
-        default: mplAssertMsg(0, "unknown algorithm type");
-    }
+		{
+	#if GUROBI == 1
+			case AlgorithmTypeEnum::ILP_GUROBI:
+				pcs = new lac::ILPColoring<graph_type> (sg); 
+				break;
+			case AlgorithmTypeEnum::ILP_UPDATED_GUROBI:
+				pcs = new lac::ILPColoringUpdated<graph_type> (sg);
+				break; 
+			case AlgorithmTypeEnum::LP_GUROBI:
+				pcs = new lac::LPColoring<graph_type> (sg); 
+				break;
+			case AlgorithmTypeEnum::MIS_GUROBI:
+				pcs = new lac::MISColoring<graph_type> (sg); 
+				break;
+	#endif
+	#if LEMONCBC == 1
+			case AlgorithmTypeEnum::ILP_CBC:
+				pcs = new lac::ILPColoringLemonCbc<graph_type> (sg); 
+				break;
+	#endif
+	#if CSDP == 1
+			case AlgorithmTypeEnum::SDP_CSDP:
+				pcs = new lac::SDPColoringCsdp<graph_type> (sg); 
+				break;
+	#endif
+			case AlgorithmTypeEnum::BACKTRACK:
+				pcs = new lac::BacktrackColoring<graph_type> (sg);
+				break;
+			case AlgorithmTypeEnum::DANCING_LINK:
+				pcs = new DancingLinkColoring<graph_type> (sg);
+				break; 
+			default: mplAssertMsg(0, "unknown algorithm type");
+		}
+	}
+
     pcs->stitch_weight(m_db->parms.weight_stitch);
     pcs->color_num(m_db->color_num());
     pcs->threads(1); // we use parallel at higher level 
@@ -2029,7 +2073,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 
         // solve coloring 
         typedef lac::Coloring<graph_type> coloring_solver_type;
-        coloring_solver_type* pcs = create_coloring_solver(sg);
+        coloring_solver_type* pcs = create_coloring_solver(sg,comp_id,sub_comp_id);
 
         // set precolored vertices 
 
@@ -2104,8 +2148,26 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
                 }
             }
         }
-
-        if( m_db->parms.record > 1)
+		if(m_db->parms.record > 1){
+			//store ILP runtime information/ read ILP information for DL to comparison, this is for DAC2020
+            if(m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI && num_vertices(sg) > 3)
+            {
+				std::string runtime = comp_timer.format(6,"%w");
+                std::ofstream myfile;
+                myfile.open("ILP_obj.txt", std::ofstream::app);
+                myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
+                myfile.close();
+            }
+            if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK && num_vertices(sg) > 3)
+            {
+				std::string runtime = comp_timer.format(6,"%w");
+                std::ofstream myfile;
+                myfile.open("DL_obj.txt", std::ofstream::app);
+                myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
+                myfile.close();
+            }
+		}
+        if( m_db->parms.record > 2)
         {
             if(obj_value1 != 0)
             {
@@ -2130,21 +2192,19 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             //we only store json file with graph size larger than 3
             if(num_vertices(sg) > 3)
             {
+				//The json file name is orgnized as follows: compid_subcompid_objvalue_time.json
                 std::string name = std::to_string(comp_id);
                 name.append("_");
                 name.append(std::to_string(sub_comp_id));
+				name.append("_");
+				name.append(std::to_string(obj_value1).substr(0,std::to_string(obj_value1).size()-5));
+				name.append("_");
+                name.append(std::to_string(num_vertices(sg)));
+				name.append("_");
+				name.append(comp_timer.format(4,"%w"));
+
                 this->write_json(sg,(char*)name.c_str(),vSubColor);
             }
-
-            //store ILP runtime information/ read ILP information for DL to comparison, this is for DAC2020
-            if(m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI && num_vertices(sg) > 3)
-            {
-                std::ofstream myfile;
-                myfile.open("ILP_obj.txt", std::ofstream::app);
-                myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<comp_timer.format(3,"%w")<<"\n";
-                myfile.close();
-            }
-
         }
 
         delete pcs;
@@ -2513,22 +2573,54 @@ bool SimpleMPL::check_uncolored(std::vector<uint32_t>::const_iterator itBgn, std
     return false;
 }
 
-void SimpleMPL::write_graph(SimpleMPL::graph_type& g, std::string const& filename ) const
-{
-    // in order to make the .gv file readable by boost graphviz reader 
-    // I dump it with boost graphviz writer 
-    boost::dynamic_properties dp;
-    dp.property("id", boost::get(boost::vertex_index, g));
-    dp.property("node_id", boost::get(boost::vertex_index, g));
-    dp.property("label", boost::get(boost::vertex_index, g));
-    // somehow edge properties need mutable graph_type& 
-    dp.property("color", boost::get(boost::edge_weight, g));
-    dp.property("label", boost::get(boost::edge_weight, g));
-    std::ofstream out ((filename+".gv").c_str());
-    boost::write_graphviz_dp(out, g, dp, string("id"));
-    out.close();
-    la::graphviz2pdf(filename);
+void SimpleMPL::update_algorithm_selector(std::string filename){
+	int max_comp_id = -1;
+	int max_sub_comp_id = -1;
+	std::ifstream selection_file(filename);
+	//read the max comp_id to alloct enough memory
+	while(!selection_file.eof()){
+		int comp_id = -1;
+		int sub_comp_id = -1;
+		int algorithm = -1;
+		selection_file >> comp_id;
+		selection_file >> sub_comp_id;
+		selection_file >> algorithm;
+		if(comp_id > max_comp_id){
+			max_comp_id = comp_id;
+		}
+		if(sub_comp_id > max_sub_comp_id){
+			max_sub_comp_id = sub_comp_id;
+		}
+	}
+    selection_file.close();
+	std::vector<std::vector<int> >().swap(m_algorithm_selector);
+	m_algorithm_selector.resize(max_comp_id + 1);
+	std::cout<<"max_comp_id"<<max_comp_id<<",max_sub_comp_id"<<max_sub_comp_id<<std::endl;
+    for(int i = 0; i <= max_comp_id; i ++){
+        std::vector<int> sub_selector;
+		std::vector<int>().swap(sub_selector);
+        sub_selector.assign(max_sub_comp_id+1,-1);
+        m_algorithm_selector[i].insert(m_algorithm_selector[i].end(),sub_selector.begin(),sub_selector.end());
+    }
+	std::ifstream selection_file_twice(filename);
+	//read the max comp_id to alloct enough memory
+	while(!selection_file_twice.eof()){
+		int comp_id = -1;
+		int sub_comp_id = -1;
+		int algorithm = -1;
+		selection_file_twice >> comp_id;
+		selection_file_twice >> sub_comp_id;
+		selection_file_twice >> algorithm;
+		if(comp_id == -1){
+			continue;
+		}
+        m_algorithm_selector[comp_id][sub_comp_id] = algorithm;
+        //std::cout<<comp_id<<" "<<sub_comp_id<<" "<<algorithm<<std::endl;
+	}
+    selection_file_twice.close();
+	return;
 }
+
 
 void SimpleMPL::print_welcome() const
 {

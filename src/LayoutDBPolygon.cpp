@@ -75,7 +75,7 @@ void LayoutDBPolygon::add_pattern(int32_t layer, std::vector<point_type> const& 
 		curret_bound[1] = std::max(gtl::xh(rect)+boundaries[1]-boundaries[0],curret_bound[1]);
 		curret_bound[2] = std::min(gtl::yl(rect),curret_bound[2]);
 		curret_bound[3] = std::max(gtl::yh(rect),curret_bound[3]);
-        if( gtl::yh(rect)- gtl::yl(rect) == 56){continue;}
+        if( gtl::yh(rect)- gtl::yl(rect) == 560){continue;}
         rectangle_pointer_type pPattern = new rectangle_type(gtl::xl(rect)+boundaries[1]-boundaries[0], gtl::yl(rect), gtl::xh(rect)+boundaries[1]-boundaries[0], gtl::yh(rect));
         pPattern->layer(layer);
         pPattern->color(color);

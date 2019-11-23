@@ -26,14 +26,14 @@
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/sim_c1.gds \
+    -in bench/sim_s2.gds \
     -out benchout/sim_c1_sti.gds  \
     -coloring_distance 100 \
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo BACKTRACK \
+    -algo DL \
     -thread_num 8 \
     -use_stitch \
     -gen_stitch \
-    -record 2\
+    -record 1\

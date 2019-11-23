@@ -21,6 +21,7 @@ bool CmdParser::operator()(int argc, char** argv)
     po_type desc (std::string("SimpleMPL 1.1 Usage"));
     desc.add_option(Value<bool>("-help", &help, "toggle printing help message").toggle(true).default_value(false).toggle_value(true).help(true))
         .add_option(Value<std::string>("-in", &parms.input_gds, "input gds file name").required(true))
+        .add_option(Value<std::string>("-selector",&parms.selector,"guided selction file").required(false))
         .add_option(Value<std::string>("-in2",&parms.input2_gds,"second input gds file").required(false))
         .add_option(Value<bool>("-in2_flip", &parms.flip2, "flip second input").required(false).toggle(true).default_value(defaultParms.flip2).toggle_value(true))
         .add_option(Value<std::string>("-in3", &parms.input3_gds,"third input gds file").required(false))

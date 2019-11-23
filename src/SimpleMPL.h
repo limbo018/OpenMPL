@@ -173,7 +173,7 @@ class SimpleMPL
         /// create solver and initialize 
         /// \param sg is the simplified graph 
         /// \return a point of solver base type
-        lac::Coloring<graph_type>* create_coloring_solver(graph_type const& sg) const;
+        lac::Coloring<graph_type>* create_coloring_solver(graph_type const& sg,uint32_t comp_id, uint32_t sub_comp_id) const;
         /// given a graph, solve coloring, contain nested call for itself 
         /// \param dg is decomposition graph before simplification
         double solve_graph_coloring(uint32_t comp_id, graph_type const& dg, 
@@ -185,7 +185,6 @@ class SimpleMPL
 
 		/// report conflict number for a component 
 		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
-
 
 
 		/// find all of the vertexes which are in the same polygon with selected vertex before stitch insertion
@@ -206,7 +205,9 @@ class SimpleMPL
         void write_graph(graph_type& g, std::string const& filename) const;
 		//print graph information for debug
 		void printGraph(graph_type& g);
-		
+		/// for update the m_algorithm_selector
+		/// \param filename is the filename which stores the selection information
+		void update_algorithm_selector(std::string filename);
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
 		std::vector<uint32_t>					m_vVertexOrder;		///< vertex id, vertices in the same component are abutting,
@@ -239,6 +240,7 @@ class SimpleMPL
 		uint32_t								m_globalCompId;
 		std::vector<std::vector<uint32_t> >		m_vdd_multi_comp;
 		std::vector<coordinate_type>			m_boundaries; // boundaries of the whole layout
+		std::vector<std::vector<int>>			m_algorithm_selector; ///<store the algorithm selection results for selecting algorithm
 };
 
 SIMPLEMPL_END_NAMESPACE
