@@ -26,14 +26,15 @@
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in tmp/mike.gds \
-    -out tmp/fourth_dff_unlabeled_result.gds \
-    -coloring_distance 60 \
-    -simplify_level 0 \
-	-uncolor_layer 19 \
-    -color_num 2 \
-    -algo BACKTRACK\
-    -thread_num 1 \
+    -in bench/sim_c1.gds \
+    -selector guide/c1selector.txt \
+    -out benchout/sim_c1_sti.gds  \
+    -coloring_distance 120 \
+	-uncolor_layer 1 \
+	-uncolor_layer 101 \
+    -color_num 3 \
+    -algo DL \
+    -thread_num 8 \
     -use_stitch \
     -gen_stitch \
-    -record 3\
+    -record 1\

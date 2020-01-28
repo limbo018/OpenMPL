@@ -1,5 +1,4 @@
 #!
-
 # ========================================================================
 #                         SimpleMPL Usage                         
 #  -help (false)                toggle printing help message
@@ -12,7 +11,7 @@
 #  -path_layer                  an integer indicating layer for conflict edges
 #  -precolor_layer              an integer indicating layer for pre-colored patterns
 #  -uncolor_layer               an integer indicating layer for coloring
-#  -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP|DL >
+#  -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP|DL|ILP_UPDATED >
 #  -shape (RECTANGLE)           shape mode < RECTANGLE|POLYGON >
 #  -verbose (false)             toggle controlling screen messages
 #  -use_stitch                  use stitch to avoid conflict
@@ -26,14 +25,14 @@
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in tmp/mike.gds \
-    -out tmp/fourth_dff_unlabeled_result.gds \
-    -coloring_distance 60 \
-    -simplify_level 0 \
-	-uncolor_layer 19 \
-    -color_num 2 \
-    -algo BACKTRACK\
-    -thread_num 1 \
+    -in big/sparc_mul_top_85.gds \
+    -out benchout/sim_c1_sti.gds  \
+    -coloring_distance 100 \
+	-uncolor_layer 15 \
+	-uncolor_layer 16 \
+    -color_num 3 \
+    -algo DL \
+    -thread_num 8 \
     -use_stitch \
     -gen_stitch \
-    -record 3\
+    -record 0\
