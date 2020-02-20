@@ -184,7 +184,7 @@ class SimpleMPL
                 graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor, std::set<vertex_descriptor>& vdd_set, bool flag) const;
 
 		/// report conflict number for a component 
-		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
+		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd);
 
 
 		/// find all of the vertexes which are in the same polygon with selected vertex before stitch insertion
@@ -203,8 +203,15 @@ class SimpleMPL
         /// \param g is mutable because edge properties for boost::dynamic_properties need mutable graph 
         /// \param filename should not contain extension 
         void write_graph(graph_type& g, std::string const& filename) const;
+		//new_cal_cost for calculating cost(for debug)
+		void iterative_mark(graph_type const& g, std::vector<uint32_t>& parent_node_ids, vertex_descriptor& v1) const;
+		double new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> const& vColor);
 		//print graph information for debug
-		void printGraph(graph_type& g);
+		void print_graph(graph_type& g);
+		//print graph information for debug
+		uint32_t num_of_conflict_adj(graph_type& g, vertex_descriptor v);
+		//print graph information for debug
+		uint32_t num_of_stitch_adj(graph_type& g, vertex_descriptor v);
 		/// for update the m_algorithm_selector
 		/// \param filename is the filename which stores the selection information
 		void update_algorithm_selector(std::string filename);
