@@ -695,9 +695,15 @@ void SimpleMPL::lg_simplification(std::vector<uint32_t>::const_iterator itBgn, s
 	if (m_db->simplify_level() > 1)
 		simplify_strategy |= graph_simplification_type::HIDE_SMALL_DEGREE;
 
-	if (m_db->simplify_level() > 2)
-        simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
-	//uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
+	// NOTE: After experiments, I noticed that BICONNECTED_COMPONENT cannot be used in the first simplification phase
+	// since some valid stitches may be introduced in the arti_point! if we use BICONNECTED_COMPONENT.
+	// Currently, biconnected point recovery does not fit into stitch case!
+	// by WEI 21/02/2020
+	
+	// if (m_db->simplify_level() > 2)
+    //     simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
+	
+	// uint32_t simplify_strategy = graph_simplification_type::HIDE_SMALL_DEGREE;
 	//simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 	graph_simplification_type gs(dg, m_db->color_num());
 	
@@ -971,8 +977,8 @@ void SimpleMPL::projection()
 		uint32_t end_idx = Poly_Rect_end[pid];
 		
 		std::vector<uint32_t>& nei_vec = m_mAdjVertex[pid];
-		//if (m_in_DG[pid] && m_isVDDGND[pid] == false) 
-		if (m_in_DG[pid] && m_articulation_vec[pid] == false && m_isVDDGND[pid] == false) 
+		if (m_in_DG[pid] && m_isVDDGND[pid] == false) 
+		// if (m_in_DG[pid] && m_articulation_vec[pid] == false && m_isVDDGND[pid] == false) 
 		{ 
 			std::vector<rectangle_pointer_type> poss_nei_vec;
 			for (std::vector<uint32_t>::iterator it = nei_vec.begin(); it != nei_vec.end(); it++)
