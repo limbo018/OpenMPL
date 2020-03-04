@@ -2587,7 +2587,14 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
         simplify_strategy |= graph_simplification_type::BICONNECTED_COMPONENT;
 	double acc_obj_value = 0;
     // solve graph coloring 
-    acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
+	if (m_db->remove_stitch_redundancy())
+	{
+		acc_obj_value = solve_graph_coloring_with_remove_stitch_redundancy(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
+	}
+	else
+	{
+    	acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
+	}
 
 #ifdef DEBUG
 	/*
@@ -2950,5 +2957,273 @@ void SimpleMPL::print_welcome() const
   mplPrint(kNONE, "=======================================================================\n");
 }
 
+std::vector<int> SimpleMPL::get_adjacent_vertices(const vertex_descriptor &v, const graph_type &G, int &stitch_edge_cnt)
+{
+	std::vector<int> adjacent_vertices;
+	boost::graph_traits<graph_type>::adjacency_iterator adj_iter, adj_iter_end;
+	for (boost::tie(adj_iter, adj_iter_end) = boost ::adjacent_vertices(v, G); adj_iter != adj_iter_end; ++adj_iter)
+	{
+		vertex_descriptor u = *adj_iter;
+		if (boost::get(boost::edge_weight, G, boost::edge(v, u, G).first) > 0)
+		{
+			adjacent_vertices.emplace_back(int(u));
+		}
+		else
+		{
+			++stitch_edge_cnt;
+		}
+	}
+	return adjacent_vertices;
+}
+
+double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(uint32_t comp_id, SimpleMPL::graph_type const &dg,
+																	 std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt,
+																	 uint32_t simplify_strategy, std::vector<int8_t> &vColor, std::set<vertex_descriptor> vdd_set)
+{
+	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
+	graph_simplification_type gs(dg, m_db->color_num());
+	gs.set_isVDDGND(vdd_set);
+	gs.precolor(vColor.begin(), vColor.end()); // set precolored vertices
+	std::set<vertex_descriptor> not_in_DG;
+
+	// set max merge level, actually it only works when MERGE_SUBK4 is on
+	if (m_db->color_num() == 3)
+		gs.max_merge_level(3);
+	else if (m_db->color_num() == 4) // for 4-coloring, low level MERGE_SUBK4 works better
+		gs.max_merge_level(2);
+
+	// SECOND SIMPLIFICATION !
+	gs.simplify(simplify_strategy);
+
+	// collect simplified information
+	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
+
+	// for debug, it does not affect normal run
+
+	// in order to recover color from articulation points
+	// we have to record all components and mappings
+	// but graph is not necessary
+	std::vector<std::vector<int8_t>> mSubColor(gs.num_component());
+	std::vector<std::vector<vertex_descriptor>> mSimpl2Orig(gs.num_component());
+	m_DG_num += gs.num_component();
+	double acc_obj_value = 0;
+
+	std::vector<vertex_descriptor> all_articulations;
+
+	gs.get_articulations(all_articulations);
+	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
+	{
+		//sg: sub-graph: graphs after second simplification
+		graph_type sg;
+		std::vector<int8_t> &vSubColor = mSubColor[sub_comp_id];
+		std::vector<vertex_descriptor> &vSimpl2Orig = mSimpl2Orig[sub_comp_id];
+
+		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
+		bool need_simplify = false;
+		std::vector<std::pair<vertex_descriptor, vertex_descriptor>> reduncancy_stitch_pairs;
+		if (boost::num_vertices(sg) > 10)
+		{
+			boost::graph_traits<graph_type>::edge_iterator edge_iter, edge_iter_end;
+			for (boost::tie(edge_iter, edge_iter_end) = boost::edges(sg); edge_iter != edge_iter_end; ++edge_iter)
+			{
+				edge_descriptor edge = *edge_iter;
+				if (boost::get(boost::edge_weight, sg, edge) > 0)
+					continue;
+				vertex_descriptor source_vertex = boost::source(edge, sg);
+				vertex_descriptor target_vertex = boost::target(edge, sg);
+				int source_stitch_edge_cnt = 0;
+				int target_stitch_edge_cnt = 0;
+				std::vector<int> source_adj_vertices = get_adjacent_vertices(source_vertex, sg, source_stitch_edge_cnt);
+				std::vector<int> target_adj_vertices = get_adjacent_vertices(target_vertex, sg, target_stitch_edge_cnt);
+				source_adj_vertices.emplace_back(int(source_vertex));
+				target_adj_vertices.emplace_back(int(target_vertex));
+				std::sort(source_adj_vertices.begin(), source_adj_vertices.end());
+				std::sort(target_adj_vertices.begin(), target_adj_vertices.end());
+				if ((source_adj_vertices == target_adj_vertices) and (source_stitch_edge_cnt <= 2) and (target_stitch_edge_cnt <= 2))
+				{
+					reduncancy_stitch_pairs.emplace_back(std::make_pair(source_vertex, target_vertex));
+					need_simplify = true;
+				}
+			}
+			for (auto iter = reduncancy_stitch_pairs.begin(); iter != reduncancy_stitch_pairs.end(); ++iter)
+			{
+				boost::clear_vertex((*iter).second, sg);
+				boost::remove_vertex((*iter).second, sg);
+			}
+		}
+		vSubColor.assign(num_vertices(sg), -1);
+		if (need_simplify and boost::num_vertices(sg) > 6)
+		{
+			double cost = solve_graph_coloring_with_remove_stitch_redundancy(sub_comp_id, sg, itBgn, pattern_cnt, simplify_strategy, vSubColor, vdd_set);
+			for (auto iter = reduncancy_stitch_pairs.begin(); iter != reduncancy_stitch_pairs.end(); ++iter)
+			{
+				vSubColor.insert(vSubColor.begin() + (*iter).second, vSubColor.at((*iter).first));
+			}
+		}
+		else
+		{
+			//youyi
+
+#ifdef _OPENMP
+#pragma omp critical(m_dgGlobal2Local)
+#endif
+			{
+				for (std::map<uint32_t, uint32_t>::iterator it = m_dgGlobal2Local.begin(); it != m_dgGlobal2Local.end(); it++)
+				{
+					if (std::find(vSimpl2Orig.begin(), vSimpl2Orig.end(), it->second) != vSimpl2Orig.end())
+					{
+						m_dgCompId[it->first] = sub_comp_id + 1;
+					}
+				}
+			}
+			if (comp_id == m_db->dbg_comp_id())
+			{
+				for (std::vector<vertex_descriptor>::const_iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
+				{
+					mplPrint(kDEBUG, "sub_comp_id %u, orig id is %u.\n", (uint32_t)sub_comp_id, (uint32_t)*it);
+				}
+			}
+			//if algorithm is Dancing Link, call it directly
+			boost::timer::cpu_timer comp_timer;
+			comp_timer.start();
+
+			// solve coloring
+			typedef lac::Coloring<graph_type> coloring_solver_type;
+			coloring_solver_type *pcs = create_coloring_solver(sg, comp_id, sub_comp_id);
+
+			boost::graph_traits<graph_type>::vertex_iterator vi, vie;
+			for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+			{
+				vertex_descriptor v = *vi;
+				int8_t color = vColor[vSimpl2Orig[v]];
+				if (color >= 0 && color < m_db->color_num())
+				{
+					pcs->precolor(v, color);
+					vSubColor[v] = color; // necessary for 2nd trial
+				}
+			}
+			// 1st trial
+			double obj_value1 = (*pcs)(); // solve coloring
+
+			// 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only
+			double obj_value2 = std::numeric_limits<double>::max();
+
+#ifdef DEBUG_NONINTEGERS
+			std::set<vertex_descriptor> s_vdd_set;
+			for (uint32_t i = 0; i < vSimpl2Orig.size(); i++)
+			{
+				if (vdd_set.find(vSimpl2Orig[i]) != vdd_set.end())
+				{
+					s_vdd_set.insert(i);
+				}
+			}
+			// very restrict condition to determin whether perform MERGE_SUBK4 or not
+			if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP) && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed
+				obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor, s_vdd_set);																					  // call again
+#endif
+
+			if (obj_value1 < obj_value2)
+			{
+				acc_obj_value += obj_value1;
+
+				// collect coloring results from simplified graph
+				for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
+				{
+					vertex_descriptor v = *vi;
+					int8_t color = pcs->color(v);
+					mplAssert(color >= 0 && color < m_db->color_num());
+					vSubColor[v] = color;
+					if (comp_id == m_db->dbg_comp_id())
+					{
+						mplPrint(kDEBUG, "vertex %u color is %u.\n", (uint32_t)v, (uint32_t)color);
+					}
+				}
+			}
+			else // no need to update vSubColor, as it is already updated by sub call
+			{
+				acc_obj_value += obj_value2;
+				if (comp_id == m_db->dbg_comp_id())
+				{
+					for (uint32_t v = 0; v < vSubColor.size(); v++)
+					{
+						mplPrint(kDEBUG, "vertex %u color is %u.\n", (uint32_t)v, (uint32_t)vSubColor[v]);
+					}
+				}
+			}
+
+			if (m_db->parms.record > 1)
+			{
+				//store ILP runtime information/ read ILP information for DL to comparison, this is for DAC2020
+				if (m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI && num_vertices(sg) > 3)
+				{
+					std::string runtime = comp_timer.format(6, "%w");
+					std::ofstream myfile;
+					myfile.open("ILP_obj.txt", std::ofstream::app);
+					myfile << m_db->input_gds().c_str() << " " << comp_id << " " << sub_comp_id << " " << num_vertices(sg) << " " << obj_value1 << " " << runtime << "\n";
+					myfile.close();
+				}
+				if (m_db->algo() == AlgorithmTypeEnum::DANCING_LINK && num_vertices(sg) > 3)
+				{
+					std::string runtime = comp_timer.format(6, "%w");
+					std::ofstream myfile;
+					myfile.open("DL_obj.txt", std::ofstream::app);
+					myfile << m_db->input_gds().c_str() << " " << comp_id << " " << sub_comp_id << " " << num_vertices(sg) << " " << obj_value1 << " " << runtime << "\n";
+					myfile.close();
+				}
+			}
+			if (m_db->parms.record > 2)
+			{
+				if (obj_value1 != 0)
+				{
+					std::ofstream myfile;
+					myfile.open("small_results.txt", std::ofstream::app);
+					myfile << ", comp_id: " << comp_id << ", sub_comp_id: " << sub_comp_id << ",num_vertices(sg) " << num_vertices(sg) << ", obj_value: " << obj_value1 << "\n";
+					myfile.close();
+				}
+				if (comp_id == m_db->dbg_comp_id())
+				{
+					write_graph(sg, std::to_string(comp_id) + "_" + std::to_string(sub_comp_id));
+					std::ofstream myfile;
+					myfile.open("debug_component_color_results.txt", std::ofstream::app);
+					myfile << ", comp_id: " << comp_id << ", sub_comp_id: " << sub_comp_id << ",num_vertices(sg) " << num_vertices(sg) << "\n";
+					for (uint32_t v = 0; v < vSubColor.size(); v++)
+					{
+						myfile << "vertex " << v << " color is " << (uint32_t)vSubColor[v] << ". \n";
+					}
+					myfile.close();
+				}
+
+				//we only store json file with graph size larger than 3
+				if (num_vertices(sg) > 3)
+				{
+					//The json file name is orgnized as follows: compid_subcompid_objvalue_time.json
+					std::string name = std::to_string(comp_id);
+					name.append("_");
+					name.append(std::to_string(sub_comp_id));
+					name.append("_");
+					name.append(std::to_string(obj_value1).substr(0, std::to_string(obj_value1).size() - 5));
+					name.append("_");
+					name.append(std::to_string(num_vertices(sg)));
+					name.append("_");
+					name.append(comp_timer.format(4, "%w"));
+
+					this->write_json(sg, (char *)name.c_str(), vSubColor);
+				}
+			}
+
+			delete pcs;
+		}
+	}
+
+	// recover color assignment according to the simplification level set previously
+	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing
+
+	gs.recover(vColor, mSubColor, mSimpl2Orig);
+	RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
+	SimpleMPL::graph_type non_const_dg = dg;
+	double total_obj = new_calc_cost(non_const_dg, vColor);
+
+	return total_obj;
+}
 SIMPLEMPL_END_NAMESPACE
 

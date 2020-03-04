@@ -35,6 +35,7 @@ struct ControlParameter
     bool flip3;                                ///<flip third gds>
 	bool use_stitch;						   ///< control whether use stitches
 	bool gen_stitch;						   ///< control whether only generate and output stitches
+    bool remove_stitch_redundancy;              /// <Remove stitch redundancy or not.>
 	uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
 
 	std::string   input_gds;                   ///< input gdsii filename 
@@ -68,6 +69,7 @@ inline ControlParameter::ControlParameter()
     flip3                    = false;
 	use_stitch				 = false;
 	gen_stitch				 = false;
+    remove_stitch_redundancy = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";
     selector                 = "";
@@ -93,6 +95,7 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(flip3, rhs.flip3);
 	std::swap(use_stitch, rhs.use_stitch);
 	std::swap(gen_stitch, rhs.gen_stitch);
+    std::swap(remove_stitch_redundancy, rhs.remove_stitch_redundancy);
     std::swap(dbg_comp_id, rhs.dbg_comp_id);
     std::swap(input_gds, rhs.input_gds);
     std::swap(input2_gds,rhs.input2_gds);
