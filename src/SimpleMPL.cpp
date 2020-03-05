@@ -874,22 +874,22 @@ void SimpleMPL::setVddGnd()
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 	m_isVDDGND.assign(vertex_num, false);
 	int count = 0;
-// 	for (uint32_t i = 0; i < vertex_num; i++)
-// 	{
-// 		if (is_long_enough(m_db->vPatternBbox[i]))
-// 		{
-// 			m_isVDDGND[i] = true;
-// 			m_db->set_color(i,0);
-// 			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
-// 		}
-// 		if(boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) == threshold )
-//         {
-// 			m_isVDDGND[i] = false;
-// #ifdef DEBUG_LIWEI
-//             mplPrint(kDEBUG, "dirty coding for oracle cases\n");
-// #endif
-// 		}
-// 	}
+	for (uint32_t i = 0; i < vertex_num; i++)
+	{
+		if (is_long_enough(m_db->vPatternBbox[i]))
+		{
+			m_isVDDGND[i] = true;
+			m_db->set_color(i,0);
+			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
+		}
+		if(boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) == threshold )
+        {
+			m_isVDDGND[i] = false;
+#ifdef DEBUG_LIWEI
+            mplPrint(kDEBUG, "dirty coding for oracle cases\n");
+#endif
+		}
+	}
 #ifdef DEBUG_LIWEI
     mplPrint(kDEBUG, "%d dirty coding for sparc cases\n", count);
 #endif
@@ -1680,22 +1680,29 @@ void SimpleMPL::generate_stitch_position(const rectangle_type pRect, std::vector
 		double maxValue = 0.9;
 		uint32_t posLost = pos1 + 2;
 		if (pos2 - pos1 < 4) continue;
+		// for (uint32_t i = pos1 + 2; i < pos2 - 1; i++)
+		// {
+		// 	if (vStages[i - 1].second <= vStages[i].second) continue;
+		// 	if (vStages[i + 1].second <= vStages[i].second) continue;
+		// 	int mind = std::min(vStages[i - 1].second - vStages[i].second, vStages[i + 1].second - vStages[i].second);
+		// 	int diff = std::abs(vStages[i + 1].second - vStages[i - 1].second);
+		// 	double value = (double)mind + (double)diff*0.1;
+		// 	if (value > maxValue)
+		// 	{
+		// 		maxValue = value;
+		// 		posLost = i;
+		// 	}
+		// }
+		// if (maxValue > 0.9)
+		// {
+		// 	coordinate_type pos = (vStages[posLost].first.first + vStages[posLost].first.second) / 2;
+		// 	vstitches.push_back(pos);
+		// }
 		for (uint32_t i = pos1 + 2; i < pos2 - 1; i++)
 		{
 			if (vStages[i - 1].second <= vStages[i].second) continue;
 			if (vStages[i + 1].second <= vStages[i].second) continue;
-			int mind = std::min(vStages[i - 1].second - vStages[i].second, vStages[i + 1].second - vStages[i].second);
-			int diff = std::abs(vStages[i + 1].second - vStages[i - 1].second);
-			double value = (double)mind + (double)diff*0.1;
-			if (value > maxValue)
-			{
-				maxValue = value;
-				posLost = i;
-			}
-		}
-		if (maxValue > 0.9)
-		{
-			coordinate_type pos = (vStages[posLost].first.first + vStages[posLost].first.second) / 2;
+			coordinate_type pos = (vStages[i].first.first + vStages[i].first.second) / 2;
 			vstitches.push_back(pos);
 		}
 	}
