@@ -215,10 +215,13 @@ class SimpleMPL
 		/// for update the m_algorithm_selector
 		/// \param filename is the filename which stores the selection information
 		void update_algorithm_selector(std::string filename);
-		double solve_graph_coloring_with_remove_stitch_redundancy(uint32_t comp_id, graph_type const &dg,
+		double solve_graph_coloring_with_remove_stitch_redundancy(int depth, uint32_t comp_id, graph_type const &dg,
 															  std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt,
 															  uint32_t simplify_strategy, std::vector<int8_t> &vColor, std::set<vertex_descriptor> vdd_set);
-		std::vector<int> get_adjacent_vertices(const vertex_descriptor &v, const graph_type &G, int &stitch_edge_cnt);
+		static std::set<vertex_descriptor> get_sub_vdd_set(std::vector<vertex_descriptor>& vSimpl2Org, std::set<vertex_descriptor> &vdd_set);
+		/// count for recursive times
+		int count;
+		int total_num_vertices;
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
 		std::vector<uint32_t>					m_vVertexOrder;		///< vertex id, vertices in the same component are abutting,

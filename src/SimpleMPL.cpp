@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <sstream>
 #include <fstream>
+#include <set>
 #define SYSERROR()  errno
 #include <stack>
 #ifdef _OPENMP
@@ -19,6 +20,7 @@
 #endif
 #include <time.h>
 #include <boost/graph/graphviz.hpp>
+#include <boost/graph/copy.hpp>
 #include <boost/timer/timer.hpp>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
 
@@ -80,6 +82,10 @@ void SimpleMPL::run(int argc, char** argv)
 	this->solve();
 	this->report();
 	this->write_gds();
+	// youyi
+	mplPrint(kINFO, "===============================\n");
+	mplPrint(kINFO,  "# Recursive = %d\n", count);
+	mplPrint(kINFO, "Mean # vertices = %f\n", double(total_num_vertices) / count);
 }
 
 void SimpleMPL::reset(bool init)
@@ -96,6 +102,9 @@ void SimpleMPL::reset(bool init)
     }
     m_db = NULL;
     m_comp_cnt = 0;
+	// youyi
+	count = 0;
+	total_num_vertices = 0;
 }
 void SimpleMPL::read_cmd(int argc, char** argv)
 {
@@ -588,10 +597,12 @@ void SimpleMPL::solve()
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
+	// cout << "almost finished -1" << endl;
 		//std::cout<<"comp_id "<<comp_id<<" omp_get_thread_num() is "<<omp_get_thread_num()<<t_comp.format(2, " comp time %ts(%p%), %ws real")<<std::endl;
 	}
     if( m_db->parms.record > 0)
     {
+	// cout << "in" << endl;
         if(m_db->use_stitch())
         {
             std::ofstream myfile,color_time,total_time;
@@ -632,6 +643,7 @@ void SimpleMPL::solve()
             total_time.close();
         }
     }
+	// cout << "almost finished" << endl;
 	this->out_stat();
 	//this->write_json();
 #ifdef DEBUG_NONINTEGERS
@@ -2283,10 +2295,12 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 
 void SimpleMPL::iterative_mark(graph_type const& g, std::vector<uint32_t>& parent_node_ids, vertex_descriptor& v1) const
 {
+	mplAssert(num_vertices(g) == parent_node_ids.size());
 	typename boost::graph_traits<graph_type>::adjacency_iterator vi2, vie2,next2;
 	boost::tie(vi2, vie2) = boost::adjacent_vertices(v1, g);
 	for (next2 = vi2; vi2 != vie2; vi2 = next2)
 	{	
+		mplAssert(num_vertices(g) > 1);
 		++next2; 
 		vertex_descriptor v2 = *vi2;
 		std::pair<edge_descriptor, bool> e12 = boost::edge(v1, v2, g);
@@ -2317,6 +2331,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 	{	
 		vertex_descriptor v1 = *vi1;
 		mplAssert(vColor[v1]!=-1);
+		mplAssert((uint32_t)v1 < parent_node_ids.size());
 		if(parent_node_ids[(uint32_t)v1] == (uint32_t)-1)
 		{
 			parent_node_ids[(uint32_t)v1] = parent_node_id;
@@ -2324,16 +2339,22 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 			parent_node_id++;
 		}
 	}
-
+	// std::cout << "Assigned parents" << std::endl;
 	//calculate conflict by parent node
-	std::vector<std::vector<bool>> conflict_mat;
-	for(uint32_t i = 0; i < parent_node_id; i++)
-	{
-		std::vector<bool> row_mat;
-		row_mat.assign(parent_node_id,false);
-		conflict_mat.push_back(row_mat);
-	}
-
+	std::vector<std::vector<bool>> conflict_mat(parent_node_id, std::vector<bool>(parent_node_id, 0));
+	// for(uint32_t i = 0; i < parent_node_id; i++)
+	// {
+	// 	std::vector<bool> row_mat;
+	// 	std::cout << "Before assign " << parent_node_id << " of false" << std::endl;
+	// 	for(int p = 0; p < parent_node_id; ++p) {
+	// 		row_mat.push_back(false);
+	// 	}
+	// 	// row_mat.assign(parent_node_id,false);
+	// 	std::cout << "Before push_back [" << i << "]" << std::endl;
+	// 	// conflict_mat.push_back(row_mat);
+	// 	conflict_mat.emplace_back(std::vector<bool>(parent_node_id, false));
+	// }
+	// std::cout << "Init conflict_mat" << std::endl;
 	for (boost::tie(vi1, vie1) = boost::vertices(g); vi1 != vie1; ++vi1)
 	{	
 		vertex_descriptor v1 = *vi1;
@@ -2366,7 +2387,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 			}
 		}
 	}
-
+	// std::cout << "Before return" << std::endl;
 	return cost;
 }
 void SimpleMPL::print_graph(SimpleMPL::graph_type& g)
@@ -2596,7 +2617,7 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     // solve graph coloring 
 	if (m_db->remove_stitch_redundancy())
 	{
-		acc_obj_value = solve_graph_coloring_with_remove_stitch_redundancy(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
+		acc_obj_value = solve_graph_coloring_with_remove_stitch_redundancy(0, comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
 	}
 	else
 	{
@@ -2964,29 +2985,30 @@ void SimpleMPL::print_welcome() const
   mplPrint(kNONE, "=======================================================================\n");
 }
 
-std::vector<int> SimpleMPL::get_adjacent_vertices(const vertex_descriptor &v, const graph_type &G, int &stitch_edge_cnt)
-{
-	std::vector<int> adjacent_vertices;
-	boost::graph_traits<graph_type>::adjacency_iterator adj_iter, adj_iter_end;
-	for (boost::tie(adj_iter, adj_iter_end) = boost ::adjacent_vertices(v, G); adj_iter != adj_iter_end; ++adj_iter)
-	{
-		vertex_descriptor u = *adj_iter;
-		if (boost::get(boost::edge_weight, G, boost::edge(v, u, G).first) > 0)
-		{
-			adjacent_vertices.emplace_back(int(u));
-		}
-		else
-		{
-			++stitch_edge_cnt;
-		}
-	}
-	return adjacent_vertices;
-}
-
-double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(uint32_t comp_id, SimpleMPL::graph_type const &dg,
+// std::vector<int> SimpleMPL::get_adjacent_vertices(const vertex_descriptor &v, const graph_type &G, int &stitch_edge_cnt)
+// {
+// 	std::vector<int> adjacent_vertices;
+// 	boost::graph_traits<graph_type>::adjacency_iterator adj_iter, adj_iter_end;
+// 	for (boost::tie(adj_iter, adj_iter_end) = boost ::adjacent_vertices(v, G); adj_iter != adj_iter_end; ++adj_iter)
+// 	{
+// 		vertex_descriptor u = *adj_iter;
+// 		if (boost::get(boost::edge_weight, G, boost::edge(v, u, G).first) > 0)
+// 		{
+// 			adjacent_vertices.emplace_back(int(u));
+// 		}
+// 		else
+// 		{
+// 			++stitch_edge_cnt;
+// 		}
+// 	}
+// 	return adjacent_vertices;
+// }
+double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, uint32_t comp_id, SimpleMPL::graph_type const &dg,
 																	 std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt,
-																	 uint32_t simplify_strategy, std::vector<int8_t> &vColor, std::set<vertex_descriptor> vdd_set)
-{
+																	 uint32_t simplify_strategy, std::vector<int8_t> &vColor, std::set<vertex_descriptor> vdd_set) {
+    if (depth > 0){
+		++count;
+	}
 	typedef lac::GraphSimplification<graph_type> graph_simplification_type;
 	graph_simplification_type gs(dg, m_db->color_num());
 	gs.set_isVDDGND(vdd_set);
@@ -3000,7 +3022,9 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(uint32_t co
 		gs.max_merge_level(2);
 
 	// SECOND SIMPLIFICATION !
+	// cout << "before simplify" << endl;
 	gs.simplify(simplify_strategy);
+	// cout << "after simplify" << endl;
 
 	// collect simplified information
 	std::stack<vertex_descriptor> vHiddenVertices = gs.hidden_vertices();
@@ -3018,21 +3042,19 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(uint32_t co
 	std::vector<vertex_descriptor> all_articulations;
 
 	gs.get_articulations(all_articulations);
-	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
-	{
-		//sg: sub-graph: graphs after second simplification
+	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id) {
 		graph_type sg;
 		std::vector<int8_t> &vSubColor = mSubColor[sub_comp_id];
 		std::vector<vertex_descriptor> &vSimpl2Orig = mSimpl2Orig[sub_comp_id];
+		auto sub_vdd_set = get_sub_vdd_set(vSimpl2Orig, vdd_set);
 
 		gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 		bool need_simplify = false;
+		graph_type tmp_sg;
 		std::vector<std::pair<vertex_descriptor, vertex_descriptor>> reduncancy_stitch_pairs;
-		if (boost::num_vertices(sg) > 10)
-		{
+		if (boost::num_vertices(sg) >= 0) {
 			boost::graph_traits<graph_type>::edge_iterator edge_iter, edge_iter_end;
-			for (boost::tie(edge_iter, edge_iter_end) = boost::edges(sg); edge_iter != edge_iter_end; ++edge_iter)
-			{
+			for (boost::tie(edge_iter, edge_iter_end) = boost::edges(sg); edge_iter != edge_iter_end; ++edge_iter) {
 				edge_descriptor edge = *edge_iter;
 				if (boost::get(boost::edge_weight, sg, edge) > 0)
 					continue;
@@ -3040,47 +3062,60 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(uint32_t co
 				vertex_descriptor target_vertex = boost::target(edge, sg);
 				int source_stitch_edge_cnt = 0;
 				int target_stitch_edge_cnt = 0;
-				std::vector<int> source_adj_vertices = get_adjacent_vertices(source_vertex, sg, source_stitch_edge_cnt);
-				std::vector<int> target_adj_vertices = get_adjacent_vertices(target_vertex, sg, target_stitch_edge_cnt);
-				source_adj_vertices.emplace_back(int(source_vertex));
-				target_adj_vertices.emplace_back(int(target_vertex));
-				std::sort(source_adj_vertices.begin(), source_adj_vertices.end());
-				std::sort(target_adj_vertices.begin(), target_adj_vertices.end());
-				if ((source_adj_vertices == target_adj_vertices) and (source_stitch_edge_cnt <= 2) and (target_stitch_edge_cnt <= 2))
-				{
+				std::vector<bool> source_adj_vertices(boost::num_vertices(sg), false);
+				std::vector<bool> target_adj_vertices(boost::num_vertices(sg), false);
+				boost::graph_traits<graph_type>::adjacency_iterator adj_iter, adj_iter_end;
+				for (boost::tie(adj_iter, adj_iter_end) = boost::adjacent_vertices(source_vertex, sg); adj_iter != adj_iter_end; ++adj_iter){
+					vertex_descriptor u = *adj_iter;
+					if (boost::get(boost::edge_weight, sg, boost::edge(source_vertex, u, sg).first) > 0){
+						source_adj_vertices.at(u) = true;
+					}
+					else {
+						++source_stitch_edge_cnt;
+					}
+				}
+				for (boost::tie(adj_iter, adj_iter_end) = boost::adjacent_vertices(target_vertex, sg); adj_iter != adj_iter_end; ++adj_iter){
+					vertex_descriptor u = *adj_iter;
+					if (boost::get(boost::edge_weight, sg, boost::edge(target_vertex, u, sg).first) > 0){
+						target_adj_vertices.at(u) = true;
+					}
+					else {
+						++target_stitch_edge_cnt;
+					}
+				}
+				if ((source_adj_vertices == target_adj_vertices) and (source_stitch_edge_cnt <= 1) and (target_stitch_edge_cnt <= 1)){
 					reduncancy_stitch_pairs.emplace_back(std::make_pair(source_vertex, target_vertex));
 					need_simplify = true;
 				}
 			}
-			for (auto iter = reduncancy_stitch_pairs.begin(); iter != reduncancy_stitch_pairs.end(); ++iter)
-			{
-				boost::clear_vertex((*iter).second, sg);
-				boost::remove_vertex((*iter).second, sg);
-			}
 		}
-		vSubColor.assign(num_vertices(sg), -1);
-		if (need_simplify and boost::num_vertices(sg) > 6)
-		{
-			double cost = solve_graph_coloring_with_remove_stitch_redundancy(sub_comp_id, sg, itBgn, pattern_cnt, simplify_strategy, vSubColor, vdd_set);
-			for (auto iter = reduncancy_stitch_pairs.begin(); iter != reduncancy_stitch_pairs.end(); ++iter)
-			{
+		auto total_v = num_vertices(sg);
+		if (need_simplify and total_v > 0) {
+			tmp_sg = sg;
+			total_num_vertices += total_v;
+			for (auto iter = reduncancy_stitch_pairs.begin(); iter != reduncancy_stitch_pairs.end(); ++iter) {
+				boost::clear_vertex((*iter).second, tmp_sg);
+				boost::remove_vertex((*iter).second, tmp_sg);
+			}
+			vSubColor.assign(num_vertices(tmp_sg), -1);
+			double cost = solve_graph_coloring_with_remove_stitch_redundancy(depth+1, sub_comp_id, tmp_sg, itBgn, 0, simplify_strategy, vSubColor, sub_vdd_set);
+			for(int i = 0; i < reduncancy_stitch_pairs.size()-1; ++i) {
+			}
+			for (auto iter = reduncancy_stitch_pairs.begin(); iter != reduncancy_stitch_pairs.end(); ++iter) {
 				vSubColor.insert(vSubColor.begin() + (*iter).second, vSubColor.at((*iter).first));
 			}
 		}
-		else
-		{
-			//youyi
+		else{
+			vSubColor.assign(num_vertices(sg), -1);
 
 #ifdef _OPENMP
 #pragma omp critical(m_dgGlobal2Local)
 #endif
+			for (std::map<uint32_t, uint32_t>::iterator it = m_dgGlobal2Local.begin(); it != m_dgGlobal2Local.end(); it++)
 			{
-				for (std::map<uint32_t, uint32_t>::iterator it = m_dgGlobal2Local.begin(); it != m_dgGlobal2Local.end(); it++)
+				if (std::find(vSimpl2Orig.begin(), vSimpl2Orig.end(), it->second) != vSimpl2Orig.end())
 				{
-					if (std::find(vSimpl2Orig.begin(), vSimpl2Orig.end(), it->second) != vSimpl2Orig.end())
-					{
-						m_dgCompId[it->first] = sub_comp_id + 1;
-					}
+					m_dgCompId[it->first] = sub_comp_id + 1;
 				}
 			}
 			if (comp_id == m_db->dbg_comp_id())
@@ -3222,15 +3257,26 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(uint32_t co
 		}
 	}
 
-	// recover color assignment according to the simplification level set previously
+	// recover csolor assignment according to the simplification level set previously
 	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing
 
 	gs.recover(vColor, mSubColor, mSimpl2Orig);
 	RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
-	SimpleMPL::graph_type non_const_dg = dg;
+	SimpleMPL::graph_type non_const_dg(dg);
 	double total_obj = new_calc_cost(non_const_dg, vColor);
 
 	return total_obj;
+}
+
+std::set<SimpleMPL::vertex_descriptor> SimpleMPL::get_sub_vdd_set(std::vector<vertex_descriptor>& vSimpl2Org, std::set<vertex_descriptor> &vdd_set)
+{
+	std::set<vertex_descriptor> sub_vdd_set;
+	for (auto it=vSimpl2Org.begin(); it!=vSimpl2Org.end(); ++it){
+		if(vdd_set.find(*it) != vdd_set.end()) {
+			sub_vdd_set.insert(std::distance(vSimpl2Org.begin(), it));
+		}
+	}
+	return sub_vdd_set;
 }
 SIMPLEMPL_END_NAMESPACE
 
