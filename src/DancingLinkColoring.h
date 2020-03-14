@@ -42,6 +42,54 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
 
             return cost; 
         }
+        void dfs_search(uint32_t& source,std::vector<uint32_t> & node_comp,uint32_t& comp_id,std::set<Edge*> & stitch_set){
+            std::stack<uint32_t> vStack; 
+            uint32_t component_count = 0;
+            // std::cout<<source<<"Vstack push: "<<source<< std::endl;
+            vStack.push(source);
+            while (!vStack.empty())
+            {
+                uint32_t current = vStack.top();
+                // std::cout<<source<<"Vstack pop: "<<current<< std::endl;
+                vStack.pop();
+                if (node_comp[current] == std::numeric_limits<uint32_t>::max()) // not visited 
+                {
+                    node_comp[current] = comp_id;// set visited 
+                    component_count += 1;
+                    typename boost::graph_traits<graph_type>::adjacency_iterator vi2, vie2,next2;
+                    boost::tie(vi2, vie2) = boost::adjacent_vertices(current, this->m_graph);
+                    for (next2 = vi2; vi2 != vie2; vi2 = next2)
+                    {
+                        ++next2; 
+                        graph_vertex_type v2 = *vi2;
+                        std::pair<graph_edge_type, bool> e12 = boost::edge(current, v2, this->m_graph);
+                        bool in_stitch_set = false;
+                        for(auto stitch = stitch_set.begin(); stitch != stitch_set.end();++stitch){
+                            if(((*stitch)->source == current && (*stitch)->target == (int)v2) || ((*stitch)->source == (int)v2 && (*stitch)->target == current)){
+                                in_stitch_set = true;
+                                break;
+                            }
+                        }
+                        //if the stitch adj node is not connected by stitch in stitch_set, then we assign the same component
+                        if(boost::get(boost::edge_weight, this->m_graph, e12.first) < 0 && in_stitch_set == false){
+                            mplAssert(current != v2);
+                            vStack.push(v2);
+                            // std::cout<<source<<"Vstack push: "<<v2<< std::endl;
+                        }
+                    }
+                }
+            }
+        }
+        void connected_components_k_stitches(std::vector<uint32_t> & node_comp, uint32_t& comp_id, std::vector<Vertex*> & node_set, std::set<Edge*> & stitch_set){
+            for(std::vector<Vertex*>::iterator it = node_set.begin(); it != node_set.end(); ++it){
+                // if not visited
+                uint32_t No = (uint32_t)((*it)->Stitch_No);
+                if(node_comp[No] ==std::numeric_limits<uint32_t>::max()){
+                    dfs_search(No, node_comp,comp_id,stitch_set);
+                    comp_id ++;
+                }
+            }
+        }
 
         double solve_by_dancing_link_with_one_stitch()
         {
@@ -168,19 +216,6 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     starting_index += 9*(childs_num-1);
                 }
             }
-#ifdef DEBUG_DANCINGLINKCOLORING
-            for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) 
-            {
-                if((*it)->No == 0)
-                {
-                    mplPrint(kDEBUG, "originial node %u non-stitch graph node %u\n", (*it)->Stitch_No, (*it)->parent->No);
-                }
-                else
-                {
-                    mplPrint(kDEBUG, "originial node %u non-stitch graph node %u\n", (*it)->Stitch_No, (*it)->No);
-                }
-            }
-#endif
             //std::cout<< "Graph build" << dancing_link_timer.format(6)<<std::endl;
             //dancing_link_timer.start();
             //BUILD DL MATRIX WITHOUT STITCH
@@ -432,32 +467,17 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
 
                 //std::cout<< "SECOND dl get result" << dancing_link_timer.format(6)<<std::endl;
                 //dancing_link_timer.start();
-#ifdef DEBUG_DANCINGLINKCOLORING
-                for(uint32_t i = 0; i < selected_rows_by_dl2.size();i++)
-                {
-                    mplPrint(kDEBUG, "selected_rows_by_dl2[%u] %u\n", i, selected_rows_by_dl2[i]);
-                }
-                for(uint32_t i = 0; i < this->m_vColor.size();i++)
-                {
-                    mplPrint(kDEBUG, "this->m_vColor[%u] %d\n", i, (int)this->m_vColor[i]);
-                }
-                mplPrint(kDEBUG, "cost1 %g, cost2 %g\n", cost1, cost2);
-#endif
-
                 if(cost1 > cost2)
                 {
                     cost1 = cost2;
                     this->m_vColor.swap(color_vector_dl2);
                 }
             }
-#ifdef DEBUG_DANCINGLINKCOLORING
-            mplPrint(kDEBUG, "cost is %g\n", cost1);
-#endif
             return cost1;
         }
 
-        //args: k: maximal valid stitches in one polygon
-        double solve_by_dancing_link_with_multiple_stitches(uint32_t k)
+
+        double solve_by_dancing_link_with_at_most_two_stitches()
         {
             // Due to graph does not contain a parent&child node system
             // we simply redesign a node struct to achieve this kind of system
@@ -503,7 +523,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     //if two nodes are stitch relationships and both of them are parent
                     if(boost::get(boost::edge_weight, this->m_graph, e12.first) < 0)
                     {
-                        //std::cout<<"Stitch:"<<v1<<" "<<v2<<std::endl;
+                        // std::cout<<"Stitch:"<<v1<<" "<<v2<<std::endl;
                         if(node_list[v1]->parent != NULL && node_list[v1]->parent== node_list[v2]->parent) continue;
                         Vertex* parent_vertex = new Vertex;
                         mplAssert(parent_vertex->Childs.empty());
@@ -582,19 +602,42 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     starting_index += 9*(childs_num-1);
                 }
             }
-#ifdef DEBUG_DANCINGLINKCOLORING
-            for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) 
-            {
-                if((*it)->No == 0)
+
+            //This step is to update Stitches set
+            int stitch_count = 0;
+            for (boost::tie(vi1, vie1) = boost::vertices(this->m_graph); vi1 != vie1; ++vi1)
+            {	
+                graph_vertex_type v1 = *vi1;
+                typename boost::graph_traits<graph_type>::adjacency_iterator vi2, vie2,next2;
+                boost::tie(vi2, vie2) = boost::adjacent_vertices(v1, this->m_graph);
+                for (next2 = vi2; vi2 != vie2; vi2 = next2)
                 {
-                    mplPrint(kDEBUG, "originial node %u non-stitch graph node %u\n", (*it)->Stitch_No, (*it)->parent->No);
-                }
-                else
-                {
-                    mplPrint(kDEBUG, "originial node %u non-stitch graph node %u\n", (*it)->Stitch_No, (*it)->No);
+                    ++next2; 
+                    graph_vertex_type v2 = *vi2;
+                    if (v1 >= v2) continue;
+                    std::pair<graph_edge_type, bool> e12 = boost::edge(v1, v2, this->m_graph);
+                    mplAssert(e12.second);
+                    //if two nodes are stitch relationships and both of them are parent
+                    if(boost::get(boost::edge_weight, this->m_graph, e12.first) < 0)
+                    {
+                        std::cout<<"Stitch:"<<int(v1)<<" "<<int(v2)<<std::endl;
+                        mplAssert(node_list[v1]->parent == node_list[v2]->parent);
+                        Edge* edge = new Edge{int(v1),int(v2),stitch_count};
+                        node_list[v1]->parent->Stitches.insert(edge);
+                        // std::cout<<"Edge address is: "<<&edge<<std::endl;
+                        // std::cout <<"parent->No: "<<node_list[v1]->parent->No<<std::endl;
+                        // std::cout<<edge->source<<std::endl;
+                        // std::cout<<edge->target<<std::endl;
+                        // std::cout<<edge->No<<std::endl;
+                        // for(auto stitch = (node_list[v1]->parent->Stitches).begin(); stitch != (node_list[v1]->parent->Stitches).end(); ++stitch){
+                        //     std::cout<<"stitch set source: "<< (*stitch)->source<<std::endl;
+                        //     std::cout<<"stitch set target: "<<(*stitch)->target<<std::endl;
+                        //     std::cout<<"stitch set No: "<<(*stitch)->No<<std::endl;
+                        // }   
+                        stitch_count ++;
+                    }
                 }
             }
-#endif
             //std::cout<< "Graph build" << dancing_link_timer.format(6)<<std::endl;
             //dancing_link_timer.start();
             //BUILD DL MATRIX WITHOUT STITCH
@@ -677,6 +720,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                 uint32_t stitch_count = 0;
                 //I traverse all of the stitch edges for getting the encode matrix
                 vertex_iterator_type vi1, vie1;
+                row_numbers = vertex_numbers * (int32_t)this->color_num() + 1;
                 for (boost::tie(vi1, vie1) = boost::vertices(this->m_graph); vi1 != vie1; ++vi1)
                 {	
                     graph_vertex_type v1 = *vi1;
@@ -705,15 +749,35 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                         }
                     }
                 }
+
+                for(std::set<Vertex*>::iterator it = node_wo_stitch_list.begin(); it != node_wo_stitch_list.end(); ++it) {
+                    uint32_t childs_num = ((*it)->Childs).size();
+                    uint32_t stitch_num = ((*it)->Stitches).size();
+                    if(childs_num > 1){
+                        std::cout<<"node id: "<<(*it)->No<<", stitch_num: "<<stitch_num<<", childs_num: "<<childs_num<<std::endl;
+                        for(auto child = ((*it)->Childs).begin(); child != ((*it)->Childs).end(); ++child){
+                            std::cout<<"child count "<< (*child)->Stitch_No<<std::endl;
+                        }                  
+                        mplAssert(childs_num == stitch_num + 1); 
+                        // # of rows which select exactly one working stitch, here non-stitch case is included... for implementation convenience
+                        row_numbers += stitch_num *(this->color_num()) * (this->color_num());
+                        if(childs_num > 2){
+                            // # of rows which select exactly two working stitches
+                            // this part is done by hard-coding, actually the valid number of rows should be determined by recording the conflict relationship between sub-polygons divided by working stitches.
+                            row_numbers += stitch_num *(stitch_num -1)/2* (this->color_num() * (this->color_num() -1 )*(this->color_num() -1));
+                        }
+                    }
+                    
+                    }
                 //std::cout<< "SECOND encode matrix" << dancing_link_timer.format(6)<<std::endl;
                 //dancing_link_timer.start();
                 //Step 1.1 BUILD DL MATRIX WITH STITCH
                 //Node structure done,  then build DL system
                 DancingLink dl2; 
-                row_numbers = vertex_numbers * (int32_t)this->color_num() + 1 + stitch_count * pow((int32_t)this->color_num(),2);
+                // row_numbers = vertex_numbers * (int32_t)this->color_num() + 1 + stitch_count * pow((int32_t)this->color_num(),2);
                 col_numbers = edge_numbers * (int32_t)this->color_num() + vertex_numbers;
-                // std::cout<<"DL2: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
-                // std::cout<<"DL2: vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
+                std::cout<<"DL2: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
+                std::cout<<"DL2: vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
                 DL_Init(dl2, row_numbers, col_numbers);
 
                 // Insert Non-stitch DL cells
@@ -828,6 +892,106 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     //for each parent node, there are 9 * stitch_No stitch rows totally
                     starting_index += pow((int32_t)this->color_num(),2) * (childs_num -1);
                 }
+
+                std::cout<<"ERROR:"<<starting_index<<std::endl;
+
+                //Now, we insert exactly two stitches 
+                std::vector<uint32_t> node_comp(node_list.size(), std::numeric_limits<uint32_t>::max());
+                for(auto parent_node = node_wo_stitch_list.begin(); parent_node != node_wo_stitch_list.end(); ++parent_node)
+                {
+                    uint32_t childs_num = ((*parent_node)->Childs).size();
+                    int parent_no = (*parent_node)->No;
+                    count++;
+                    if(childs_num == 0){continue;}
+                    mplAssert(childs_num > 1);
+                    starting_indexes.push_back(starting_index);
+                    //DYNAMIC TODO: Here we hard-code select two stitches as working stitches. If we need a dynamic k stitches, a recursive func is needed
+                    for(auto stitch1 = (*parent_node)->Stitches.begin(); stitch1 != (*parent_node)->Stitches.end(); ++stitch1){
+                        for(auto stitch2 = (*parent_node)->Stitches.begin(); stitch2 != (*parent_node)->Stitches.end(); ++stitch2){
+                            //if two stitches are the same, it equals to the one stitch situation
+                            if((*stitch1)->No < (*stitch2)->No){
+                                std::set<Edge*> stitch_set;
+                                stitch_set.insert(*stitch1);
+                                stitch_set.insert(*stitch2);
+                                uint32_t comp_id = 0;
+                                std::fill(node_comp.begin(), node_comp.end(), std::numeric_limits<uint32_t>::max());
+                                connected_components_k_stitches(node_comp,comp_id,(*parent_node)->Childs,stitch_set);
+                                std::cout<<comp_id<<std::endl;
+                                // for(auto stitch:stitch_set){
+                                //     std::cout<<"selected stitch->source"<<stitch->source<<std::endl;
+                                //     std::cout<<"selected stitch->target"<<stitch->target<<std::endl;
+                                // }
+                                // for(auto stitch:(*parent_node)->Stitches){
+                                //     std::cout<<"all stitch->source"<<stitch->source<<std::endl;
+                                //     std::cout<<"all stitch->target"<<stitch->target<<std::endl;                                    
+                                // }
+                                // for(auto node_comp_item:node_comp){
+                                //     std::cout<<node_comp_item<<std::endl;
+                                // }
+                                mplAssert(comp_id == 3);
+                                //DYNAMIC TODO: color should also be a dynamic vector(not color1,color2,color3)
+                                std::vector<uint32_t> colors(comp_id, std::numeric_limits<uint32_t>::max());
+                                for(uint32_t color0 = 0; color0 < this->color_num(); color0++){
+                                    for(uint32_t color1 = 0; color1 < this->color_num();color1++){
+                                        for(uint32_t color2 = 0; color2 < this->color_num();color2++){
+                                            colors[0] = color0;
+                                            colors[1] = color1;
+                                            colors[2] = color2;
+                                            bool is_invalid = false;
+                                            for(auto stitch = stitch_set.begin(); stitch != stitch_set.end(); ++stitch){
+                                                mplAssert(node_comp[(*stitch)->source] != node_comp[(*stitch)->target]);
+                                                //if two components seperated by one working stitch share same color: then this is invalid! (the stitch is not working!)
+                                                if(colors[node_comp[(*stitch)->source]] == colors[node_comp[(*stitch)->target]]){
+                                                    is_invalid = true;
+                                                    break;
+                                                }
+                                            }
+                                            if(is_invalid)  continue;
+                                            //otherwise, we insert the color combination as one row.
+                                            
+                                            std::vector<std::pair<uint32_t,uint32_t>> row_decoder;
+                                            //Insert node indicator
+                                            std::cout<<"Cell_Insert "<<vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index <<" " <<parent_no<<std::endl;
+                                            Cell_Insert(dl2,vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index, parent_no);
+                                            // for(auto node_comp_item:node_comp){
+                                            //     std::cout<<(node_comp_item)<<std::endl;
+                                            // }
+                                            for(auto child_node = (*parent_node)->Childs.begin(); child_node != (*parent_node)->Childs.end(); ++child_node){
+                                                int No = (*child_node)->Stitch_No;
+                                                // std::cout<<"No is "<<No<<std::endl;
+                                                for(auto child_conflict =  ((*child_node)->Conflicts_in_LG).begin(); child_conflict != 
+                                                        ((*child_node)->Conflicts_in_LG).end(); ++child_conflict)
+                                                {
+                                                    int col_edge = -1;
+                                                    // This step is to find col_edge to locate the col number.
+                                                    for(std::list<Edge_Simple>::iterator conflict_edge = edge_list[(*child_node)->parent->No].begin();conflict_edge != edge_list[(*child_node)->parent->No].end();++conflict_edge)
+                                                    {
+                                                        if((*conflict_edge).target == (*child_conflict)->No)
+                                                        {
+                                                            col_edge = (*conflict_edge).No;
+                                                            break;
+                                                        }
+                                                    }
+                                                    // 			mplAssert(col_edge!=-1);
+                                                    // 			mplAssert(node_list[*first_set_element]->Stitch_No == *first_set_element);
+                                                    // 			std::cout<<"COL EDGE is "<<col_edge<<std::endl;
+                                                    //  			std::cout<<vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index + (stitch_no*pow((uint32_t)this->color_num(),2)) + 
+                                                    //  first_color *(uint32_t)this->color_num() + second_color<<" "<< vertex_numbers + 1+(col_edge -1)*(uint32_t)this->color_num() + first_color<<std::endl;
+                                                    // Insert corresponding edge indicators
+                                                    // std::cout<<"Cell_Insert "<<vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index <<" " <<vertex_numbers + 1+(col_edge -1)*(uint32_t)this->color_num() + colors[node_comp[No]]<<std::endl;
+                                                    Cell_Insert(dl2,vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index, vertex_numbers + 1+(col_edge -1)*(uint32_t)this->color_num() + colors[node_comp[No]]);
+                                                }  
+                                                row_decoder.push_back(std::make_pair((uint32_t)No,colors[node_comp[No]]));
+                                            }
+                                            decode_mat.push_back(row_decoder);
+                                            starting_index += 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }                        
+                    }
+                }
                 //std::cout<< "SECOND dl insert" << dancing_link_timer.format(6)<<std::endl;
                 //dancing_link_timer.start();
                 // if(starting_index != pow((int32_t)this->color_num(),2)* stitch_count)
@@ -846,17 +1010,6 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
 
                 //std::cout<< "SECOND dl get result" << dancing_link_timer.format(6)<<std::endl;
                 //dancing_link_timer.start();
-#ifdef DEBUG_DANCINGLINKCOLORING
-                for(uint32_t i = 0; i < selected_rows_by_dl2.size();i++)
-                {
-                    mplPrint(kDEBUG, "selected_rows_by_dl2[%u] %u\n", i, selected_rows_by_dl2[i]);
-                }
-                for(uint32_t i = 0; i < this->m_vColor.size();i++)
-                {
-                    mplPrint(kDEBUG, "this->m_vColor[%u] %d\n", i, (int)this->m_vColor[i]);
-                }
-                mplPrint(kDEBUG, "cost1 %g, cost2 %g\n", cost1, cost2);
-#endif
 
                 if(cost1 > cost2)
                 {
@@ -864,13 +1017,8 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     this->m_vColor.swap(color_vector_dl2);
                 }
             }
-#ifdef DEBUG_DANCINGLINKCOLORING
-            mplPrint(kDEBUG, "cost is %g\n", cost1);
-#endif
             return cost1;
         }
-
-
 		//find the node with maximal degree,
 		//return: the node id with maximal degree
 		//iteratively mark the nodes which locate in some polygon (for new_calc_cost function)
@@ -965,7 +1113,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
 
             return cost;
         }
-
+        
 		//push stitch adjacents nodes into same des_set used in solve_by_dancing_link_with_one_stitch.
         void push_adj_into_set(graph_vertex_type const& v1, graph_type const& g, std::set<uint32_t> & des_set, std::set<uint32_t> const& oppo_set)
         {
@@ -990,6 +1138,8 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                 }
             }
         }
+
+
 };
 
 SIMPLEMPL_END_NAMESPACE
