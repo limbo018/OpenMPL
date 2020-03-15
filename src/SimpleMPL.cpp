@@ -647,7 +647,7 @@ void SimpleMPL::solve()
     }
 	// cout << "almost finished" << endl;
 	this->out_stat();
-	//this->write_json();
+	// this->write_json();
 #ifdef DEBUG_NONINTEGERS
     mplPrint(kNONE, "vLP1NonInteger vLP1HalfInteger vLP2NonInteger vLP2HalfInteger vLPEndNonInteger vLPEndHalfInteger vLPNumIter\n"); 
     try 
