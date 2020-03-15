@@ -221,6 +221,7 @@ class SimpleMPL
 		static std::set<vertex_descriptor> get_sub_vdd_set(std::vector<vertex_descriptor>& vSimpl2Org, std::set<vertex_descriptor> &vdd_set);
 		/// count for recursive times
 		int count;
+		int total_count;
 		int total_num_vertices;
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
