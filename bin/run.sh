@@ -23,17 +23,17 @@
 
 # if the benchmark contains polygon shapes, -shape must be set to POLYGON;
 # otherwise, set -shape to RECTANGLE is more memory efficient
+# -remove_stitch_redundancy \
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/sim_c9.gds \
+    -in big/ispd19_test1_flatten.gds \
     -out tmp/sim_c1.gds \
     -simplify_level 3 \
-    -coloring_distance 120 \
-	-uncolor_layer 1 \
-	-uncolor_layer 101 \
+    -coloring_distance 160 \
+	-uncolor_layer 100 \
     -color_num 3 \
-    -algo DL\
+    -algo ILP_UPDATED\
     -thread_num 8 \
     -use_stitch \
     -gen_stitch \

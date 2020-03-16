@@ -26,15 +26,15 @@
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in bench/sim_c1.gds \
-    -selector guide/c1selector.txt \
+    -in bench/sim_c9.gds \
     -out benchout/sim_c1_sti.gds  \
     -coloring_distance 120 \
 	-uncolor_layer 1 \
 	-uncolor_layer 101 \
     -color_num 3 \
-    -algo DL \
-    -thread_num 8 \
+    -algo DL_OPT \
+    -thread_num 1 \
     -use_stitch \
     -gen_stitch \
+    -dbg_comp_id 108\
     -record 1\
