@@ -34,7 +34,7 @@ bool CmdParser::operator()(int argc, char** argv)
         .add_option(Value<std::set<int32_t> >("-path_layer", &parms.sPathLayer, "an integer indicating layer for conflict edges"))
         .add_option(Value<std::set<int32_t> >("-precolor_layer", &parms.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
         .add_option(Value<std::set<int32_t> >("-uncolor_layer", &parms.sUncolorLayer, "an integer indicating layer for coloring"))
-        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK|LP|SDP >").default_value(std::string(defaultParms.algo)))
+        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|ILP_UPDATED|BACKTRACK|LP|SDP|DL|DL_OPT >").default_value(std::string(defaultParms.algo)))
         .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
         .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
         .add_option(Value<bool>("-use_stitch", &parms.use_stitch, "whether use stitch projection").toggle(true).default_value(defaultParms.use_stitch).toggle_value(true))
@@ -102,6 +102,8 @@ bool CmdParser::operator()(int argc, char** argv)
             parms.algo = AlgorithmTypeEnum::BACKTRACK;
         else if (limbo::iequals(algo_str, "DL"))
             parms.algo = AlgorithmTypeEnum::DANCING_LINK;
+        else if (limbo::iequals(algo_str, "DL_OPT"))
+            parms.algo = AlgorithmTypeEnum::DANCING_LINK_OPT;
         else mplPrint(kWARN, "Unknown algorithm type %s, set to default algorithm\n", algo_str.c_str());
 
         // post processing shape_str

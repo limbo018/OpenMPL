@@ -38,9 +38,8 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
 		/// @return objective value 
 		virtual double coloring()
         {
-            double cost = solve_by_dancing_link_with_one_stitch();
-
-            return cost; 
+            double cost1 = solve_by_dancing_link_with_one_stitch();
+            return cost1;
         }
         void dfs_search(uint32_t& source,std::vector<uint32_t> & node_comp,uint32_t& comp_id,std::set<Edge*> & stitch_set){
             std::stack<uint32_t> vStack; 
@@ -477,8 +476,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
         }
 
 
-        double solve_by_dancing_link_with_at_most_two_stitches()
-        {
+        double solve_by_dancing_link_with_at_most_two_stitches(double current_best_cost){
             // Due to graph does not contain a parent&child node system
             // we simply redesign a node struct to achieve this kind of system
             //boost::timer::cpu_timer dancing_link_timer;
@@ -698,10 +696,15 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
             //cost 1 is the cost of non-stitch solver
             //std::cout<< "FIRST DL SOLVE" << dancing_link_timer.format(6)<<std::endl;
             //dancing_link_timer.start();
-            decode_row_results(selected_rows_by_dl1, this->m_vColor,(int)vertex_numbers, (int32_t)this->color_num(), decode_mat,node_list);
-            double cost1 = new_calc_cost(this->m_vColor);
+            std::vector<int8_t> color_vector_dl1;
+            color_vector_dl1.assign(this->m_vColor.size(),-1);
+            decode_row_results(selected_rows_by_dl1, color_vector_dl1,(int)vertex_numbers, (int32_t)this->color_num(), decode_mat,node_list);
+            double cost1 = new_calc_cost(color_vector_dl1);
             //std::cout<< "FIRST DL GET RESULT" << dancing_link_timer.format(6)<<std::endl;
             //dancing_link_timer.start();
+            if(cost1 < current_best_cost){
+                this->m_vColor.swap(color_vector_dl1);
+            }
             if(cost1 > 0)
             {
                 std::vector<int8_t> color_vector_dl2;
@@ -754,10 +757,10 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     uint32_t childs_num = ((*it)->Childs).size();
                     uint32_t stitch_num = ((*it)->Stitches).size();
                     if(childs_num > 1){
-                        std::cout<<"node id: "<<(*it)->No<<", stitch_num: "<<stitch_num<<", childs_num: "<<childs_num<<std::endl;
-                        for(auto child = ((*it)->Childs).begin(); child != ((*it)->Childs).end(); ++child){
-                            std::cout<<"child count "<< (*child)->Stitch_No<<std::endl;
-                        }                  
+                        // std::cout<<"node id: "<<(*it)->No<<", stitch_num: "<<stitch_num<<", childs_num: "<<childs_num<<std::endl;
+                        // for(auto child = ((*it)->Childs).begin(); child != ((*it)->Childs).end(); ++child){
+                        //     std::cout<<"child count "<< (*child)->Stitch_No<<std::endl;
+                        // }                  
                         mplAssert(childs_num == stitch_num + 1); 
                         // # of rows which select exactly one working stitch, here non-stitch case is included... for implementation convenience
                         row_numbers += stitch_num *(this->color_num()) * (this->color_num());
@@ -776,8 +779,8 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                 DancingLink dl2; 
                 // row_numbers = vertex_numbers * (int32_t)this->color_num() + 1 + stitch_count * pow((int32_t)this->color_num(),2);
                 col_numbers = edge_numbers * (int32_t)this->color_num() + vertex_numbers;
-                std::cout<<"DL2: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
-                std::cout<<"DL2: vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
+                // std::cout<<"DL2: row/col is"<<row_numbers<< " "<<col_numbers<<std::endl;
+                // std::cout<<"DL2: vertex/edge number is"<<vertex_numbers<< " "<<edge_numbers<<std::endl;
                 DL_Init(dl2, row_numbers, col_numbers);
 
                 // Insert Non-stitch DL cells
@@ -893,7 +896,6 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     starting_index += pow((int32_t)this->color_num(),2) * (childs_num -1);
                 }
 
-                std::cout<<"ERROR:"<<starting_index<<std::endl;
 
                 //Now, we insert exactly two stitches 
                 std::vector<uint32_t> node_comp(node_list.size(), std::numeric_limits<uint32_t>::max());
@@ -916,7 +918,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                                 uint32_t comp_id = 0;
                                 std::fill(node_comp.begin(), node_comp.end(), std::numeric_limits<uint32_t>::max());
                                 connected_components_k_stitches(node_comp,comp_id,(*parent_node)->Childs,stitch_set);
-                                std::cout<<comp_id<<std::endl;
+                                // std::cout<<comp_id<<std::endl;
                                 // for(auto stitch:stitch_set){
                                 //     std::cout<<"selected stitch->source"<<stitch->source<<std::endl;
                                 //     std::cout<<"selected stitch->target"<<stitch->target<<std::endl;
@@ -951,7 +953,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                                             
                                             std::vector<std::pair<uint32_t,uint32_t>> row_decoder;
                                             //Insert node indicator
-                                            std::cout<<"Cell_Insert "<<vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index <<" " <<parent_no<<std::endl;
+                                            // std::cout<<"Cell_Insert "<<vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index <<" " <<parent_no<<std::endl;
                                             Cell_Insert(dl2,vertex_numbers * (uint32_t)this->color_num() + 2+ starting_index, parent_no);
                                             // for(auto node_comp_item:node_comp){
                                             //     std::cout<<(node_comp_item)<<std::endl;
@@ -1010,8 +1012,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
 
                 //std::cout<< "SECOND dl get result" << dancing_link_timer.format(6)<<std::endl;
                 //dancing_link_timer.start();
-
-                if(cost1 > cost2)
+                if(cost1 > cost2 && current_best_cost > cost2)
                 {
                     cost1 = cost2;
                     this->m_vColor.swap(color_vector_dl2);

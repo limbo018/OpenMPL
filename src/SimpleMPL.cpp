@@ -40,6 +40,7 @@
 #endif
 #include <limbo/algorithms/coloring/BacktrackColoring.h>
 #include "DancingLinkColoring.h"
+#include "DancingLinkColoringOpt.h"
 #define CUT_DG
 #ifdef DEBUG_NONINTEGERS
 std::vector<unsigned int> vLP1NonInteger; 
@@ -2048,6 +2049,9 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 			case AlgorithmTypeEnum::DANCING_LINK:
 				pcs = new DancingLinkColoring<graph_type> (sg);
 				break; 
+			case AlgorithmTypeEnum::DANCING_LINK_OPT:
+				pcs = new DancingLinkColoringOpt<graph_type> (sg);
+				break; 
 			default: mplAssertMsg(0, "unknown algorithm type");
 		}
 	}
@@ -3197,19 +3201,6 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 			// 2nd trial, call solve_graph_coloring() again with MERGE_SUBK4 simplification only
 			double obj_value2 = std::numeric_limits<double>::max();
 
-#ifdef DEBUG_NONINTEGERS
-			std::set<vertex_descriptor> s_vdd_set;
-			for (uint32_t i = 0; i < vSimpl2Orig.size(); i++)
-			{
-				if (vdd_set.find(vSimpl2Orig[i]) != vdd_set.end())
-				{
-					s_vdd_set.insert(i);
-				}
-			}
-			// very restrict condition to determin whether perform MERGE_SUBK4 or not
-			if (obj_value1 >= 1 && boost::num_vertices(sg) > 4 && (m_db->algo() == AlgorithmTypeEnum::LP_GUROBI || m_db->algo() == AlgorithmTypeEnum::SDP_CSDP) && (simplify_strategy & graph_simplification_type::MERGE_SUBK4) == 0) // MERGE_SUBK4 is not performed
-				obj_value2 = solve_graph_coloring(comp_id, sg, itBgn, pattern_cnt, graph_simplification_type::MERGE_SUBK4, vSubColor, s_vdd_set);																					  // call again
-#endif
 
 			if (obj_value1 < obj_value2)
 			{

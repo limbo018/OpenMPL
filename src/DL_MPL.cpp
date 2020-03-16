@@ -815,16 +815,17 @@ int  mask_number, std::vector<std::vector<std::pair<uint32_t,uint32_t>>>& decode
 		int No = ((*i) - 1) / mask_number + 1;
 		int mask = (*i + 2) % mask_number;
 		color_results_wo_stitch[No-1] = mask; }
-
+		// std::cout<<"selected rows: "<<(*i)<<std::endl;
 		//if the selected_rows represent some stitches rows 
 		if((*i) > (vertex_number * (uint32_t)(mask_number) + (uint32_t)1)){
 			std::vector<std::pair<uint32_t,uint32_t>>& row_decoder = decode_mat[(*i)- vertex_number * mask_number -2];
 			for(std::vector<std::pair<uint32_t,uint32_t>>::iterator it = row_decoder.begin(); it != row_decoder.end(); ++it) {
 				color_vector[(*it).first] = (*it).second;
+				// std::cout<<"Corresponding color "<<(*it).first<<" "<<(*it).second<<std::endl;
 			}
 		}
 	}
-
+	// std::cout<<"Finished"<<std::endl;
 
 	for(std::vector<Vertex*>::iterator it = node_list.begin(); it != node_list.end(); ++it) {
 		if(color_vector[(*it)->Stitch_No]!= -1){continue;}
