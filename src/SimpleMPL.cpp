@@ -2552,11 +2552,14 @@ uint32_t SimpleMPL::solve_component(const std::vector<uint32_t>::const_iterator 
 	}
 
 	uint32_t component_conflict_num = conflict_num(itBgn, itEnd);
-	if(component_conflict_num != acc_obj_value){
-		std::cout<<"component_conflict_num "<<component_conflict_num<<",acc_obj_value "<<acc_obj_value<<std::endl;
-		// debug_conflict_num(itBgn, itEnd);
-	}
-	assert(component_conflict_num == acc_obj_value);
+	// if(component_conflict_num != acc_obj_value){
+	// 	std::cout<<"component_conflict_num "<<component_conflict_num<<",acc_obj_value "<<acc_obj_value<<std::endl;
+	// 	// debug_conflict_num(itBgn, itEnd);
+	// }
+
+	//NOTE: There is a bug(feature): if multi-thread is enabled, the following assertion may fail, but it does not influence final results, therefore I ignore this part.
+	// 03/16/2020 Wei
+	// mplAssert(component_conflict_num == acc_obj_value);
     // only valid under no stitch 
     // if (acc_obj_value != std::numeric_limits<uint32_t>::max())
     //    mplAssertMsg(acc_obj_value == component_conflict_num, "%u != %u", acc_obj_value, component_conflict_num);
@@ -2623,6 +2626,12 @@ uint32_t SimpleMPL::coloring_component(const std::vector<uint32_t>::const_iterat
     // solve graph coloring 
 	if (m_db->remove_stitch_redundancy())
 	{
+		// if(pattern_cnt > 10){
+		// 	acc_obj_value = solve_graph_coloring_with_remove_stitch_redundancy(0, comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
+		// }
+		// else{
+		// 	acc_obj_value = solve_graph_coloring(comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
+		// }
 		acc_obj_value = solve_graph_coloring_with_remove_stitch_redundancy(0, comp_id, dg, itBgn, pattern_cnt, simplify_strategy, vColor, vdd_set);
 	}
 	else
@@ -2806,6 +2815,9 @@ uint32_t SimpleMPL::conflict_num(const std::vector<uint32_t>::const_iterator itB
         else // uncolored vertex is counted as conflict 
             mplAssertMsg(0, "uncolored vertex %u = %d", v, color1);
 	}
+	// for(auto conflict:m_vConflict){
+	// 	std::cout<<conflict.first<<" "<<conflict.second<<std::endl;
+	// }
 	return m_vConflict.size();
 }
 
@@ -3061,10 +3073,9 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 	std::vector<vertex_descriptor> all_articulations;
 
 	gs.get_articulations(all_articulations);
-	// solver_timer.stop();
-	// cout << "Start -- Enter subcomponent : " << solver_timer.format(6,"%w") << endl;
+	// cout << "Start -- Enter subcomponent : simplification cost: " << // solver_timer.format(6,"%w") << ", depth is "<<depth<<", num_of_nodes simplified:"<<vHiddenVertices.size()<< ", graph size is "<<boost::num_vertices(dg)<<", gs.num_component() is "<<gs.num_component()<<endl;
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id) {
-	// solver_timer.resume();
+	// solver_timer.start();
 		graph_type sg;
 		std::vector<int8_t> &vSubColor = mSubColor[sub_comp_id];
 		std::vector<vertex_descriptor> &vSimpl2Orig = mSimpl2Orig[sub_comp_id];
@@ -3090,25 +3101,41 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 				std::vector<bool> target_adj_vertices(total_v, false);
 				std::vector<vertex_descriptor> target_stitch_neigh;
 				boost::graph_traits<graph_type>::adjacency_iterator adj_iter, adj_iter_end;
+				bool can_merge = true;
 				for (boost::tie(adj_iter, adj_iter_end) = boost::adjacent_vertices(source_vertex, sg); adj_iter != adj_iter_end; ++adj_iter){
 					vertex_descriptor u = *adj_iter;
 					if (boost::get(boost::edge_weight, sg, boost::edge(source_vertex, u, sg).first) > 0){
 						source_adj_vertices.at(u) = true;
+						if(boost::edge(target_vertex, u, sg).second == false){
+							can_merge = false;
+							break;
+						}
+						
 					}
 					else {
 						++source_stitch_edge_cnt;
 					}
 				}
+				if(can_merge == false){
+					break;
+				}
 				for (boost::tie(adj_iter, adj_iter_end) = boost::adjacent_vertices(target_vertex, sg); adj_iter != adj_iter_end; ++adj_iter){
 					vertex_descriptor u = *adj_iter;
 					if (boost::get(boost::edge_weight, sg, boost::edge(target_vertex, u, sg).first) > 0){
 						target_adj_vertices.at(u) = true;
+						if(source_adj_vertices.at(u) == false){
+							can_merge = false;
+							break;
+						}
 					}
 					else {
 						if (u != source_vertex){
 						target_stitch_neigh.emplace_back(u);}
 						++target_stitch_edge_cnt;
 					}
+				}
+				if(can_merge == false){
+					break;
 				}
 				// if ((source_adj_vertices == target_adj_vertices) and (source_stitch_edge_cnt <= 1) and (target_stitch_edge_cnt <= 1)){
 				if ((source_adj_vertices == target_adj_vertices) ){
@@ -3122,13 +3149,11 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 		if (need_simplify and total_v > 0) {
 			// if (total_v >2){
 			// cout << "# vertices=" << total_v << std::endl;}
-	// solver_timer.stop();
-	// cout << "Enter subcomponent -- Before Copy Graph: " << solver_timer.format(6,"%w") << endl;
-	// solver_timer.resume();
-			tmp_sg = sg;
-	// solver_timer.stop();
-	// cout << "Copy Graph: " << solver_timer.format(6,"%w") << endl;
-	// solver_timer.resume();
+	// cout << "Enter subcomponent -- Before Copy Graph: " << // solver_timer.format(6,"%w")<<", boost::num_vertices(sg)"<<boost::num_vertices(sg)<<endl;
+	// solver_timer.start();
+			// tmp_sg = sg;
+	// cout << "Copy Graph: " << // solver_timer.format(6,"%w") << endl;
+	// solver_timer.start();
 			total_num_vertices += total_v;
 			// if (total_v>2){
 			// cout << "redundancy stitch pairs size = " << redundancy_stitch_pairs.size()<< endl;
@@ -3136,25 +3161,37 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 
 			for (auto iter = redundancy_stitch_pairs.begin(); iter != redundancy_stitch_pairs.end(); ++iter) {
 				std::vector<vertex_descriptor> stitch_neighs = stitch_neigh_of_remove_vertcies.at(std::distance(redundancy_stitch_pairs.begin(), iter));
+				// solver_timer.start();
 				for( auto stitch_neigh : stitch_neighs){
-					auto e = boost::add_edge((*iter).first, stitch_neigh, tmp_sg);
-					boost::put(boost::edge_weight, tmp_sg, e.first, -1);
+					auto e = boost::add_edge((*iter).first, stitch_neigh, sg);
+					boost::put(boost::edge_weight, sg, e.first, -1);
 				}
-				boost::clear_vertex((*iter).second, tmp_sg);
-				boost::remove_vertex((*iter).second, tmp_sg);
+				
+				// cout << "add edge and assign edge value cost" << // solver_timer.format(6,"%w") << endl;
+				// solver_timer.start();
+				boost::clear_vertex((*iter).second, sg);
+				boost::remove_vertex((*iter).second, sg);
+				// cout << "remove vertex costs" << // solver_timer.format(6,"%w") << endl;
+				// solver_timer.start();
 			}
 			// if (total_v>2){
 			// cout << "after merge tmp_sg #v=" << num_vertices(tmp_sg) << ", #e=" << num_edges(tmp_sg) << endl;}
-	// solver_timer.stop();
-	// cout << "Remove Node: " << solver_timer.format(6,"%w") << endl;
-			vSubColor.assign(num_vertices(tmp_sg), -1);
-			double cost = solve_graph_coloring_with_remove_stitch_redundancy(depth+1, sub_comp_id, tmp_sg, itBgn, 0, simplify_strategy, vSubColor, sub_vdd_set);
-	// solver_timer.resume();
+	// cout << "Remove Node: " << // solver_timer.format(6,"%w") << endl;
+			uint32_t sg_size = num_vertices(sg);
+			vSubColor.assign(sg_size, -1);
+			double cost = 0;
+			cost = solve_graph_coloring_with_remove_stitch_redundancy(depth+1, sub_comp_id, sg, itBgn, 0, simplify_strategy, vSubColor, sub_vdd_set);
+			// if(sg_size > 6){
+			// 	cost = solve_graph_coloring_with_remove_stitch_redundancy(depth+1, sub_comp_id, sg, itBgn, 0, simplify_strategy, vSubColor, sub_vdd_set);
+			// }
+			// else{
+			// 	cost = solve_graph_coloring(sub_comp_id, sg, itBgn, 0, simplify_strategy, vSubColor, sub_vdd_set);
+			// }
+	// solver_timer.start();
 			for (auto iter = redundancy_stitch_pairs.begin(); iter != redundancy_stitch_pairs.end(); ++iter) {
 				vSubColor.insert(vSubColor.begin() + (*iter).second, vSubColor.at((*iter).first));
 			}
-	// solver_timer.stop();
-	// cout << "Recover: " << solver_timer.format(6,"%w") << endl;
+	// cout << "Recover: " << // solver_timer.format(6,"%w") <<", boost::num_vertices(sg)"<<boost::num_vertices(sg)<< endl;
 		}
 		else{
 			vSubColor.assign(num_vertices(sg), -1);

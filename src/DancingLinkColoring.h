@@ -618,7 +618,7 @@ class DancingLinkColoring : public limbo::algorithms::coloring::Coloring<GraphTy
                     //if two nodes are stitch relationships and both of them are parent
                     if(boost::get(boost::edge_weight, this->m_graph, e12.first) < 0)
                     {
-                        std::cout<<"Stitch:"<<int(v1)<<" "<<int(v2)<<std::endl;
+                        // std::cout<<"Stitch:"<<int(v1)<<" "<<int(v2)<<std::endl;
                         mplAssert(node_list[v1]->parent == node_list[v2]->parent);
                         Edge* edge = new Edge{int(v1),int(v2),stitch_count};
                         node_list[v1]->parent->Stitches.insert(edge);
