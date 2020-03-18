@@ -2113,7 +2113,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
         gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 
         vSubColor.assign(num_vertices(sg), -1);
-		std::cout<<"Graph size is "<<num_vertices(sg)<<" "<<comp_id<<" "<<sub_comp_id<<std::endl;
+		// std::cout<<"Graph size is "<<num_vertices(sg)<<" "<<comp_id<<" "<<sub_comp_id<<std::endl;
 #ifdef _OPENMP
 #pragma omp critical(m_dgGlobal2Local)
 #endif
