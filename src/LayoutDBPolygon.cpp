@@ -141,7 +141,8 @@ void LayoutDBPolygon::cal_bound(){
 	// boundaries.push_back(tmp_bound[3]);
 	// return;
     boundaries[0] = curret_bound[0];
-    boundaries[1] = curret_bound[1];
+    // add a space with width 40
+    boundaries[1] = curret_bound[1] + 40;
     boundaries[2] = curret_bound[2];
     boundaries[3] = curret_bound[3];
     return;

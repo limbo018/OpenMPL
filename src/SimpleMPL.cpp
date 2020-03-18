@@ -2113,7 +2113,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
         gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 
         vSubColor.assign(num_vertices(sg), -1);
-
+		std::cout<<"Graph size is "<<num_vertices(sg)<<" "<<comp_id<<" "<<sub_comp_id<<std::endl;
 #ifdef _OPENMP
 #pragma omp critical(m_dgGlobal2Local)
 #endif
@@ -2131,7 +2131,14 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		{
 			for (std::vector<vertex_descriptor>::const_iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
 			{mplPrint(kDEBUG, "sub_comp_id %u, orig id is %u.\n", (uint32_t)sub_comp_id, (uint32_t)*it);}
+			for(auto orig:vSimpl2Orig){
+				std::cout<<orig<<std::endl;
+				std::cout<<gtl::xl(*(m_db->vPatternBbox[*(itBgn+orig)]))<<std::endl;
+				std::cout<<gtl::yl(*(m_db->vPatternBbox[*(itBgn+orig)]))<<std::endl;
+				
+			}
 		}
+
         //if algorithm is Dancing Link, call it directly
         boost::timer::cpu_timer comp_timer;
         comp_timer.start();
@@ -2257,7 +2264,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             }
 
             //we only store json file with graph size larger than 3
-            if(num_vertices(sg) > 3)
+            if(num_vertices(sg) > 0)
             {
 				//The json file name is orgnized as follows: compid_subcompid_objvalue_time.json
                 std::string name = std::to_string(comp_id);

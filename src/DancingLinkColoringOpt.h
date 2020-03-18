@@ -762,10 +762,10 @@ class DancingLinkColoringOpt : public limbo::algorithms::coloring::Coloring<Grap
                     uint32_t stitch_num = ((*it)->Stitches).size();
                     if(childs_num > 1){
                         // std::cout<<"node id: "<<(*it)->No<<", stitch_num: "<<stitch_num<<", childs_num: "<<childs_num<<std::endl;
-                        // for(auto child = ((*it)->Childs).begin(); child != ((*it)->Childs).end(); ++child){
-                        //     std::cout<<"child count "<< (*child)->Stitch_No<<std::endl;
-                        // }                  
-                        mplAssert(childs_num == stitch_num + 1); 
+                        // for(auto stitch:((*it)->Stitches)){
+                        //     std::cout<<stitch->source <<" "<<stitch->target<<std::endl;
+                        // }
+                        // mplAssert(childs_num == stitch_num + 1); 
                         // # of rows which select exactly one working stitch, here non-stitch case is included... for implementation convenience
                         row_numbers += stitch_num *(this->color_num()) * (this->color_num());
                         if(childs_num > 2){
@@ -934,7 +934,7 @@ class DancingLinkColoringOpt : public limbo::algorithms::coloring::Coloring<Grap
                                 // for(auto node_comp_item:node_comp){
                                 //     std::cout<<node_comp_item<<std::endl;
                                 // }
-                                mplAssert(comp_id == 3);
+                                // mplAssert(comp_id == 3);
                                 //DYNAMIC TODO: color should also be a dynamic vector(not color1,color2,color3)
                                 std::vector<uint32_t> colors(comp_id, std::numeric_limits<uint32_t>::max());
                                 for(uint32_t color0 = 0; color0 < this->color_num(); color0++){
@@ -942,10 +942,13 @@ class DancingLinkColoringOpt : public limbo::algorithms::coloring::Coloring<Grap
                                         for(uint32_t color2 = 0; color2 < this->color_num();color2++){
                                             colors[0] = color0;
                                             colors[1] = color1;
-                                            colors[2] = color2;
+                                            if(comp_id == 3){
+                                                colors[2] = color2;
+                                            }
+                                    
                                             bool is_invalid = false;
                                             for(auto stitch = stitch_set.begin(); stitch != stitch_set.end(); ++stitch){
-                                                mplAssert(node_comp[(*stitch)->source] != node_comp[(*stitch)->target]);
+                                                // mplAssert(node_comp[(*stitch)->source] != node_comp[(*stitch)->target]);
                                                 //if two components seperated by one working stitch share same color: then this is invalid! (the stitch is not working!)
                                                 if(colors[node_comp[(*stitch)->source]] == colors[node_comp[(*stitch)->target]]){
                                                     is_invalid = true;
