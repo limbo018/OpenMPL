@@ -153,21 +153,21 @@ void SimpleMPL::read_gds()
 		mplAssertMsg(reader(m_db->input2_gds()),"failed to read %s", m_db->input2_gds().c_str());
 		m_db->num_of_cells += 1;
 		coordinate_type left_x = m_db->boundaries[1];
-		std::cout<<left_x<<std::endl;
+		// std::cout<<left_x<<std::endl;
 		m_db->cal_bound();
 		coordinate_type right_x = m_db->boundaries[1];
-		std::cout<<right_x<<std::endl;
+		// std::cout<<right_x<<std::endl;
 		if(m_db->parms.flip2){
-			std::cout<<"FLIP SECOND CELL!"<<std::endl;
+			// std::cout<<"FLIP SECOND CELL!"<<std::endl;
 			m_db->flip(left_x,right_x);
 		}
 	}
 	if(m_db->input3_gds() != std::string("")){
 		mplAssertMsg(reader(m_db->input3_gds()),"failed to read %s", m_db->input3_gds().c_str());
 		m_db->num_of_cells += 1;
-		coordinate_type left_x = m_db->boundaries[2];
+		coordinate_type left_x = m_db->boundaries[1];
 		m_db->cal_bound();
-		coordinate_type right_x = m_db->boundaries[2];
+		coordinate_type right_x = m_db->boundaries[1];
 		if(m_db->parms.flip3){
 			m_db->flip(left_x,right_x);
 		}
@@ -617,12 +617,15 @@ void SimpleMPL::solve()
             // {
             //     color_time<<"\\\\\n"<<m_db->input_gds();
             // }
-
+            if(m_db->algo() == AlgorithmTypeEnum::ILP_UPDATED_GUROBI)
+            {
+                color_time<<"\\\\\n"<<m_db->input_gds();
+            }
 			// color_time<<"\\\\\n"<<m_db->input_gds();
             // color_time<<t.format(3, "&  %w");
 
 			// color_time << m_db->input_gds() << " ";
-			color_time << std::setw(5) <<t.format(3, "%w ");
+			color_time << std::setw(5) <<m_db->algo()<<" "<<t.format(3, "&  %w");
             myfile.close();
             color_time.close();
         }
@@ -891,12 +894,12 @@ void SimpleMPL::setVddGnd()
 	int count = 0;
 	for (uint32_t i = 0; i < vertex_num; i++)
 	{
-		if (is_long_enough(m_db->vPatternBbox[i]))
-		{
-			m_isVDDGND[i] = true;
-			m_db->set_color(i,0);
-			// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
-		}
+		// if (is_long_enough(m_db->vPatternBbox[i]))
+		// {
+		// 	m_isVDDGND[i] = true;
+		// 	m_db->set_color(i,0);
+		// 	// m_db->vPatternBbox[i]->color(m_db->color_num() - 1);
+		// }
 		if(boost::polygon::delta(*m_db->vPatternBbox[i], gtl::HORIZONTAL) == threshold )
         {
 			m_isVDDGND[i] = false;
@@ -2101,7 +2104,11 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 	std::vector<vertex_descriptor> all_articulations;
 
 	gs.get_articulations(all_articulations);
-	
+	// std::cout<<"articulations!"<<std::endl;
+	// for(auto arti:all_articulations){
+	// 	std::cout<<arti<<std::endl;
+	// }
+	// std::cout<<"DG Graph size is "<<num_vertices(dg)<<" "<<comp_id<< ", num_of  hidden vertices:"<<vHiddenVertices.size()<<std::endl;
 	for (uint32_t sub_comp_id = 0; sub_comp_id < gs.num_component(); ++sub_comp_id)
     {
 
@@ -2113,7 +2120,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
         gs.simplified_graph_component(sub_comp_id, sg, vSimpl2Orig);
 
         vSubColor.assign(num_vertices(sg), -1);
-		// std::cout<<"Graph size is "<<num_vertices(sg)<<" "<<comp_id<<" "<<sub_comp_id<<std::endl;
+		// std::cout<<"SG Graph size is "<<num_vertices(sg)<<" "<<comp_id<<" "<<sub_comp_id<<std::endl;
 #ifdef _OPENMP
 #pragma omp critical(m_dgGlobal2Local)
 #endif
@@ -2264,7 +2271,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             }
 
             //we only store json file with graph size larger than 3
-            if(num_vertices(sg) > 0)
+            if(num_vertices(sg) > 3)
             {
 				//The json file name is orgnized as follows: compid_subcompid_objvalue_time.json
                 std::string name = std::to_string(comp_id);
@@ -2278,6 +2285,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 				name.append(comp_timer.format(4,"%w"));
 
                 this->write_json(sg,(char*)name.c_str(),vSubColor);
+				// print_graph(sg);
             }
         }
 
@@ -2406,6 +2414,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 void SimpleMPL::print_graph(SimpleMPL::graph_type& g)
 {
 	boost::graph_traits<graph_type>::vertex_iterator vi1, vie1;
+	std::cout<<"Print graph!"<<std::endl;
 	for (boost::tie(vi1, vie1) = boost::vertices(g); vi1 != vie1; ++vi1)
 	{	
 		vertex_descriptor v1 = *vi1;
