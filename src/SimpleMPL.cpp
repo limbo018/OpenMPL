@@ -487,7 +487,7 @@ void SimpleMPL::out_stat()
 void SimpleMPL::solve()
 {
 	int numProcs = omp_get_num_procs();
-    std::cout << "omp_get_num_procs() = " << numProcs << std::endl;
+	mplPrint(kINFO,  "omp_get_num_procs() = %d\n", numProcs);
     // skip if no uncolored layer 
     if (m_db->parms.sUncolorLayer.empty())
         return;
@@ -547,7 +547,8 @@ void SimpleMPL::solve()
 		//GdsWriter writer;
 		//writer.write_Simplification(m_db->output_gds() + "_lg_simplification.gds", *m_db, m_vCompId, m_mAdjVertex, m_in_DG, m_isVDDGND, true);
 		this->projection();		///< m_vBookmark has already been updated in projection()
-		std::cout<<total_timer.format(2, "stitch time %ts(%p%), %ws real")<<std::endl;
+		const char *buf = total_timer.format(2, "stitch candidate insertion time %ts(%p%), %ws real \n").c_str();
+		mplPrint(kINFO,buf);
 	}
     std::vector<uint32_t>().swap(m_dgCompId);
     m_dgCompId.assign(m_db->vPatternBbox.size(), 0);
@@ -625,7 +626,10 @@ void SimpleMPL::solve()
             // color_time<<t.format(3, "&  %w");
 
 			// color_time << m_db->input_gds() << " ";
-			color_time << std::setw(5) <<m_db->algo()<<" "<<t.format(3, "&  %w");
+			for(auto layer:m_db->parms.sUncolorLayer){
+				color_time << layer<<" ";
+			}
+			color_time << std::setw(5) <<m_db->algo()<<" "<<m_db->input_gds()<<" "<<t.format(3, "&  %w");
             myfile.close();
             color_time.close();
         }
@@ -943,9 +947,6 @@ void SimpleMPL::cal_boundaries()
 
 void SimpleMPL::projection()
 {
-#ifdef _OPENMP
-	std::cout<<"OPENMP enabled with thread num "<<m_db->thread_num()<<std::endl;
-#endif
 	uint32_t vertex_num = m_db->vPatternBbox.size();
 	std::vector<rectangle_pointer_type> rect_vec = m_db->polyrect_patterns();	///< original rectangle list
 	std::vector<uint32_t> Poly_Rect_begin;
@@ -2134,17 +2135,16 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
                 }
             }
         }
-		if (comp_id == m_db->dbg_comp_id())
-		{
-			for (std::vector<vertex_descriptor>::const_iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
-			{mplPrint(kDEBUG, "sub_comp_id %u, orig id is %u.\n", (uint32_t)sub_comp_id, (uint32_t)*it);}
-			for(auto orig:vSimpl2Orig){
-				std::cout<<orig<<std::endl;
-				std::cout<<gtl::xl(*(m_db->vPatternBbox[*(itBgn+orig)]))<<std::endl;
-				std::cout<<gtl::yl(*(m_db->vPatternBbox[*(itBgn+orig)]))<<std::endl;
-				
-			}
-		}
+		// if (comp_id == m_db->dbg_comp_id())
+		// {
+		// 	for (std::vector<vertex_descriptor>::const_iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
+		// 	{mplPrint(kDEBUG, "sub_comp_id %u, orig id is %u.\n", (uint32_t)sub_comp_id, (uint32_t)*it);}
+		// 	// for(auto orig:vSimpl2Orig){
+		// 	// 	std::cout<<orig<<std::endl;
+		// 	// 	std::cout<<gtl::xl(*(m_db->vPatternBbox[*(itBgn+orig)]))<<std::endl;
+		// 	// 	std::cout<<gtl::yl(*(m_db->vPatternBbox[*(itBgn+orig)]))<<std::endl;
+		// 	// }
+		// }
 
         //if algorithm is Dancing Link, call it directly
         boost::timer::cpu_timer comp_timer;
@@ -2214,7 +2214,7 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
                 vSubColor[v] = color;
                 if (comp_id == m_db->dbg_comp_id())
                 {
-                    mplPrint(kDEBUG, "vertex %u color is %u.\n", (uint32_t)v, (uint32_t)color);
+                    mplPrint(kDEBUG, "sub_comp %u, vertex %u , orig id %u, color is %u.\n", (uint32_t)sub_comp_id,(uint32_t)v, (uint32_t)vSimpl2Orig[v],(uint32_t)color);
                 }
             }
         }
@@ -2294,14 +2294,47 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 
 	// recover color assignment according to the simplification level set previously 
 	// HIDE_SMALL_DEGREE needs to be recovered manually for density balancing 
-
+	SimpleMPL::graph_type non_const_dg = dg;
+	if (comp_id == m_db->dbg_comp_id()){
+		double beforeLIMBO_obj = new_calc_cost(non_const_dg,vColor);
+		std::cout<<"BEFORE LIMBO REC OBJ "<<beforeLIMBO_obj<<std::endl;
+		for(auto arti:all_articulations){
+			std::cout<<"arti:"<<arti<<std::endl;
+		}
+	}
 	gs.recover(vColor, mSubColor, mSimpl2Orig); 
 
 	// recover colors for simplified vertices with balanced assignment 
 	// recover hidden vertices with local balanced density control 
+	if (comp_id == m_db->dbg_comp_id()){
+		double before_obj = new_calc_cost(non_const_dg,vColor);
+		std::cout<<"BEFORE OBJ "<<before_obj<<std::endl;
+		// int index = 0;
+		// for(auto color:vColor){
+		// 	std::cout<<"index: "<<index<< ", color "<<(uint32_t)color<<std::endl;
+		// 	index ++;
+		// }
+	}
+
+	// RecoverHiddenVertex(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
+
+
     RecoverHiddenVertexDistance(dg, itBgn, pattern_cnt, vColor, vHiddenVertices, m_vColorDensity, *m_db)();
-	SimpleMPL::graph_type non_const_dg = dg;
+	// if (comp_id == m_db->dbg_comp_id()){
+	// 	double AFTER = new_calc_cost(non_const_dg,vColor);
+	// 	std::cout<<"AFTER OBJ "<<AFTER<<std::endl;
+	// }
 	double total_obj = new_calc_cost(non_const_dg,vColor);
+	if( m_db->parms.record > 2)
+	{
+		if(total_obj != 0)
+		{
+			std::ofstream myfile;
+			myfile.open ("component_results.txt", std::ofstream::app);
+			myfile <<"comp_id: "<< comp_id <<",num_vertices(dg) "<<num_vertices(dg)<<", obj_value: "<< total_obj<<"\n";
+			myfile.close();
+		}
+	}
 	// std::cout<<"total_obj "<<total_obj<<",acc_obj_value "<<acc_obj_value<<std::endl;
 	// assert(total_obj == acc_obj_value);
 	// std::cout<<(total_obj == acc_obj_value)<<std::endl;
@@ -2351,7 +2384,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 	for (boost::tie(vi1, vie1) = boost::vertices(g); vi1 != vie1; ++vi1)
 	{	
 		vertex_descriptor v1 = *vi1;
-		mplAssert(vColor[v1]!=-1);
+		// mplAssert(vColor[v1]!=-1);
 		mplAssert((uint32_t)v1 < parent_node_ids.size());
 		if(parent_node_ids[(uint32_t)v1] == (uint32_t)-1)
 		{
@@ -2385,6 +2418,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 		{
 			++next2; 
 			vertex_descriptor v2 = *vi2;
+			if(vColor[v1] < 0 || vColor[v2] < 0) continue;
 			if (v1 >= v2) continue;
 			std::pair<edge_descriptor, bool> e12 = boost::edge(v1, v2, g);
 			mplAssert(e12.second);
@@ -2392,7 +2426,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 			if(boost::get(boost::edge_weight, g, e12.first) < 0)
 			{
 				//std::cout<<"Stitch:"<<v1<<" "<<v2<<std::endl;
-				//cost += (vColor[v1] != vColor[v2])*m_db->parms.weight_stitch;
+				cost += (vColor[v1] != vColor[v2])*m_db->parms.weight_stitch;
 			}
 			else
 			{
@@ -2400,6 +2434,7 @@ double SimpleMPL::new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> con
 				{
 					if(conflict_mat[parent_node_ids[(uint32_t)v1]][parent_node_ids[(uint32_t)v2]] == false)
 					{
+						// std::cout<<"Conflict: "<<v1<<" "<<v2<<std::endl;
 						cost += 1;
 						conflict_mat[parent_node_ids[(uint32_t)v1]][parent_node_ids[(uint32_t)v2]] = true;
 						conflict_mat[parent_node_ids[(uint32_t)v2]][parent_node_ids[(uint32_t)v1]] = true;
@@ -3222,13 +3257,13 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 					m_dgCompId[it->first] = sub_comp_id + 1;
 				}
 			}
-			if (comp_id == m_db->dbg_comp_id())
-			{
-				for (std::vector<vertex_descriptor>::const_iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
-				{
-					mplPrint(kDEBUG, "sub_comp_id %u, orig id is %u.\n", (uint32_t)sub_comp_id, (uint32_t)*it);
-				}
-			}
+			// if (comp_id == m_db->dbg_comp_id())
+			// {
+			// 	for (std::vector<vertex_descriptor>::const_iterator it = vSimpl2Orig.begin(); it != vSimpl2Orig.end(); ++it)
+			// 	{
+			// 		mplPrint(kDEBUG, "sub_comp_id %u, orig id is %u.\n", (uint32_t)sub_comp_id, (uint32_t)*it);
+			// 	}
+			// }
 			//if algorithm is Dancing Link, call it directly
 			boost::timer::cpu_timer comp_timer;
 			comp_timer.start();
