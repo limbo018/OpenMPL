@@ -32,6 +32,14 @@
     "**OpenMPL: An Open Source Layout Decomposer**", 
     IEEE International Conference on ASIC (ASICON), Chongqing, China, Oct. 29–Nov. 1, 2019.
 ([preprint](https://arxiv.org/pdf/1809.07554v3.pdf)) ([slides](http://yibolin.com/publications/papers/DFM_ASICON2019_Li.slides.pdf))
+### Docker Version
+We provide the docker version to avoid annoying compilation.
+You can pull the image by
+```bash
+$ docker pull wadmes/openmpl:latest
+```
+The OpenMPL folder locates in `/home/OpenMPL`
+
 
 ### How To Compile
 

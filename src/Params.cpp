@@ -21,7 +21,12 @@ bool CmdParser::operator()(int argc, char** argv)
     po_type desc (std::string("SimpleMPL 1.1 Usage"));
     desc.add_option(Value<bool>("-help", &help, "toggle printing help message").toggle(true).default_value(false).toggle_value(true).help(true))
         .add_option(Value<std::string>("-in", &parms.input_gds, "input gds file name").required(true))
-        .add_option(Value<std::string>("-out", &parms.output_gds, "output gds file name").default_value(defaultParms.output_gds))
+        .add_option(Value<std::string>("-selector",&parms.selector,"guided selction file").required(false))
+        .add_option(Value<std::string>("-in2",&parms.input2_gds,"second input gds file").required(false))
+        .add_option(Value<bool>("-in2_flip", &parms.flip2, "flip second input").required(false).toggle(true).default_value(defaultParms.flip2).toggle_value(true))
+        .add_option(Value<std::string>("-in3", &parms.input3_gds,"third input gds file").required(false))
+        .add_option(Value<bool>("-in3_flip", &parms.flip3, "flip third input").required(false).toggle(true).default_value(defaultParms.flip3).toggle_value(true))
+	    .add_option(Value<std::string>("-out", &parms.output_gds, "output gds file name").default_value(defaultParms.output_gds))
         .add_option(Value<double>("-coloring_distance", &parms.coloring_distance_nm, "a floating point number indicating number of coloring distance in nanometer").default_value(defaultParms.coloring_distance_nm))
         .add_option(Value<int32_t>("-color_num", &parms.color_num, "an integer indicating number of masks (colors) < 3|4 >").required(true))
         .add_option(Value<int32_t>("-simplify_level", &parms.simplify_level, "an integer indicating graph simplification level < 0|1|2|3 >").default_value(defaultParms.simplify_level))
@@ -29,11 +34,12 @@ bool CmdParser::operator()(int argc, char** argv)
         .add_option(Value<std::set<int32_t> >("-path_layer", &parms.sPathLayer, "an integer indicating layer for conflict edges"))
         .add_option(Value<std::set<int32_t> >("-precolor_layer", &parms.sPrecolorLayer, "an integer indicating layer for pre-colored patterns"))
         .add_option(Value<std::set<int32_t> >("-uncolor_layer", &parms.sUncolorLayer, "an integer indicating layer for coloring"))
-        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|BACKTRACK|LP|SDP >").default_value(std::string(defaultParms.algo)))
+        .add_option(Value<std::string>("-algo", &algo_str, "algorithm type < ILP|ILP_UPDATED|BACKTRACK|LP|SDP|DL|DL_OPT >").default_value(std::string(defaultParms.algo)))
         .add_option(Value<std::string>("-shape", &shape_str, "shape mode < RECTANGLE|POLYGON >").default_value(std::string(defaultParms.shape_mode)))
         .add_option(Value<bool>("-verbose", &parms.verbose, "toggle controling screen messages").toggle(true).default_value(defaultParms.verbose).toggle_value(true))
         .add_option(Value<bool>("-use_stitch", &parms.use_stitch, "whether use stitch projection").toggle(true).default_value(defaultParms.use_stitch).toggle_value(true))
 		.add_option(Value<bool>("-gen_stitch", &parms.gen_stitch, "control whether only generate and output stitches").toggle(true).default_value(defaultParms.gen_stitch).toggle(true))
+        .add_option(Value<bool>("-remove_stitch_redundancy", &parms.remove_stitch_redundancy, "whether remove stitch redundancy").toggle(true).default_value(defaultParms.remove_stitch_redundancy).toggle_value(true))
 		.add_option(Value<uint32_t>("-dbg_comp_id", &parms.dbg_comp_id, "debug component id").default_value(defaultParms.dbg_comp_id))
         .add_option(Value<int32_t>("-record", &parms.record, "record level, which controls the degree of recording information").default_value(defaultParms.record))
         .add_option(Value<double>("-weight_stitch", &parms.weight_stitch, "a floating point number indicating the weight of stitch").default_value(defaultParms.weight_stitch))
@@ -96,6 +102,8 @@ bool CmdParser::operator()(int argc, char** argv)
             parms.algo = AlgorithmTypeEnum::BACKTRACK;
         else if (limbo::iequals(algo_str, "DL"))
             parms.algo = AlgorithmTypeEnum::DANCING_LINK;
+        else if (limbo::iequals(algo_str, "DL_OPT"))
+            parms.algo = AlgorithmTypeEnum::DANCING_LINK_OPT;
         else mplPrint(kWARN, "Unknown algorithm type %s, set to default algorithm\n", algo_str.c_str());
 
         // post processing shape_str
