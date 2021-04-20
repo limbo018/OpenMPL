@@ -75,7 +75,8 @@ The Csdp API used in OpenMPL has been modified and built for threading safety at
 
 ### How to Get Benchmarks
 
-[Download](http://www.cse.cuhk.edu.hk/~wli/ISCAS_benchmark.zip)
+Small benchmarks (ISCAS) [Download](http://www.cse.cuhk.edu.hk/~wli/ISCAS_benchmark.zip)
+big benchmarks (ISPD19) [Download](http://www.cse.cuhk.edu.hk/~wli/ISPD19.zip)
 
 ### How To Execute
 
@@ -103,10 +104,11 @@ A table of options :
 -dbg_comp_id (4294967295)    debug component id
 -use_stitch                  use stitch to avoid conflict
 -gen_stitch                  generate stitch candidate
--weight_stitch               a floating point number indicating the weight of stitch
+-weight_stitch               a floating point number indicating the weight of stitch                     
 ```
 
 One exmaple : /bin/run.sh.
+Another example for large benchmark: /bin/run_big.sh
 
 ### Possible Compiler Problems
 
