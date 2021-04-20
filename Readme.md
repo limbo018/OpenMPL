@@ -4,7 +4,7 @@
 
 | Stitch Insertion | Graph Simplification | Decomposition |
 | ---------------- | -------------------- | ------------- |
-| <img src=/images/stitch-2.png width=150> | <img src=/images/biconnected.png width=250> | <img src=/images/total_c2.gif width=200> |
+| <img src=./images/stitch-2.png width=150> | <img src=./images/biconnected.png width=250> | <img src=./images/total_c2.gif width=200> |
 
 ### Pre-requisite
 
@@ -28,10 +28,17 @@
 
 ### Publications
 
+
+* [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Lu Zhang](https://zhanlgu.github.io/about/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
+“**OpenMPL: An Open Source Layout Decomposer**”, accepted by IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems (TCAD).
+([preprint](https://doi.org/10.1109/TCAD.2020.3042175))
+
+
 * [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
     "**OpenMPL: An Open Source Layout Decomposer**", 
     IEEE International Conference on ASIC (ASICON), Chongqing, China, Oct. 29–Nov. 1, 2019.
 ([preprint](https://arxiv.org/pdf/1809.07554v3.pdf)) ([slides](http://yibolin.com/publications/papers/DFM_ASICON2019_Li.slides.pdf))
+
 ### Docker Version
 We provide the docker version to avoid annoying compilation.
 You can pull the image by
