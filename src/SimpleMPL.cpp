@@ -2239,7 +2239,23 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
                 myfile.close();
             }
+            if(m_db->algo() == AlgorithmTypeEnum::ILP_UPDATED_GUROBI && num_vertices(sg) > 3)
+            {
+				std::string runtime = comp_timer.format(6,"%w");
+                std::ofstream myfile;
+                myfile.open("ILP_update_obj.txt", std::ofstream::app);
+                myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
+                myfile.close();
+            }
             if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK && num_vertices(sg) > 3)
+            {
+				std::string runtime = comp_timer.format(6,"%w");
+                std::ofstream myfile;
+                myfile.open("DL_obj.txt", std::ofstream::app);
+                myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
+                myfile.close();
+            }
+            if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK_OPT && num_vertices(sg) > 3)
             {
 				std::string runtime = comp_timer.format(6,"%w");
                 std::ofstream myfile;
