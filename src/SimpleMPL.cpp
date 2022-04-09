@@ -289,7 +289,11 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
     std::stringstream ss2;
     ss2 << m_db->parms.flip3;
 	//for one input gds
-	string filename0 = m_db->input_gds().substr(m_db->input_gds().find("/",2)+1) +"_"+ graph_count + ".json";
+	int32_t layer = 0;
+		for(auto l:m_db->parms.sUncolorLayer){
+		layer = l;
+	}
+	string filename0 = m_db->input_gds().substr(m_db->input_gds().find("/",2)+1) + "_" + std::to_string(layer) + "_"+ graph_count + ".json";
 	//for two input gds
 	string filename = m_db->input_gds().substr(m_db->input_gds().find("/",2)+1) +"_"+m_db->input2_gds().substr(m_db->input2_gds().find("/",2)+1)+"_"+ss1.str()+"_"+ graph_count + ".json";
 	//for three input gds
@@ -302,7 +306,8 @@ void SimpleMPL::write_json(graph_type const& sg,std::string graph_count,std::vec
 		else
 			jsonFile.open(".//json//"+filename0);
 	}
-		
+	
+
 	//jsonFile.open("/json/"+ m_db->input_gds() + graph_count + ".json");
 	//jsonFile.open("/research/byu2/wli/repository/OpenMPL/bin/json/" + m_db->input_gds() + graph_count + ".json");
 	//std::cout<<jsonFile.is_open()<<std::endl;
@@ -2045,7 +2050,8 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 	#if CSDP == 1
 			case AlgorithmTypeEnum::SDP_CSDP:
 				pcs = new lac::SDPColoringCsdp<graph_type> (sg); 
-				break;
+                mplPrint(kINFO, "SDP selected!");
+                break;
 	#endif
 			case AlgorithmTypeEnum::BACKTRACK:
 				pcs = new lac::BacktrackColoring<graph_type> (sg);
@@ -2154,6 +2160,15 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
         typedef lac::Coloring<graph_type> coloring_solver_type;
         coloring_solver_type* pcs = create_coloring_solver(sg,comp_id,sub_comp_id);
 
+		
+		// Default is sdp solver
+		coloring_solver_type* ilp_pcs = NULL;
+		coloring_solver_type* dl_pcs = NULL;
+		ilp_pcs = new lac::ILPColoringUpdated<graph_type> (sg);
+		// coloring_solver_type* sdp_pcs = new lac::SDPColoringCsdp<graph_type> (sg);
+		dl_pcs = new DancingLinkColoring<graph_type> (sg);
+
+
         // set precolored vertices 
 
         boost::graph_traits<graph_type>::vertex_iterator vi, vie;
@@ -2169,7 +2184,25 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
         }
         // 1st trial 
 
-        double obj_value1 = (*pcs)(); // solve coloring 
+        //double obj_value1 = (*pcs)(); // solve coloring 
+		double ilp_obj = 0;
+		double dl_obj = 0;
+
+		comp_timer.stop();
+		boost::timer::cpu_timer ilp_comp_timer;
+		boost::timer::cpu_timer dl_comp_timer;
+		ilp_comp_timer.start();
+		if(num_vertices(sg) < 500){ilp_obj = (*ilp_pcs)();}
+		ilp_comp_timer.stop();
+		dl_comp_timer.start();
+		dl_obj = (*dl_pcs)();
+		dl_comp_timer.stop();
+			
+		
+		
+         double obj_value1 = (*pcs)(); // solve coloring
+		// TMP RESULTS:
+
 
         // if(boost::num_vertices(sg) > 2)
         // {
@@ -2207,7 +2240,10 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             for (boost::tie(vi, vie) = vertices(sg); vi != vie; ++vi)
             {
                 vertex_descriptor v = *vi;
-                int8_t color = pcs->color(v);
+				int8_t color;
+				if(num_vertices(sg) < 500){color = pcs->color(v);}
+				else{color = pcs->color(v);}
+                
                 // if (color < 0) color = m_db->color_num();
 				//std::cout<<"color is"<<(uint32_t)color<<std::endl;
                 mplAssert(color >= 0 && color < m_db->color_num());
@@ -2259,7 +2295,15 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             {
 				std::string runtime = comp_timer.format(6,"%w");
                 std::ofstream myfile;
-                myfile.open("DL_obj.txt", std::ofstream::app);
+                myfile.open("DL_update_obj.txt", std::ofstream::app);
+                myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
+                myfile.close();
+            }
+            if(m_db->algo() == AlgorithmTypeEnum::SDP_CSDP && num_vertices(sg) > 3)
+            {
+				std::string runtime = comp_timer.format(6,"%w");
+                std::ofstream myfile;
+                myfile.open("SDP_obj.txt", std::ofstream::app);
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
                 myfile.close();
             }
@@ -2294,9 +2338,17 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
                 name.append("_");
                 name.append(std::to_string(sub_comp_id));
 				name.append("_");
+				name.append(std::to_string(ilp_obj).substr(0,std::to_string(ilp_obj).size()-5));
+				name.append("_");
+				name.append(std::to_string(dl_obj).substr(0,std::to_string(dl_obj).size()-5));
+				name.append("_");
 				name.append(std::to_string(obj_value1).substr(0,std::to_string(obj_value1).size()-5));
 				name.append("_");
                 name.append(std::to_string(num_vertices(sg)));
+				name.append("_");
+				name.append(ilp_comp_timer.format(4,"%w"));
+				name.append("_");
+				name.append(dl_comp_timer.format(4,"%w"));
 				name.append("_");
 				name.append(comp_timer.format(4,"%w"));
 
@@ -3012,6 +3064,9 @@ bool SimpleMPL::check_uncolored(std::vector<uint32_t>::const_iterator itBgn, std
     return false;
 }
 
+
+// The function is developed to dynamically select algorithms.
+// the input filename specifies the selected algorithm for the target node.
 void SimpleMPL::update_algorithm_selector(std::string filename){
 	int max_comp_id = -1;
 	int max_sub_comp_id = -1;
@@ -3350,7 +3405,6 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 				{
 					std::string runtime = comp_timer.format(6, "%w");
 					std::ofstream myfile;
-					myfile.open("DL_obj.txt", std::ofstream::app);
 					myfile << m_db->input_gds().c_str() << " " << comp_id << " " << sub_comp_id << " " << num_vertices(sg) << " " << obj_value1 << " " << runtime << "\n";
 					myfile.close();
 				}
