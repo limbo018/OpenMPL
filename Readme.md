@@ -82,8 +82,8 @@ The Csdp API used in OpenMPL has been modified and built for threading safety at
 
 ### How to Get Benchmarks
 
-Small benchmarks (ISCAS) [Download](http://www.cse.cuhk.edu.hk/~wli/ISCAS_benchmark.zip)
-big benchmarks (ISPD19) [Download](http://www.cse.cuhk.edu.hk/~wli/ISPD19.zip)
+Small benchmarks (ISCAS) [Download](https://yuzhema.people.ust.hk/release/ISCAS_benchmark.zip)
+big benchmarks (ISPD19) [Download](https://yuzhema.people.ust.hk/release/ISPD19.zip)
 
 ### How To Execute
 
