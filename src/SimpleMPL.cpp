@@ -2164,7 +2164,9 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		// Default is sdp solver
 		coloring_solver_type* ilp_pcs = NULL;
 		coloring_solver_type* dl_pcs = NULL;
+	#if GUROBI == 1
 		ilp_pcs = new lac::ILPColoringUpdated<graph_type> (sg);
+	#endif
 		// coloring_solver_type* sdp_pcs = new lac::SDPColoringCsdp<graph_type> (sg);
 		dl_pcs = new DancingLinkColoring<graph_type> (sg);
 
@@ -2192,7 +2194,9 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		boost::timer::cpu_timer ilp_comp_timer;
 		boost::timer::cpu_timer dl_comp_timer;
 		ilp_comp_timer.start();
+	#if GUROBI == 1
 		if(num_vertices(sg) < 500){ilp_obj = (*ilp_pcs)();}
+	#endif
 		ilp_comp_timer.stop();
 		dl_comp_timer.start();
 		dl_obj = (*dl_pcs)();
