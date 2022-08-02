@@ -16,7 +16,7 @@
     - Require 3.8.2 or later. 
 
 - [Boost](https://www.boost.org)
-    - Require 1.55 or later. 
+    - Require 1.55...1.72. 
     - Need to install and visible for linking. 
     - Custom installation path may require to export ```BOOST_ROOT``` for [CMake](https://cmake.org/cmake/help/v3.8/module/FindBoost.html). 
 

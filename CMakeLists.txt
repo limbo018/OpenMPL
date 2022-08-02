@@ -38,7 +38,7 @@ message("-- LIMBO_BINARY_DIR ${LIMBO_BINARY_DIR}")
 find_package(ZLIB REQUIRED)
 # first try to find static libraries, then try to find dynamic ones
 set(Boost_USE_STATIC_LIBS ON) 
-find_package(Boost 1.55.0 COMPONENTS timer chrono graph)
+find_package(Boost 1.55.0...1.72.0 COMPONENTS timer chrono graph)
 if (NOT Boost_FOUND)
     set(Boost_USE_STATIC_LIBS OFF)  
     find_package(Boost 1.55.0 REQUIRED COMPONENTS timer chrono graph)
