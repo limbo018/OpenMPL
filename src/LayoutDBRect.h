@@ -46,6 +46,8 @@ struct LayoutDBRect : public LayoutDB
     /// set color for patterns 
     /// \param pattern_id is the index of vPatternBbox
     virtual void set_color(uint32_t pattern_id, int8_t color);
+    virtual void cal_bound();
+	virtual void flip(coordinate_type leftx,coordinate_type rightx);
     /// mainly used for outputing edges 
     /// \return a point that is on the pattern and close to its center with given pattern id (polygon id for LayoutDBPolygon)
     /// default is to return the center of rectangle in vPatternBbox

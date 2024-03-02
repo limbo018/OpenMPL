@@ -91,7 +91,9 @@ void GdsReader::begin_end_cbk(GdsParser::GdsRecords::EnumType record_type)
             db.end_str();
             break;
         default: // be careful here, you may dump a lot of unnecessary error message for unknown record_type 
+#ifdef DEBUG_IO
             mplPrint(kERROR, "%s() unsupported record_type = %s", __func__, GdsParser::gds_record_ascii(record_type));
+#endif
             break;
     }
 }
@@ -134,7 +136,9 @@ void GdsReader::float_cbk(GdsParser::GdsRecords::EnumType record_type, GdsParser
 			db.unit = vData[1]; 
             break;
         default:
+#ifdef DEBUG_IO
             mplPrint(kERROR, "%s() invalid record_type = %s, data_type = %s", __func__, GdsParser::gds_record_ascii(record_type), GdsParser::gds_data_ascii(data_type));
+#endif
             break;
     }
 }

@@ -173,7 +173,7 @@ class SimpleMPL
         /// create solver and initialize 
         /// \param sg is the simplified graph 
         /// \return a point of solver base type
-        lac::Coloring<graph_type>* create_coloring_solver(graph_type const& sg) const;
+        lac::Coloring<graph_type>* create_coloring_solver(graph_type const& sg,uint32_t comp_id, uint32_t sub_comp_id) const;
         /// given a graph, solve coloring, contain nested call for itself 
         /// \param dg is decomposition graph before simplification
         double solve_graph_coloring(uint32_t comp_id, graph_type const& dg, 
@@ -184,8 +184,7 @@ class SimpleMPL
                 graph_type& dg, std::map<uint32_t, uint32_t>& mGlobal2Local, std::vector<int8_t>& vColor, std::set<vertex_descriptor>& vdd_set, bool flag) const;
 
 		/// report conflict number for a component 
-		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd) const;
-
+		uint32_t conflict_num(const std::vector<uint32_t>::const_iterator itBgn, const std::vector<uint32_t>::const_iterator itEnd);
 
 
 		/// find all of the vertexes which are in the same polygon with selected vertex before stitch insertion
@@ -204,9 +203,26 @@ class SimpleMPL
         /// \param g is mutable because edge properties for boost::dynamic_properties need mutable graph 
         /// \param filename should not contain extension 
         void write_graph(graph_type& g, std::string const& filename) const;
+		//new_cal_cost for calculating cost(for debug)
+		void iterative_mark(graph_type const& g, std::vector<uint32_t>& parent_node_ids, vertex_descriptor& v1) const;
+		double new_calc_cost(SimpleMPL::graph_type& g,std::vector<int8_t> const& vColor);
 		//print graph information for debug
-		void printGraph(graph_type& g);
-		
+		void print_graph(graph_type& g);
+		//print graph information for debug
+		uint32_t num_of_conflict_adj(graph_type& g, vertex_descriptor v);
+		//print graph information for debug
+		uint32_t num_of_stitch_adj(graph_type& g, vertex_descriptor v);
+		/// for update the m_algorithm_selector
+		/// \param filename is the filename which stores the selection information
+		void update_algorithm_selector(std::string filename);
+		double solve_graph_coloring_with_remove_stitch_redundancy(int depth, uint32_t comp_id, graph_type const &dg,
+															  std::vector<uint32_t>::const_iterator itBgn, uint32_t pattern_cnt,
+															  uint32_t simplify_strategy, std::vector<int8_t> &vColor, std::set<vertex_descriptor> vdd_set);
+		static std::set<vertex_descriptor> get_sub_vdd_set(std::vector<vertex_descriptor>& vSimpl2Org, std::set<vertex_descriptor> &vdd_set);
+		/// count for recursive times
+		int count;
+		int total_count;
+		int total_num_vertices;
         layoutdb_type* m_db; ///< pointer of layout database and user-defined options 
 		/// adjacency list data structure for a graph 
 		std::vector<uint32_t>					m_vVertexOrder;		///< vertex id, vertices in the same component are abutting,
@@ -239,6 +255,7 @@ class SimpleMPL
 		uint32_t								m_globalCompId;
 		std::vector<std::vector<uint32_t> >		m_vdd_multi_comp;
 		std::vector<coordinate_type>			m_boundaries; // boundaries of the whole layout
+		std::vector<std::vector<int>>			m_algorithm_selector; ///<store the algorithm selection results for selecting algorithm
 };
 
 SIMPLEMPL_END_NAMESPACE

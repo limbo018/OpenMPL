@@ -4,7 +4,7 @@
 
 | Stitch Insertion | Graph Simplification | Decomposition |
 | ---------------- | -------------------- | ------------- |
-| <img src=/images/stitch-2.png width=150> | <img src=/images/biconnected.png width=250> | <img src=/images/total_c2.gif width=200> |
+| <img src=./images/stitch-2.png width=150> | <img src=./images/biconnected.png width=250> | <img src=./images/total_c2.gif width=200> |
 
 ### Pre-requisite
 
@@ -16,7 +16,7 @@
     - Require 3.8.2 or later. 
 
 - [Boost](https://www.boost.org)
-    - Require 1.55 or later. 
+    - Require 1.55...1.72. 
     - Need to install and visible for linking. 
     - Custom installation path may require to export ```BOOST_ROOT``` for [CMake](https://cmake.org/cmake/help/v3.8/module/FindBoost.html). 
 
@@ -28,10 +28,25 @@
 
 ### Publications
 
+
+* [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Lu Zhang](https://zhanlgu.github.io/about/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
+“**OpenMPL: An Open Source Layout Decomposer**”, accepted by IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems (TCAD).
+([preprint](https://doi.org/10.1109/TCAD.2020.3042175))
+
+
 * [Wei Li](https://wadmes.github.io/cv/), [Yuzhe Ma](http://yuzhe630.github.io/), [Qi Sun](http://qisunchn.top/), [Yibo Lin](http://yibolin.com), [Iris Hui-Ru Jiang](http://www.ee.ntu.edu.tw/profile1?id=1060726), [Bei Yu](http://www.cse.cuhk.edu.hk/~byu/index.html), [David Z. Pan](http://users.ece.utexas.edu/~dpan/), 
     "**OpenMPL: An Open Source Layout Decomposer**", 
     IEEE International Conference on ASIC (ASICON), Chongqing, China, Oct. 29–Nov. 1, 2019.
 ([preprint](https://arxiv.org/pdf/1809.07554v3.pdf)) ([slides](http://yibolin.com/publications/papers/DFM_ASICON2019_Li.slides.pdf))
+
+### Docker Version
+We provide the docker version to avoid annoying compilation.
+You can pull the image by
+```bash
+$ docker pull wadmes/openmpl:latest
+```
+The OpenMPL folder locates in `/home/OpenMPL`
+
 
 ### How To Compile
 
@@ -45,7 +60,7 @@ $ cmake ..
 $ make
 $ make install
 ```
-The default installation path is the repo directory. It can bee changed via 
+The default installation path is the repo directory. It can be changed via 
 ```
 cmake .. -DCMAKE_INSTALL_PREFIX=your_installation_path
 ```
@@ -67,7 +82,8 @@ The Csdp API used in OpenMPL has been modified and built for threading safety at
 
 ### How to Get Benchmarks
 
-[Download](http://www.cse.cuhk.edu.hk/~wli/ISCAS_benchmark.zip)
+Small benchmarks (ISCAS) [Download](https://yuzhema.people.ust.hk/release/ISCAS_benchmark.zip)
+big benchmarks (ISPD19) [Download](https://yuzhema.people.ust.hk/release/ISPD19.zip)
 
 ### How To Execute
 
@@ -95,10 +111,11 @@ A table of options :
 -dbg_comp_id (4294967295)    debug component id
 -use_stitch                  use stitch to avoid conflict
 -gen_stitch                  generate stitch candidate
--weight_stitch               a floating point number indicating the weight of stitch
+-weight_stitch               a floating point number indicating the weight of stitch                     
 ```
 
 One exmaple : /bin/run.sh.
+Another example for large benchmark: /bin/run_big.sh
 
 ### Possible Compiler Problems
 

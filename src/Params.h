@@ -31,11 +31,17 @@ struct ControlParameter
 	int32_t thread_num;                        ///< number of maximum threads for parallel computation 
     int32_t record;                        ///< record level, which controls the degree of recording information
 	bool verbose;                              ///< control screen message 
+    bool flip2;                                ///<flip second gds>
+    bool flip3;                                ///<flip third gds>
 	bool use_stitch;						   ///< control whether use stitches
 	bool gen_stitch;						   ///< control whether only generate and output stitches
+    bool remove_stitch_redundancy;              /// <Remove stitch redundancy or not.>
 	uint32_t dbg_comp_id;                      ///< component id for debug, if matched, graphs will be dumped before and after coloring  
 
 	std::string   input_gds;                   ///< input gdsii filename 
+    std::string   selector;                  ///<filename indicating the selector>
+	std::string   input2_gds;		   ///< second gdsii filename
+	std::string   input3_gds;		   ///< third gdsii filename
 	std::string   output_gds;                  ///< output gdsii filename 
 
 	/// algorithm options 
@@ -59,10 +65,16 @@ inline ControlParameter::ControlParameter()
     record                   = 0;
     weight_stitch            = 0.1;
     verbose                  = false;
+    flip2                    = false;
+    flip3                    = false;
 	use_stitch				 = false;
 	gen_stitch				 = false;
+    remove_stitch_redundancy = false;
     dbg_comp_id              = std::numeric_limits<uint32_t>::max();
     input_gds                = "";
+    selector                 = "";
+    input2_gds		     = "";
+    input3_gds		     = "";
     output_gds               = "";
     algo                     = AlgorithmTypeEnum::BACKTRACK;
     shape_mode               = ShapeModeEnum::RECTANGLE;
@@ -79,10 +91,16 @@ inline void ControlParameter::swap(ControlParameter& rhs)
     std::swap(thread_num, rhs.thread_num);
     std::swap(record, rhs.record);
     std::swap(verbose, rhs.verbose);
+    std::swap(flip2, rhs.flip2);
+    std::swap(flip3, rhs.flip3);
 	std::swap(use_stitch, rhs.use_stitch);
 	std::swap(gen_stitch, rhs.gen_stitch);
+    std::swap(remove_stitch_redundancy, rhs.remove_stitch_redundancy);
     std::swap(dbg_comp_id, rhs.dbg_comp_id);
     std::swap(input_gds, rhs.input_gds);
+    std::swap(input2_gds,rhs.input2_gds);
+    std::swap(selector, rhs.selector);
+    std::swap(input3_gds,rhs.input3_gds);
     std::swap(output_gds, rhs.output_gds);
     std::swap(algo, rhs.algo);
     std::swap(shape_mode, rhs.shape_mode);

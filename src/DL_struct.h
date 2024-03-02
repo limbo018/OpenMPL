@@ -18,6 +18,7 @@
 #include<limits.h>
 #include <assert.h>
 #include "Msg.h"
+#include <limbo/algorithms/coloring/Coloring.h>
 
 SIMPLEMPL_BEGIN_NAMESPACE
 
@@ -52,6 +53,7 @@ struct Vertex {
 	int Stitch_No = -1;
 	std::set<Vertex*> Conflicts;
 	std::set<Vertex*> Conflicts_in_LG;
+	std::set<Edge*> Stitches;
 	std::vector<Vertex*> Childs;
 	void parentOf(Vertex* child){
 		/*

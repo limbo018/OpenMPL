@@ -15,26 +15,32 @@
 #  -algo (BACKTRACK)            algorithm type < ILP|BACKTRACK|LP|SDP|DL >
 #  -shape (RECTANGLE)           shape mode < RECTANGLE|POLYGON >
 #  -verbose (false)             toggle controlling screen messages
-#  -use_stitch                  use stitch to avoid conflict
-#  -gen_stitch                  generate stitch candidate
-#  -dbg_comp_id                 debug component id
-#  -weight_stitch               a floating point number indicating the weight of stitch
+#  -stitch (false)              toggle controlling stitch insertion
+#  -use_stitch
+#  gen_stitch
+#  -dbg_comp_id (4294967295)    debug component id
 # ========================================================================
 
+#-uncolor_layer  100  \ 
+#-uncolor_layer 201  \
+#-uncolor_layer 202  \
+#-uncolor_layer 203 \
 # if the benchmark contains polygon shapes, -shape must be set to POLYGON;
 # otherwise, set -shape to RECTANGLE is more memory efficient
-# -remove_stitch_redundancy \
 mkdir -p benchout
 ./OpenMPL  \
     -shape POLYGON \
-    -in big/ispd19_test1_flatten.gds \
-    -out tmp/sim_c1.gds \
-    -simplify_level 3 \
-    -coloring_distance 160 \
-	-uncolor_layer 100 \
+    -in cell/SDFFRNQ_X1.gds \
+    -in2 cell/SDFFRNQ_X1.gds\
+    -in2_flip\
+    -out benchout/sim_c1_sti.gds  \
+    -coloring_distance 100 \
+	-uncolor_layer 15 \
+    -uncolor_layer 16 \
     -color_num 3 \
-    -algo ILP_UPDATED\
-    -thread_num 8 \
-    -use_stitch \
-    -gen_stitch \
-    -record 0\
+    -algo BACKTRACK\
+    -thread_num 8\
+     -use_stitch \
+	-gen_stitch\
+    -record 2\
+    # -dbg_comp_id 10096
