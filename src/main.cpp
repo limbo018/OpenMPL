@@ -6,7 +6,8 @@
  ************************************************************************/
 
 #include <iostream>
-#include <boost/timer/timer.hpp>
+#include <chrono>
+#include <ratio>
 #include "SimpleMPL.h"
 
 int main(int argc, char** argv)
@@ -19,11 +20,12 @@ int main(int argc, char** argv)
     SimpleMPL::mplPrint(SimpleMPL::kDEBUG, "size of Rectangle = %u bytes\n", sizeof(SimpleMPL::Rectangle<int>));
     SimpleMPL::mplPrint(SimpleMPL::kDEBUG, "size of Polygon = %u bytes\n", sizeof(SimpleMPL::Polygon<int>));
 
-    char buf[256];
-    SimpleMPL::mplSPrint(SimpleMPL::kINFO, buf, "program takes %%t seconds CPU, %%w seconds real\n");
-	boost::timer::auto_cpu_timer timer (buf);
-
+  auto start = std::chrono::high_resolution_clock::now();
 	mpl.run(argc, argv);
+  auto end = std::chrono::high_resolution_clock::now();
+
+  std::chrono::duration<double, std::ratio<1, 1>> duration_s (end - start); 
+  mplPrint(SimpleMPL::kINFO, "program takes %g seconds\n", duration_s.count());
 
 	return 0;
 }

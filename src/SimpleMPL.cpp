@@ -13,6 +13,8 @@
 #include <sstream>
 #include <fstream>
 #include <set>
+#include <chrono>
+#include <ratio>
 #define SYSERROR()  errno
 #include <stack>
 #ifdef _OPENMP
@@ -21,7 +23,6 @@
 #include <time.h>
 #include <boost/graph/graphviz.hpp>
 #include <boost/graph/copy.hpp>
-#include <boost/timer/timer.hpp>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
 
 // only valid when gurobi is available 
@@ -140,9 +141,7 @@ void SimpleMPL::read_cmd(int argc, char** argv)
 
 void SimpleMPL::read_gds()
 {
-    char buf[256];
-    mplSPrint(kINFO, buf, "reading input files takes %%t seconds CPU, %%w seconds real\n");
-	boost::timer::auto_cpu_timer timer (buf);
+  auto start = std::chrono::high_resolution_clock::now();
 	mplPrint(kINFO, "Reading input file %s\n", m_db->input_gds().c_str());
 	// read input gds file 
 	GdsReader reader (*m_db);
@@ -178,13 +177,15 @@ void SimpleMPL::read_gds()
 	
 	// report data 
 	m_db->report_data();
+
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::ratio<1, 1>> duration_s (end - start); 
+  mplPrint(kINFO, "reading input files takes %g seconds\n", duration_s.count());
 }
 
 void SimpleMPL::write_gds()
 {
-    char buf[256];
-    mplSPrint(kINFO, buf, "writing output file takes %%t seconds CPU, %%w seconds real\n");
-	boost::timer::auto_cpu_timer timer (buf);
+  auto start = std::chrono::high_resolution_clock::now();
 	if (m_db->output_gds().empty()) 
 	{
         mplPrint(kWARN, "Output file not specified, no file generated\n");
@@ -204,6 +205,10 @@ void SimpleMPL::write_gds()
 		mplPrint(kINFO, "Write output gds file: %s\n", m_db->output_gds().c_str());
 		writer(m_db->output_gds() + ".gds", *m_db, m_vConflict, m_mAdjVertex, m_db->strname, m_db->unit*1e+6);
 	}
+
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::ratio<1, 1>> duration_s (end - start); 
+  mplPrint(kINFO, "writing output file takes %g seconds\n", duration_s.count());
 }
 
 void SimpleMPL::write_json()
@@ -500,8 +505,9 @@ void SimpleMPL::solve()
 		this->update_algorithm_selector(m_db->parms.selector);
 	}
 	
-	boost::timer::cpu_timer total_timer;
-	total_timer.start();
+  auto total_start = std::chrono::high_resolution_clock::now();
+	// boost::timer::cpu_timer total_timer;
+	// total_timer.start();
 	if (m_db->vPatternBbox.empty())
 	{
         mplPrint(kWARN, "No patterns found in specified layers\n");
@@ -539,8 +545,6 @@ void SimpleMPL::solve()
 	//this->cal_boundaries();
 	this->setVddGnd(); //perhapes we should also consider pshape->getPointNum()==4
 	mplPrint(kINFO,"VDD nodes set done\n");
-	boost::timer::cpu_timer stitch_timer;
-	stitch_timer.start();
 
 	//First simplification: IVR (HIDE_SMALL_DEGREE) && Bridge detection
 	this->lg_simplification();
@@ -552,8 +556,11 @@ void SimpleMPL::solve()
 		//GdsWriter writer;
 		//writer.write_Simplification(m_db->output_gds() + "_lg_simplification.gds", *m_db, m_vCompId, m_mAdjVertex, m_in_DG, m_isVDDGND, true);
 		this->projection();		///< m_vBookmark has already been updated in projection()
-		const char *buf = total_timer.format(2, "stitch candidate insertion time %ts(%p%), %ws real \n").c_str();
-		mplPrint(kINFO,buf);
+		// const char *buf = total_timer.format(2, "stitch candidate insertion time %ts(%p%), %ws real \n").c_str();
+		// mplPrint(kINFO,buf);
+    auto total_end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::ratio<1, 1>> duration_s (total_end - total_start); 
+    mplPrint(kNONE, "stitch candidate insertion time %gs\n", duration_s.count());
 	}
     std::vector<uint32_t>().swap(m_dgCompId);
     m_dgCompId.assign(m_db->vPatternBbox.size(), 0);
@@ -588,8 +595,9 @@ void SimpleMPL::solve()
     // 	}
     // }
 
-	boost::timer::cpu_timer t;
-	t.start();
+	// boost::timer::cpu_timer t;
+	// t.start();
+  auto t_start = std::chrono::high_resolution_clock::now();
 	// thread number controled by user option 
 
 	// Thirdly, solve each component
@@ -599,15 +607,13 @@ void SimpleMPL::solve()
     for (uint32_t comp_id = 0; comp_id < m_comp_cnt; ++comp_id)
     {
         // construct a component 
-		boost::timer::cpu_timer t_comp;
-		t_comp.start();
+        auto t_comp_start = std::chrono::high_resolution_clock::now();
         std::vector<uint32_t>::iterator itBgn = m_vVertexOrder.begin()+m_vBookmark[comp_id];
         std::vector<uint32_t>::iterator itEnd = (comp_id+1 != m_comp_cnt)? m_vVertexOrder.begin()+m_vBookmark[comp_id+1] : m_vVertexOrder.end();
         // solve component 
         // pass iterators to save memory 
         this->solve_component(itBgn, itEnd, comp_id);
 	// cout << "almost finished -1" << endl;
-		//std::cout<<"comp_id "<<comp_id<<" omp_get_thread_num() is "<<omp_get_thread_num()<<t_comp.format(2, " comp time %ts(%p%), %ws real")<<std::endl;
 	}
     if( m_db->parms.record > 0)
     {
@@ -617,8 +623,17 @@ void SimpleMPL::solve()
             std::ofstream myfile,color_time,total_time;
             myfile.open ("record.txt", std::ofstream::app);
             color_time.open("result_w_stitch.txt",std::ofstream::app);
-            myfile << t.format(2, "color time %ts(%p%), %ws real")<<"\n";
-            myfile << total_timer.format(2, "total time %ts(%p%), %ws real")<<"\n";
+            // myfile << t.format(2, "color time %ts(%p%), %ws real")<<"\n";
+            auto t_end = std::chrono::high_resolution_clock::now();
+            char buf[64];
+            std::chrono::duration<double, std::ratio<1, 1>> duration_s (t_end - t_start); 
+            mplSPrint(kNONE, buf, "color time %gs", duration_s.count());
+            myfile << buf <<"\n";
+            // myfile << total_timer.format(2, "total time %ts(%p%), %ws real")<<"\n";
+            auto total_end = std::chrono::high_resolution_clock::now();
+            duration_s = total_end - total_start; 
+            mplSPrint(kNONE, buf, "total time %gs", duration_s.count());
+            myfile << buf <<"\n";
             // if(m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI || m_db->algo() == AlgorithmTypeEnum::DANCING_LINK)
             // {
             //     color_time<<"\\\\\n"<<m_db->input_gds();
@@ -634,7 +649,10 @@ void SimpleMPL::solve()
 			for(auto layer:m_db->parms.sUncolorLayer){
 				color_time << layer<<" ";
 			}
-			color_time << std::setw(5) <<m_db->algo()<<" "<<m_db->input_gds()<<" "<<t.format(3, "&  %w");
+      t_end = std::chrono::high_resolution_clock::now();
+      duration_s = t_end - t_start; 
+      mplSPrint(kNONE, buf, "&  %g", duration_s.count());
+			color_time << std::setw(5) <<m_db->algo()<<" "<<m_db->input_gds()<<" "<<buf;
             myfile.close();
             color_time.close();
         }
@@ -644,15 +662,31 @@ void SimpleMPL::solve()
             myfile.open ("record.txt", std::ofstream::app);
             color_time.open("color_wo_stitch.txt",std::ofstream::app);
             total_time.open("total_wo_stitch.txt",std::ofstream::app);
-            myfile << t.format(2, "color time %ts(%p%), %ws real")<<"\n";
-            myfile << total_timer.format(2, "total time %ts(%p%), %ws real")<<"\n";
+            // myfile << t.format(2, "color time %ts(%p%), %ws real")<<"\n";
+            char buf[64];
+            auto t_end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::ratio<1, 1>> duration_s (t_end - t_start); 
+            mplSPrint(kNONE, buf, "color time %gs", duration_s.count());
+            myfile << buf <<"\n";
+            // myfile << total_timer.format(2, "total time %ts(%p%), %ws real")<<"\n";
+            auto total_end = std::chrono::high_resolution_clock::now();
+            duration_s = total_end - total_start; 
+            mplSPrint(kNONE, buf, "total time %gs", duration_s.count());
+            myfile << buf <<"\n";
             if(m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI)
             {
                 color_time<<"\\\\\n"<<m_db->input_gds();
                 total_time<<"\n"<<m_db->input_gds();
             }
-            color_time<<t.format(2, "& %t  &  %w");
-            total_time<<total_timer.format(2, "& %t  &  %w");
+            // color_time<<t.format(2, "& %t  &  %w");
+            t_end = std::chrono::high_resolution_clock::now();
+            duration_s = t_end - t_start; 
+            mplSPrint(kNONE, buf, "& %g  ", duration_s.count());
+            color_time<<buf;
+            // total_time<<total_timer.format(2, "& %t  &  %w");
+            duration_s = total_end - total_start; 
+            mplSPrint(kNONE, buf, "& %g  ", duration_s.count());
+            myfile << buf <<"\n";
             myfile.close();
             color_time.close();
             total_time.close();
@@ -2153,8 +2187,9 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		// }
 
         //if algorithm is Dancing Link, call it directly
-        boost::timer::cpu_timer comp_timer;
-        comp_timer.start();
+        // boost::timer::cpu_timer comp_timer;
+        // comp_timer.start();
+        auto comp_start = std::chrono::high_resolution_clock::now();
 
         // solve coloring 
         typedef lac::Coloring<graph_type> coloring_solver_type;
@@ -2190,17 +2225,22 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 		double ilp_obj = 0;
 		double dl_obj = 0;
 
-		comp_timer.stop();
-		boost::timer::cpu_timer ilp_comp_timer;
-		boost::timer::cpu_timer dl_comp_timer;
-		ilp_comp_timer.start();
+		// comp_timer.stop();
+    auto comp_end = std::chrono::high_resolution_clock::now();
+		// boost::timer::cpu_timer ilp_comp_timer;
+		// boost::timer::cpu_timer dl_comp_timer;
+		// ilp_comp_timer.start();
+    auto ilp_comp_start = std::chrono::high_resolution_clock::now();
 	#if GUROBI == 1
 		if(num_vertices(sg) < 500){ilp_obj = (*ilp_pcs)();}
 	#endif
-		ilp_comp_timer.stop();
-		dl_comp_timer.start();
+		// ilp_comp_timer.stop();
+    auto ilp_comp_end = std::chrono::high_resolution_clock::now();
+		// dl_comp_timer.start();
+    auto dl_comp_start = std::chrono::high_resolution_clock::now();
 		dl_obj = (*dl_pcs)();
-		dl_comp_timer.stop();
+		// dl_comp_timer.stop();
+    auto dl_comp_end = std::chrono::high_resolution_clock::now();
 			
 		
 		
@@ -2273,7 +2313,12 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 			//store ILP runtime information/ read ILP information for DL to comparison, this is for DAC2020
             if(m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI && num_vertices(sg) > 3)
             {
-				std::string runtime = comp_timer.format(6,"%w");
+                // std::string runtime = comp_timer.format(6,"%w");
+                char buf[64];
+                auto comp_end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+                mplSPrint(kNONE, buf, "%g", duration_s.count());
+                std::string runtime = buf;
                 std::ofstream myfile;
                 myfile.open("ILP_obj.txt", std::ofstream::app);
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
@@ -2281,7 +2326,12 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             }
             if(m_db->algo() == AlgorithmTypeEnum::ILP_UPDATED_GUROBI && num_vertices(sg) > 3)
             {
-				std::string runtime = comp_timer.format(6,"%w");
+                // std::string runtime = comp_timer.format(6,"%w");
+                char buf[64];
+                auto comp_end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+                mplSPrint(kNONE, buf, "%g", duration_s.count());
+                std::string runtime = buf;
                 std::ofstream myfile;
                 myfile.open("ILP_update_obj.txt", std::ofstream::app);
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
@@ -2289,7 +2339,12 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             }
             if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK && num_vertices(sg) > 3)
             {
-				std::string runtime = comp_timer.format(6,"%w");
+                // std::string runtime = comp_timer.format(6,"%w");
+                char buf[64];
+                auto comp_end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+                mplSPrint(kNONE, buf, "%g", duration_s.count());
+                std::string runtime = buf;
                 std::ofstream myfile;
                 myfile.open("DL_obj.txt", std::ofstream::app);
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
@@ -2297,7 +2352,12 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             }
             if(m_db->algo() == AlgorithmTypeEnum::DANCING_LINK_OPT && num_vertices(sg) > 3)
             {
-				std::string runtime = comp_timer.format(6,"%w");
+                // std::string runtime = comp_timer.format(6,"%w");
+                char buf[64];
+                auto comp_end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+                mplSPrint(kNONE, buf, "%g", duration_s.count());
+                std::string runtime = buf;
                 std::ofstream myfile;
                 myfile.open("DL_update_obj.txt", std::ofstream::app);
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
@@ -2305,7 +2365,12 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
             }
             if(m_db->algo() == AlgorithmTypeEnum::SDP_CSDP && num_vertices(sg) > 3)
             {
-				std::string runtime = comp_timer.format(6,"%w");
+                // std::string runtime = comp_timer.format(6,"%w");
+                char buf[64];
+                auto comp_end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+                mplSPrint(kNONE, buf, "%g", duration_s.count());
+                std::string runtime = buf;
                 std::ofstream myfile;
                 myfile.open("SDP_obj.txt", std::ofstream::app);
                 myfile<<m_db->input_gds().c_str()<<" "<<comp_id<<" "<<sub_comp_id <<" "<<num_vertices(sg)<<" "<<obj_value1<<" "<<runtime<<"\n";
@@ -2350,11 +2415,24 @@ double SimpleMPL::solve_graph_coloring(uint32_t comp_id, SimpleMPL::graph_type c
 				name.append("_");
                 name.append(std::to_string(num_vertices(sg)));
 				name.append("_");
-				name.append(ilp_comp_timer.format(4,"%w"));
+				// name.append(ilp_comp_timer.format(4,"%w"));
+        char buf[64];
+        auto ilp_comp_end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::ratio<1, 1>> duration_s (ilp_comp_end - ilp_comp_start); 
+        mplSPrint(kNONE, buf, "%g", duration_s.count());
+        name.append(buf);
 				name.append("_");
-				name.append(dl_comp_timer.format(4,"%w"));
+				// name.append(dl_comp_timer.format(4,"%w"));
+        auto dl_comp_end = std::chrono::high_resolution_clock::now();
+        duration_s = dl_comp_end - dl_comp_start; 
+        mplSPrint(kNONE, buf, "%g", duration_s.count());
+        name.append(buf);
 				name.append("_");
-				name.append(comp_timer.format(4,"%w"));
+				// name.append(comp_timer.format(4,"%w"));
+        auto comp_end = std::chrono::high_resolution_clock::now();
+        duration_s = comp_end - comp_start; 
+        mplSPrint(kNONE, buf, "%g", duration_s.count());
+        name.append(buf);
 
                 this->write_json(sg,(char*)name.c_str(),vSubColor);
 				// print_graph(sg);
@@ -3340,8 +3418,9 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 			// 	}
 			// }
 			//if algorithm is Dancing Link, call it directly
-			boost::timer::cpu_timer comp_timer;
-			comp_timer.start();
+			// boost::timer::cpu_timer comp_timer;
+			// comp_timer.start();
+      auto comp_start = std::chrono::high_resolution_clock::now();
 
 			// solve coloring
 			typedef lac::Coloring<graph_type> coloring_solver_type;
@@ -3399,7 +3478,13 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 				//store ILP runtime information/ read ILP information for DL to comparison, this is for DAC2020
 				if (m_db->algo() == AlgorithmTypeEnum::ILP_GUROBI && num_vertices(sg) > 3)
 				{
-					std::string runtime = comp_timer.format(6, "%w");
+					// std::string runtime = comp_timer.format(6, "%w");
+          char buf[64];
+          auto comp_end = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+          mplSPrint(kNONE, buf, "%g", duration_s.count());
+          std::string runtime = buf; 
+
 					std::ofstream myfile;
 					myfile.open("ILP_obj.txt", std::ofstream::app);
 					myfile << m_db->input_gds().c_str() << " " << comp_id << " " << sub_comp_id << " " << num_vertices(sg) << " " << obj_value1 << " " << runtime << "\n";
@@ -3407,7 +3492,12 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 				}
 				if (m_db->algo() == AlgorithmTypeEnum::DANCING_LINK && num_vertices(sg) > 3)
 				{
-					std::string runtime = comp_timer.format(6, "%w");
+					// std::string runtime = comp_timer.format(6, "%w");
+          char buf[64];
+          auto comp_end = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+          mplSPrint(kNONE, buf, "%g", duration_s.count());
+          std::string runtime = buf; 
 					std::ofstream myfile;
 					myfile << m_db->input_gds().c_str() << " " << comp_id << " " << sub_comp_id << " " << num_vertices(sg) << " " << obj_value1 << " " << runtime << "\n";
 					myfile.close();
@@ -3447,7 +3537,12 @@ double SimpleMPL::solve_graph_coloring_with_remove_stitch_redundancy(int depth, 
 					name.append("_");
 					name.append(std::to_string(num_vertices(sg)));
 					name.append("_");
-					name.append(comp_timer.format(4, "%w"));
+					// name.append(comp_timer.format(4, "%w"));
+          char buf[64];
+          auto comp_end = std::chrono::high_resolution_clock::now();
+          std::chrono::duration<double, std::ratio<1, 1>> duration_s (comp_end - comp_start); 
+          mplSPrint(kNONE, buf, "%g", duration_s.count());
+          name.append(buf);
 
 					this->write_json(sg, (char *)name.c_str(), vSubColor);
 				}
