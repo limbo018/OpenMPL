@@ -9,6 +9,11 @@
 #include <chrono>
 #include <ratio>
 #include "SimpleMPL.h"
+#include "globals.h"
+
+int IDX = 0;
+std::string GDSNAME;
+int distance;
 
 int main(int argc, char** argv)
 {

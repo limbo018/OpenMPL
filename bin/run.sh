@@ -25,16 +25,16 @@
 # otherwise, set -shape to RECTANGLE is more memory efficient
 # -remove_stitch_redundancy \
 mkdir -p benchout
-./OpenMPL  \
+./OpenMPL \
     -shape POLYGON \
-    -in big/ispd19_test1_flatten.gds \
-    -out tmp/sim_c1.gds \
+    -in big/ispd19_test10_flatten.gds \
+    -out tmp/sim_c2.gds \
     -simplify_level 3 \
-    -coloring_distance 160 \
-	-uncolor_layer 100 \
+    -coloring_distance 130 \
+	-uncolor_layer 101 \
     -color_num 3 \
-    -algo ILP_UPDATED\
-    -thread_num 8 \
+    -algo OPB\
+    -thread_num 1 \
     -use_stitch \
     -gen_stitch \
     -record 0\

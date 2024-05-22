@@ -35,6 +35,8 @@ std::string AlgorithmType::enum2Str(AlgorithmType::enum_type const& e) const
         ENUM2STR(mEnum2Str, MIS_GUROBI);
         ENUM2STR(mEnum2Str, DANCING_LINK);
         ENUM2STR(mEnum2Str, DANCING_LINK_OPT);
+        ENUM2STR(mEnum2Str, SJTU);
+        ENUM2STR(mEnum2Str, OPB);
         init = false;
     }
 
@@ -57,6 +59,8 @@ AlgorithmType::enum_type AlgorithmType::str2Enum(std::string const& s) const
         STR2ENUM(mStr2Enum, MIS_GUROBI);
         STR2ENUM(mStr2Enum, DANCING_LINK);
         STR2ENUM(mStr2Enum, DANCING_LINK_OPT);
+        STR2ENUM(mStr2Enum, SJTU);
+        STR2ENUM(mStr2Enum, OPB);
         init = false;
     }
 

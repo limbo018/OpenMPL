@@ -24,8 +24,13 @@
 #include <boost/graph/graphviz.hpp>
 #include <boost/graph/copy.hpp>
 #include <limbo/algorithms/coloring/GraphSimplification.h>
+#include "globals.h"
 
 // only valid when gurobi is available 
+#if NEUROSAT == 1
+#include <limbo/algorithms/coloring/SJTUcoloring.h>
+#endif
+#include <limbo/algorithms/coloring/OPBgen.h>
 #if GUROBI == 1
 #include <limbo/algorithms/coloring/ILPColoring.h>
 #include <limbo/algorithms/coloring/ILPColoringUpdated.h>
@@ -81,6 +86,7 @@ void SimpleMPL::run(int argc, char** argv)
         myfile_small << argv[4]<<" " << argv[16]<<"\n";
         myfile_small.close();
     }
+	distance = m_db->coloring_distance;// 将double转换成int，便于opbfile命名简短
 	this->solve();
 	this->report();
 	this->write_gds();
@@ -143,6 +149,7 @@ void SimpleMPL::read_gds()
 {
   auto start = std::chrono::high_resolution_clock::now();
 	mplPrint(kINFO, "Reading input file %s\n", m_db->input_gds().c_str());
+	GDSNAME = m_db->input_gds().c_str();
 	// read input gds file 
 	GdsReader reader (*m_db);
         mplAssertMsg(reader(m_db->input_gds()), "failed to read %s", m_db->input_gds().c_str());
@@ -562,6 +569,7 @@ void SimpleMPL::solve()
     std::chrono::duration<double, std::ratio<1, 1>> duration_s (total_end - total_start); 
     mplPrint(kNONE, "stitch candidate insertion time %gs\n", duration_s.count());
 	}
+
     std::vector<uint32_t>().swap(m_dgCompId);
     m_dgCompId.assign(m_db->vPatternBbox.size(), 0);
     m_globalCompId = 1;
@@ -571,7 +579,6 @@ void SimpleMPL::solve()
 
     // update VddGnd information
     this->setVddGnd();
-
 
     m_vdd_multi_comp.resize(m_db->vPatternBbox.size());
     //this->dg_simplification(); 
@@ -2062,6 +2069,13 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 	else{
     switch (m_db->algo().get())
 		{
+			// std::cout << "【】" << m_db->algo().get() << endl;
+	#if NEUROSAT == 1
+			case AlgorithmTypeEnum::SJTU:
+				// std::cout << "(SJTU)【Debug】: case AlgorithmTypeEnum::SJTU:" << endl;
+				pcs = new lac::SJTUColoring<graph_type> (sg); 
+				break;
+	#endif
 	#if GUROBI == 1
 			case AlgorithmTypeEnum::ILP_GUROBI:
 				pcs = new lac::ILPColoring<graph_type> (sg); 
@@ -2076,6 +2090,9 @@ lac::Coloring<SimpleMPL::graph_type>* SimpleMPL::create_coloring_solver(SimpleMP
 				pcs = new lac::MISColoring<graph_type> (sg); 
 				break;
 	#endif
+			case AlgorithmTypeEnum::OPB:
+				pcs = new lac::OPBgen<graph_type> (sg); 
+				break;
 	#if LEMONCBC == 1
 			case AlgorithmTypeEnum::ILP_CBC:
 				pcs = new lac::ILPColoringLemonCbc<graph_type> (sg); 

@@ -13,6 +13,8 @@ if(UNIX AND NOT APPLE)
     set(LIBS ${LIBS} rt)
 endif(UNIX AND NOT APPLE)
 
+set(COMPILE_DEFINITIONS "NEUROSAT=1" ${COMPILE_DEFINITIONS}) #先设置NEUROSAT恒为1
+
 if(GUROBI_FOUND)
     include_directories(
         ${GUROBI_INCLUDE_DIRS}

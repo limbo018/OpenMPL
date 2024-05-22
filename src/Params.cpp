@@ -66,7 +66,20 @@ bool CmdParser::operator()(int argc, char** argv)
             mplPrint(kWARN, "ILP is not available without GUROBI or CBC, set to default algorithm\n");
 #endif
         }
-        if (limbo::iequals(algo_str, "ILP_UPDATED")) 
+        else if (limbo::iequals(algo_str, "SJTU")) 
+        {
+            // std::cout << "你正在使用SJTU" << std::endl;
+#if NEUROSAT == 1
+            parms.algo = AlgorithmTypeEnum::SJTU;
+#else 
+            mplPrint(kWARN, "SJTU is not available without NEUROSAT, set to default algorithm\n");
+#endif  
+        }
+        else if(limbo::iequals(algo_str, "OPB"))
+        {
+            parms.algo = AlgorithmTypeEnum::OPB;
+        }
+        else if (limbo::iequals(algo_str, "ILP_UPDATED")) 
         {
 #if GUROBI == 1
             parms.algo = AlgorithmTypeEnum::ILP_UPDATED_GUROBI;
